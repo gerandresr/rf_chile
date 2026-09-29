@@ -1,0 +1,3 @@
+"use client";
+import Link from "next/link";import {usePathname} from "next/navigation";import {Activity,BarChart3,Landmark} from "lucide-react";
+export function AppShell({children}:{children:React.ReactNode}){const p=usePathname();const nav=[{href:"/",label:"Mercados",icon:Landmark},{href:"/historicos",label:"Históricos",icon:BarChart3}];return <div className="app-shell"><aside className="sidebar"><div className="brand"><Activity size={20}/><span>RF Markets</span></div><div className="brand-sub">Chile Fixed Income</div><nav>{nav.map(({href,label,icon:Icon})=><Link key={href} href={href} className={`nav-item ${p===href?"active":""}`}><Icon size={17}/><span>{label}</span></Link>)}</nav></aside><main className="main">{children}</main></div>}
