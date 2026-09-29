@@ -175,9 +175,13 @@ export function MarketDashboard() {
     <AppShell>
       <header className="page-head">
         <div>
-          <div className="eyebrow">Mercado de renta fija</div>
-          <h1>Chile · RF</h1>
-          <p>Resumen de bonos vigentes con información de la hoja RF.</p>
+          <div className="eyebrow">Mesa Trading Propietario BE</div>
+          <h1>Resumen Mercado de Renta Fija Chilena</h1>
+          <p>
+            Dashboard de Renta Fija Chilena que centraliza principales indicadores
+            macroeconomicos, tasas de mercado, bonos y curvas de gobierno además de
+            series historicas.
+          </p>
         </div>
         <div className="asof">
           <span>Último cierre</span>
@@ -201,7 +205,7 @@ export function MarketDashboard() {
         <div className="panel-head">
           <div>
             <div className="eyebrow">Estructura temporal</div>
-            <h2>Curva de tasas</h2>
+            <h2>Curva de Bonos de Gobierno</h2>
           </div>
           <div className="segmented">
             <button
@@ -232,6 +236,9 @@ export function MarketDashboard() {
                 tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
               />
               <Tooltip
+                labelFormatter={(label, payload) =>
+                  payload?.[0]?.payload?.code ?? label
+                }
                 formatter={(v) => [`${Number(v).toFixed(3)}%`, "Yield"]}
               />
               <Line
@@ -247,8 +254,16 @@ export function MarketDashboard() {
       </section>
 
       <div className="two-col">
-        <MarketTable title="BTP" instruments={btp} data={data} />
-        <MarketTable title="BTU" instruments={btu} data={data} />
+        <MarketTable
+          title="Bonos de Gobierno en Pesos"
+          instruments={btp}
+          data={data}
+        />
+        <MarketTable
+          title="Bonos de Gobierno en UF"
+          instruments={btu}
+          data={data}
+        />
       </div>
 
       <div className="note">
