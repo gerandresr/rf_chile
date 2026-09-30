@@ -498,7 +498,7 @@ export function MarketDashboard() {
                   setCompareDate("");
                 }}
               >
-                DPF CLP
+                DPF
               </button>
             </div>
 
@@ -563,7 +563,7 @@ export function MarketDashboard() {
               />
               <YAxis
                 domain={["auto", "auto"]}
-                tickFormatter={(v) => `${Number(v).toFixed(curveType === "DPF" && dpfRateView === "monthly" ? 2 : 1)}%`}
+                tickFormatter={(v) => `${Number(v).toFixed(curveType === "DPF" && dpfRateView === "monthly" ? 3 : 1)}%`}
               />
               <Tooltip
                 content={
@@ -628,7 +628,8 @@ export function MarketDashboard() {
       </div>
 
       <div className="note">
-        Regla de vigencia: el instrumento se mantiene visible durante su mes de vencimiento y el mes siguiente. Luego se oculta automáticamente.
+        Regla de vigencia: el instrumento se mantiene visible durante su mes de
+        vencimiento y el mes siguiente. Luego se oculta automáticamente.
       </div>
     </AppShell>
   );
