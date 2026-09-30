@@ -12,6 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { AppShell } from "./AppShell";
+import { TPMMeetings } from "./TPMMeetings";
 import {
   RFData,
   Instrument,
@@ -387,7 +388,15 @@ export function MarketDashboard() {
       </header>
 
       <div className="kpi-grid">
-        {macroKpis.map((kpi) => <div className="kpi" key={kpi.label}><div className="kpi-label">{kpi.label}</div><div className="kpi-value">{kpi.value}</div><div className="kpi-foot kpi-foot-static"><span>{kpi.description}</span></div></div>)}
+        {macroKpis.map((kpi) => (
+          <div className="kpi" key={kpi.label}>
+            <div className="kpi-label">{kpi.label}</div>
+            <div className="kpi-value">{kpi.value}</div>
+            <div className="kpi-foot kpi-foot-static">
+              {kpi.label === "TPM" ? <TPMMeetings /> : <span>{kpi.description}</span>}
+            </div>
+          </div>
+        ))}
       </div>
 
       <section className="panel curve-panel">
