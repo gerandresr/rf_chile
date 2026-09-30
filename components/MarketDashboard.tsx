@@ -82,15 +82,9 @@ function MarketTable({
                   </td>
                   <td>{maturityLabel(inst)}</td>
                   <td className="num strong">{formatPercent(s?.value, 3)}</td>
-                  <td className="num">
-                    <Change value={s?.d1 ?? null} />
-                  </td>
-                  <td className="num">
-                    <Change value={s?.mtd ?? null} />
-                  </td>
-                  <td className="num">
-                    <Change value={s?.ytd ?? null} />
-                  </td>
+                  <td className="num"><Change value={s?.d1 ?? null} /></td>
+                  <td className="num"><Change value={s?.mtd ?? null} /></td>
+                  <td className="num"><Change value={s?.ytd ?? null} /></td>
                 </tr>
               );
             })}
@@ -119,7 +113,7 @@ const macroKpis = [
   },
   {
     label: "Desempleo",
-    value: "9,40%",
+    value: "9,60%",
     description: "Tasa de desocupación",
   },
 ];
@@ -508,7 +502,7 @@ export function MarketDashboard() {
         <div className="panel-head">
           <div>
             <div className="eyebrow">Estructura temporal</div>
-            <h2>Curva de Bonos de Gobierno</h2>
+            <h2>Curvas de Rendimiento</h2>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -576,6 +570,19 @@ export function MarketDashboard() {
           </div>
         )}
 
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: "var(--text)",
+            margin: "2px 0 8px",
+          }}
+        >
+          {curveType === "BTP"
+            ? "Curva de Bonos de Gobierno en CLP"
+            : "Curva de Bonos de Gobierno en UF"}
+        </div>
+
         <div className="chart-box">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -614,7 +621,8 @@ export function MarketDashboard() {
                 name={`Actual · ${data.lastMarketDate}`}
                 stroke="currentColor"
                 strokeWidth={2.5}
-                dot={{ r: 3.5 }}
+                dot={{ r: 3.5, fill: "#2f6fed", stroke: "#2f6fed" }}
+                activeDot={{ r: 5, fill: "#2f6fed", stroke: "#2f6fed" }}
                 connectNulls
               />
               {comparisonRow && (
@@ -635,7 +643,7 @@ export function MarketDashboard() {
                   type="monotone"
                   dataKey="nsYield"
                   name="Nelson-Siegel"
-                  stroke="#f59e0b"
+                  stroke="#34d399"
                   strokeWidth={2.25}
                   strokeDasharray="7 5"
                   dot={false}
@@ -648,16 +656,8 @@ export function MarketDashboard() {
       </section>
 
       <div className="two-col">
-        <MarketTable
-          title="Bonos de Gobierno en Pesos"
-          instruments={btp}
-          data={data}
-        />
-        <MarketTable
-          title="Bonos de Gobierno en UF"
-          instruments={btu}
-          data={data}
-        />
+        <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} />
+        <MarketTable title="Bonos de Gobierno en UF" instruments={btu} data={data} />
       </div>
 
       <div className="note">
