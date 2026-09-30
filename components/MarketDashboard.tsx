@@ -97,9 +97,12 @@ type DPFInstrument = {
 
 type DPFData = {
   lastMarketDate: string;
+  rateConvention?: "monthly";
   annualization: string;
   instruments: DPFInstrument[];
 };
+
+type DPFRateView = "monthly" | "annual";
 
 function DPFTable({ data }: { data: DPFData }) {
   return (
@@ -117,7 +120,7 @@ function DPFTable({ data }: { data: DPFData }) {
           <thead>
             <tr>
               <th>Plazo</th>
-              <th>Tasa anual</th>
+              <th>Tasa mensual</th>
               <th>Δ Día</th>
               <th>MTD</th>
               <th>YTD</th>
@@ -292,6 +295,7 @@ function CurveTooltip({
   showNelsonSiegel,
   curveType,
   currentDate,
+  dpfRateView,
 }: {
   active?: boolean;
   label?: number | string;
@@ -302,6 +306,7 @@ function CurveTooltip({
   showNelsonSiegel: boolean;
   curveType: CurveType;
   currentDate: string;
+  dpfRateView: DPFRateView;
 }) {
   if (!active || label == null) return null;
   const term = Number(label);
@@ -315,12 +320,15 @@ function CurveTooltip({
   const fallbackTitle = curveType === "DPF"
     ? `DPF · ${Math.round(term * 365.25)} días`
     : `${curveType} · ${term.toFixed(2)} años`;
+  const currentLabel = curveType === "DPF"
+    ? dpfRateView === "monthly" ? "Tasa mensual" : "Tasa anual"
+    : "Actual";
 
   return (
     <div className="curve-tooltip">
       <div className="curve-tooltip-title">{exactPoint?.code ?? fallbackTitle}</div>
       {exactPoint?.name && <div className="curve-tooltip-sub">{exactPoint.name}</div>}
-      {current != null && <div>Actual ({currentDate}): {current.toFixed(3)}%</div>}
+      {current != null && <div>{currentLabel} ({currentDate}): {current.toFixed(3)}%</div>}
       {comparison != null && comparisonDate && <div>{comparisonDate}: {comparison.toFixed(3)}%</div>}
       {move != null && (
         <div className={move < 0 ? "good" : move > 0 ? "bad" : "muted"}>
@@ -336,6 +344,7 @@ export function MarketDashboard() {
   const [data, setData] = useState<RFData | null>(null);
   const [dpfData, setDpfData] = useState<DPFData | null>(null);
   const [curveType, setCurveType] = useState<CurveType>("BTP");
+  const [dpfRateView, setDpfRateView] = useState<DPFRateView>("monthly");
   const [showNelsonSiegel, setShowNelsonSiegel] = useState(false);
   const [compareDate, setCompareDate] = useState("");
 
@@ -359,10 +368,11 @@ export function MarketDashboard() {
   const currentCurve = useMemo<CurvePoint[]>(() => {
     if (curveType === "DPF") {
       if (!dpfData) return [];
+      const factor = dpfRateView === "annual" ? 12 : 1;
       return dpfData.instruments
         .map((item) => ({
           term: item.days / 365.25,
-          yield: item.value,
+          yield: item.value * factor,
           code: item.code,
           name: `${item.days} días`,
         }))
@@ -372,7 +382,7 @@ export function MarketDashboard() {
     const currentRow = findHistoryOnOrBefore(data, data.lastMarketDate);
     if (!currentRow) return [];
     return curveAtDate(data, curveType, currentRow.date, currentRow.values);
-  }, [data, dpfData, curveType]);
+  }, [data, dpfData, curveType, dpfRateView]);
 
   const comparisonRow = useMemo(
     () => data && compareDate && curveType !== "DPF" ? findHistoryOnOrBefore(data, compareDate) : null,
@@ -441,6 +451,9 @@ export function MarketDashboard() {
   const minHistoryDate = data.history[0]?.date;
   const maxHistoryDate = data.lastMarketDate;
   const currentDate = curveType === "DPF" ? dpfData.lastMarketDate : data.lastMarketDate;
+  const currentSeriesName = curveType === "DPF"
+    ? `${dpfRateView === "monthly" ? "Tasa mensual" : "Tasa anual"} · ${currentDate}`
+    : `Actual · ${currentDate}`;
 
   return (
     <AppShell>
@@ -480,6 +493,7 @@ export function MarketDashboard() {
                 className={curveType === "DPF" ? "selected" : ""}
                 onClick={() => {
                   setCurveType("DPF");
+                  setDpfRateView("monthly");
                   setShowNelsonSiegel(false);
                   setCompareDate("");
                 }}
@@ -488,7 +502,7 @@ export function MarketDashboard() {
               </button>
             </div>
 
-            {curveType !== "DPF" && (
+            {curveType !== "DPF" ? (
               <label className="curve-check">
                 <input
                   type="checkbox"
@@ -497,6 +511,21 @@ export function MarketDashboard() {
                 />
                 <span>Nelson-Siegel</span>
               </label>
+            ) : (
+              <div className="segmented">
+                <button
+                  className={dpfRateView === "monthly" ? "selected" : ""}
+                  onClick={() => setDpfRateView("monthly")}
+                >
+                  Tasa mensual
+                </button>
+                <button
+                  className={dpfRateView === "annual" ? "selected" : ""}
+                  onClick={() => setDpfRateView("annual")}
+                >
+                  Tasa anual
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -532,7 +561,10 @@ export function MarketDashboard() {
                 ticks={curveAxis.ticks}
                 tickFormatter={(v) => curveType === "DPF" ? `${Math.round(Number(v) * 365.25)}d` : `${Number(v).toFixed(0)}a`}
               />
-              <YAxis domain={["auto", "auto"]} tickFormatter={(v) => `${Number(v).toFixed(1)}%`} />
+              <YAxis
+                domain={["auto", "auto"]}
+                tickFormatter={(v) => `${Number(v).toFixed(curveType === "DPF" && dpfRateView === "monthly" ? 2 : 1)}%`}
+              />
               <Tooltip
                 content={
                   <CurveTooltip
@@ -543,6 +575,7 @@ export function MarketDashboard() {
                     showNelsonSiegel={showNelsonSiegel}
                     curveType={curveType}
                     currentDate={currentDate}
+                    dpfRateView={dpfRateView}
                   />
                 }
               />
@@ -550,7 +583,7 @@ export function MarketDashboard() {
               <Line
                 type="linear"
                 dataKey="yield"
-                name={`Actual · ${currentDate}`}
+                name={currentSeriesName}
                 stroke="currentColor"
                 strokeWidth={2.5}
                 dot={{ r: 3.5 }}
