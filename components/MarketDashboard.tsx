@@ -217,7 +217,6 @@ function curveAtDate(data: RFData, curveType: "BTP" | "BTU", marketDate: string,
     .filter((p) => p.term > 0 && p.yield != null)
     .sort((a, b) => a.term - b.term);
 }
-
 function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null) {
   if (!row) return null;
   return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, true));
@@ -255,27 +254,38 @@ function buildBenchmarkRows(data: RFData): BenchmarkRow[] {
   });
 }
 
+function BenchmarkChange({ value }: { value: number | null }) {
+  if (value == null) return <span className="muted">—</span>;
+  return (
+    <span className={value < 0 ? "good" : value > 0 ? "bad" : "muted"}>
+      {formatBp(value, 0)} bp
+    </span>
+  );
+}
+
 function BenchmarkTable({ rows }: { rows: BenchmarkRow[] }) {
   return (
-    <div style={{ maxWidth: 820, margin: "28px auto 4px" }}>
-      <div style={{ textAlign: "center", marginBottom: 12 }}><h2>Tasas Benchmark</h2></div>
+    <section className="panel market-table-panel" style={{ maxWidth: 820, margin: "14px auto" }}>
+      <div className="panel-head" style={{ justifyContent: "center", textAlign: "center" }}>
+        <div><h2>Tasas Benchmark</h2></div>
+      </div>
       <div className="table-wrap" role="region" aria-label="Tasas Benchmark" tabIndex={0}>
-        <table className="market-table">
-          <thead><tr><th>Benchmark</th><th>Yield</th><th>Δ 1 Día</th><th>MTD</th><th>YTD</th></tr></thead>
+        <table className="benchmark-table">
+          <thead><tr><th>Benchmark</th><th style={{ textAlign: "right" }}>Yield</th><th>Δ 1 Día</th><th>MTD</th><th>YTD</th></tr></thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.benchmark}>
                 <td><strong>{row.benchmark}</strong></td>
-                <td className="num strong">{formatPercent(row.yield, 3)}</td>
-                <td className="num"><Change value={row.d1} /></td>
-                <td className="num"><Change value={row.mtd} /></td>
-                <td className="num"><Change value={row.ytd} /></td>
+                <td className="num strong" style={{ textAlign: "right" }}>{formatPercent(row.yield, 2)}</td>
+                <td className="num"><BenchmarkChange value={row.d1} /></td>
+                <td className="num"><BenchmarkChange value={row.mtd} /></td>
+                <td className="num"><BenchmarkChange value={row.ytd} /></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -337,7 +347,6 @@ export function MarketDashboard() {
   const comparisonRow = useMemo(() => data && compareDate && curveType !== "DPF" ? findHistoryOnOrBefore(data, compareDate) : null, [data, compareDate, curveType]);
   const comparisonCurve = useMemo<CurvePoint[]>(() => !data || !comparisonRow || curveType === "DPF" ? [] : curveAtDate(data, curveType, comparisonRow.date, comparisonRow.values), [data, comparisonRow, curveType]);
   const nsFit = useMemo(() => curveType === "DPF" ? null : fitNelsonSiegel(currentCurve), [currentCurve, curveType]);
-
   const curveAxis = useMemo(() => {
     if (curveType === "DPF") return { ticks: (dpfData?.instruments ?? []).map((item) => item.days / 365.25), max: 430 / 365.25 };
     const allTerms = [...currentCurve, ...comparisonCurve].map((p) => p.term);
@@ -418,9 +427,9 @@ export function MarketDashboard() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-
-        <BenchmarkTable rows={benchmarkRows} />
       </section>
+
+      <BenchmarkTable rows={benchmarkRows} />
 
       <div className="two-col">
         <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} />
