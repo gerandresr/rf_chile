@@ -243,29 +243,52 @@ function nelsonSiegelYield(term: number, fit: NelsonSiegelFit) {
   return fit.beta0 * x[0] + fit.beta1 * x[1] + fit.beta2 * x[2];
 }
 
+function interpolateMarketYield(term: number, points: CurvePoint[]) {
+  const valid = points.filter(
+    (p): p is CurvePoint & { yield: number } =>
+      typeof p.yield === "number" && Number.isFinite(p.yield),
+  );
+
+  if (!valid.length) return null;
+  if (term <= valid[0].term) return valid[0].yield;
+  if (term >= valid[valid.length - 1].term) return valid[valid.length - 1].yield;
+
+  for (let i = 1; i < valid.length; i++) {
+    const left = valid[i - 1];
+    const right = valid[i];
+    if (term <= right.term) {
+      const weight = (term - left.term) / (right.term - left.term);
+      return left.yield + weight * (right.yield - left.yield);
+    }
+  }
+
+  return null;
+}
+
 function CurveTooltip({
   active,
-  payload,
   label,
+  curveData,
+  nsFit,
+  showNelsonSiegel,
+  curveType,
 }: {
   active?: boolean;
-  payload?: Array<{
-    dataKey?: string;
-    value?: number | string;
-    payload?: {
-      code?: string;
-      name?: string;
-      yield?: number | null;
-      nsYield?: number | null;
-    };
-  }>;
   label?: number | string;
+  curveData: CurvePoint[];
+  nsFit: NelsonSiegelFit | null;
+  showNelsonSiegel: boolean;
+  curveType: "BTP" | "BTU";
 }) {
-  if (!active || !payload?.length) return null;
+  if (!active || label == null) return null;
 
-  const row = payload[0]?.payload;
-  const market = payload.find((p) => p.dataKey === "yield")?.value;
-  const ns = payload.find((p) => p.dataKey === "nsYield")?.value;
+  const term = Number(label);
+  if (!Number.isFinite(term)) return null;
+
+  const exactPoint = curveData.find((p) => Math.abs(p.term - term) < 1e-6);
+  const market = interpolateMarketYield(term, curveData);
+  const ns =
+    showNelsonSiegel && nsFit ? nelsonSiegelYield(term, nsFit) : null;
 
   return (
     <div
@@ -278,10 +301,15 @@ function CurveTooltip({
       }}
     >
       <div style={{ fontWeight: 700, marginBottom: 3 }}>
-        {row?.code ?? row?.name ?? `${Number(label).toFixed(1)} años`}
+        {exactPoint?.code ?? `${curveType} · ${term.toFixed(2)} años`}
       </div>
-      {market != null && <div>Mercado: {Number(market).toFixed(3)}%</div>}
-      {ns != null && <div>Nelson-Siegel: {Number(ns).toFixed(3)}%</div>}
+      {exactPoint?.name && (
+        <div style={{ color: "var(--muted)", fontSize: 11, marginBottom: 4 }}>
+          {exactPoint.name}
+        </div>
+      )}
+      {market != null && <div>Mercado: {market.toFixed(3)}%</div>}
+      {ns != null && <div>Nelson-Siegel: {ns.toFixed(3)}%</div>}
     </div>
   );
 }
@@ -338,6 +366,20 @@ export function MarketDashboard() {
 
   const nsFit = useMemo(() => fitNelsonSiegel(curveData), [curveData]);
 
+  const curveAxis = useMemo(() => {
+    const maxTerm = curveData.length
+      ? curveData[curveData.length - 1].term
+      : 20;
+    const ticks = [1, 2, 5, 10, 15, 20];
+
+    if (maxTerm > 20) ticks.push(30);
+
+    return {
+      ticks,
+      max: maxTerm > 20 ? Math.max(30, Math.ceil(maxTerm / 10) * 10) : 20,
+    };
+  }, [curveData]);
+
   const chartData = useMemo(() => {
     if (!curveData.length) return [];
 
@@ -387,13 +429,8 @@ export function MarketDashboard() {
     <AppShell>
       <header className="page-head">
         <div>
-          <div className="eyebrow">Mesa Trading Propietario BE</div>
-          <h1>Resumen Mercado de Renta Fija Chilena</h1>
-          <p>
-            Dashboard de Renta Fija Chilena que centraliza principales indicadores
-            macroeconomicos, tasas de mercado, bonos y curvas de gobierno además de
-            series historicas.
-          </p>
+          <div className="eyebrow">Trading Propietario</div>
+          <h1>Mercado de Renta Fija Chilena</h1>
         </div>
 
         <div className="asof">
@@ -434,14 +471,18 @@ export function MarketDashboard() {
             >
               BTU
             </button>
-            <button
-              className={showNelsonSiegel ? "selected" : ""}
-              onClick={() => setShowNelsonSiegel((v) => !v)}
-              title="Mostrar u ocultar curva ajustada Nelson-Siegel"
-            >
-              Nelson-Siegel
-            </button>
           </div>
+        </div>
+
+        <div className="curve-options-row">
+          <label className="curve-check">
+            <input
+              type="checkbox"
+              checked={showNelsonSiegel}
+              onChange={(e) => setShowNelsonSiegel(e.target.checked)}
+            />
+            <span>Nelson-Siegel</span>
+          </label>
         </div>
 
         <div className="chart-box">
@@ -454,14 +495,24 @@ export function MarketDashboard() {
               <XAxis
                 dataKey="term"
                 type="number"
-                domain={["dataMin", "dataMax"]}
+                domain={[0, curveAxis.max]}
+                ticks={curveAxis.ticks}
                 tickFormatter={(v) => `${Number(v).toFixed(0)}a`}
               />
               <YAxis
                 domain={["auto", "auto"]}
                 tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
               />
-              <Tooltip content={<CurveTooltip />} />
+              <Tooltip
+                content={
+                  <CurveTooltip
+                    curveData={curveData}
+                    nsFit={nsFit}
+                    showNelsonSiegel={showNelsonSiegel}
+                    curveType={curveType}
+                  />
+                }
+              />
               <Legend />
               <Line
                 type="linear"
