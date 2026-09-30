@@ -57,12 +57,18 @@ export function instrumentSnapshot(data:RFData,code:string){
   // observación disponible del año (por ejemplo, un bono emitido durante el año).
   const ytdBase=previousObservationBefore(o,yearStart)??firstObservationFrom(o,yearStart);
 
+  const mtd=mtdBase?(l.value-mtdBase.value)*100:null;
+  const ytd=ytdBase?(l.value-ytdBase.value)*100:null;
+
   return{
     date:l.date,
     value:l.value,
     d1:p?(l.value-p.value)*100:null,
-    mtd:mtdBase?(l.value-mtdBase.value)*100:null,
-    ytd:ytdBase?(l.value-ytdBase.value)*100:null,
+    mtd,
+    ytd,
+    // Alias temporales para mantener compatibilidad con la tabla actual.
+    w1:mtd,
+    m1:ytd,
   };
 }
 
