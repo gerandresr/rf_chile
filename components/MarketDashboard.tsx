@@ -142,8 +142,6 @@ function yearsToMaturity(inst: Instrument, marketDate: string) {
   const d = new Date(`${marketDate}T00:00:00`);
   if (Number.isNaN(d.getTime())) return null;
 
-  // Los datos solo informan mes/año de vencimiento. Se usa el día 15 como
-  // aproximación neutral dentro del mes para calcular el plazo en años.
   const maturity = new Date(inst.maturityYear, inst.maturityMonth - 1, 15);
   const years =
     (maturity.getTime() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
@@ -194,8 +192,6 @@ function fitNelsonSiegel(points: CurvePoint[]): NelsonSiegelFit | null {
 
   let best: (NelsonSiegelFit & { sse: number }) | null = null;
 
-  // Búsqueda simple y robusta del parámetro tau. Para un tau fijo,
-  // beta0/beta1/beta2 se obtienen por mínimos cuadrados lineales.
   for (let tau = 0.15; tau <= 15; tau += 0.05) {
     const xtx = [
       [0, 0, 0],
@@ -250,8 +246,8 @@ function interpolateMarketYield(term: number, points: CurvePoint[]) {
   );
 
   if (!valid.length) return null;
-  if (term <= valid[0].term) return valid[0].yield;
-  if (term >= valid[valid.length - 1].term) return valid[valid.length - 1].yield;
+  if (term < valid[0].term || term > valid[valid.length - 1].term) return null;
+  if (term === valid[0].term) return valid[0].yield;
 
   for (let i = 1; i < valid.length; i++) {
     const left = valid[i - 1];
@@ -265,50 +261,82 @@ function interpolateMarketYield(term: number, points: CurvePoint[]) {
   return null;
 }
 
+function findHistoryOnOrBefore(data: RFData, date: string) {
+  for (let i = data.history.length - 1; i >= 0; i--) {
+    if (data.history[i].date <= date) return data.history[i];
+  }
+  return null;
+}
+
+function curveAtDate(
+  data: RFData,
+  curveType: "BTP" | "BTU",
+  marketDate: string,
+  values: Record<string, number>,
+) {
+  const refDate = new Date(`${marketDate}T12:00:00`);
+
+  return data.instruments
+    .filter((inst) => inst.type === curveType && isActiveInstrument(inst, refDate))
+    .map((inst) => ({
+      term: yearsToMaturity(inst, marketDate) ?? 0,
+      yield: typeof values[inst.code] === "number" ? values[inst.code] : null,
+      code: inst.code,
+      name: maturityLabel(inst),
+    }))
+    .filter((p) => p.term > 0 && p.yield != null)
+    .sort((a, b) => a.term - b.term);
+}
+
 function CurveTooltip({
   active,
   label,
-  curveData,
+  currentCurve,
+  comparisonCurve,
+  comparisonDate,
   nsFit,
   showNelsonSiegel,
   curveType,
+  currentDate,
 }: {
   active?: boolean;
   label?: number | string;
-  curveData: CurvePoint[];
+  currentCurve: CurvePoint[];
+  comparisonCurve: CurvePoint[];
+  comparisonDate: string | null;
   nsFit: NelsonSiegelFit | null;
   showNelsonSiegel: boolean;
   curveType: "BTP" | "BTU";
+  currentDate: string;
 }) {
   if (!active || label == null) return null;
 
   const term = Number(label);
   if (!Number.isFinite(term)) return null;
 
-  const exactPoint = curveData.find((p) => Math.abs(p.term - term) < 1e-6);
-  const market = interpolateMarketYield(term, curveData);
-  const ns =
-    showNelsonSiegel && nsFit ? nelsonSiegelYield(term, nsFit) : null;
+  const exactPoint = currentCurve.find((p) => Math.abs(p.term - term) < 1e-6);
+  const current = interpolateMarketYield(term, currentCurve);
+  const comparison = comparisonDate
+    ? interpolateMarketYield(term, comparisonCurve)
+    : null;
+  const ns = showNelsonSiegel && nsFit ? nelsonSiegelYield(term, nsFit) : null;
+  const move = current != null && comparison != null ? (current - comparison) * 100 : null;
 
   return (
-    <div
-      style={{
-        background: "var(--panel, #fff)",
-        border: "1px solid rgba(148, 163, 184, 0.35)",
-        borderRadius: 8,
-        padding: "8px 10px",
-        boxShadow: "0 6px 18px rgba(0,0,0,0.12)",
-      }}
-    >
-      <div style={{ fontWeight: 700, marginBottom: 3 }}>
+    <div className="curve-tooltip">
+      <div className="curve-tooltip-title">
         {exactPoint?.code ?? `${curveType} · ${term.toFixed(2)} años`}
       </div>
-      {exactPoint?.name && (
-        <div style={{ color: "var(--muted)", fontSize: 11, marginBottom: 4 }}>
-          {exactPoint.name}
+      {exactPoint?.name && <div className="curve-tooltip-sub">{exactPoint.name}</div>}
+      {current != null && <div>Actual ({currentDate}): {current.toFixed(3)}%</div>}
+      {comparison != null && comparisonDate && (
+        <div>{comparisonDate}: {comparison.toFixed(3)}%</div>
+      )}
+      {move != null && (
+        <div className={move < 0 ? "good" : move > 0 ? "bad" : "muted"}>
+          Cambio: {formatBp(move)} bp
         </div>
       )}
-      {market != null && <div>Mercado: {market.toFixed(3)}%</div>}
       {ns != null && <div>Nelson-Siegel: {ns.toFixed(3)}%</div>}
     </div>
   );
@@ -318,6 +346,7 @@ export function MarketDashboard() {
   const [data, setData] = useState<RFData | null>(null);
   const [curveType, setCurveType] = useState<"BTP" | "BTU">("BTP");
   const [showNelsonSiegel, setShowNelsonSiegel] = useState(false);
+  const [compareDate, setCompareDate] = useState("");
 
   useEffect(() => {
     fetch("/data/rf.json")
@@ -343,66 +372,70 @@ export function MarketDashboard() {
   const btp = active.filter((i) => i.type === "BTP");
   const btu = active.filter((i) => i.type === "BTU");
 
-  const curveData = useMemo<CurvePoint[]>(
-    () =>
-      !data
-        ? []
-        : active
-            .filter((i) => i.type === curveType)
-            .map((inst) => {
-              const s = instrumentSnapshot(data, inst.code);
-              const term = yearsToMaturity(inst, data.lastMarketDate);
-              return {
-                term: term ?? 0,
-                yield: s?.value ?? null,
-                code: inst.code,
-                name: maturityLabel(inst),
-              };
-            })
-            .filter((x) => x.yield != null && x.term > 0)
-            .sort((a, b) => a.term - b.term),
-    [data, active, curveType],
+  const currentCurve = useMemo<CurvePoint[]>(() => {
+    if (!data) return [];
+    const currentRow = findHistoryOnOrBefore(data, data.lastMarketDate);
+    if (!currentRow) return [];
+    return curveAtDate(data, curveType, currentRow.date, currentRow.values);
+  }, [data, curveType]);
+
+  const comparisonRow = useMemo(
+    () => (data && compareDate ? findHistoryOnOrBefore(data, compareDate) : null),
+    [data, compareDate],
   );
 
-  const nsFit = useMemo(() => fitNelsonSiegel(curveData), [curveData]);
+  const comparisonCurve = useMemo<CurvePoint[]>(() => {
+    if (!data || !comparisonRow) return [];
+    return curveAtDate(data, curveType, comparisonRow.date, comparisonRow.values);
+  }, [data, comparisonRow, curveType]);
+
+  const nsFit = useMemo(() => fitNelsonSiegel(currentCurve), [currentCurve]);
 
   const curveAxis = useMemo(() => {
-    const maxTerm = curveData.length
-      ? curveData[curveData.length - 1].term
-      : 20;
+    const allTerms = [...currentCurve, ...comparisonCurve].map((p) => p.term);
+    const maxTerm = allTerms.length ? Math.max(...allTerms) : 20;
     const ticks = [1, 2, 5, 10, 15, 20];
-
     if (maxTerm > 20) ticks.push(30);
 
     return {
       ticks,
       max: maxTerm > 20 ? Math.max(30, Math.ceil(maxTerm / 10) * 10) : 20,
     };
-  }, [curveData]);
+  }, [currentCurve, comparisonCurve]);
 
   const chartData = useMemo(() => {
-    if (!curveData.length) return [];
+    if (!currentCurve.length) return [];
 
     const rows: Array<{
       term: number;
       yield?: number | null;
+      compareYield?: number | null;
       nsYield?: number | null;
       code?: string;
       name?: string;
-    }> = curveData.map((point) => ({
-      term: point.term,
-      yield: point.yield,
-      code: point.code,
-      name: point.name,
-      nsYield:
-        showNelsonSiegel && nsFit
-          ? nelsonSiegelYield(point.term, nsFit)
-          : null,
-    }));
+    }> = [];
+
+    for (const point of currentCurve) {
+      rows.push({
+        term: point.term,
+        yield: point.yield,
+        code: point.code,
+        name: point.name,
+      });
+    }
+
+    for (const point of comparisonCurve) {
+      rows.push({
+        term: point.term,
+        compareYield: point.yield,
+        code: point.code,
+        name: point.name,
+      });
+    }
 
     if (showNelsonSiegel && nsFit) {
-      const minTerm = Math.max(0.05, curveData[0].term);
-      const maxTerm = curveData[curveData.length - 1].term;
+      const minTerm = Math.max(0.05, currentCurve[0].term);
+      const maxTerm = currentCurve[currentCurve.length - 1].term;
       const steps = 140;
 
       for (let i = 0; i <= steps; i++) {
@@ -415,7 +448,24 @@ export function MarketDashboard() {
     }
 
     return rows.sort((a, b) => a.term - b.term);
-  }, [curveData, nsFit, showNelsonSiegel]);
+  }, [currentCurve, comparisonCurve, nsFit, showNelsonSiegel]);
+
+  const movementSummary = useMemo(() => {
+    if (!comparisonRow || !comparisonCurve.length) return [];
+    return [2, 5, 10, 20]
+      .map((term) => {
+        const current = interpolateMarketYield(term, currentCurve);
+        const previous = interpolateMarketYield(term, comparisonCurve);
+        return {
+          term,
+          value:
+            current != null && previous != null
+              ? (current - previous) * 100
+              : null,
+        };
+      })
+      .filter((x) => x.value != null);
+  }, [comparisonRow, comparisonCurve, currentCurve]);
 
   if (!data) {
     return (
@@ -424,6 +474,9 @@ export function MarketDashboard() {
       </AppShell>
     );
   }
+
+  const minHistoryDate = data.history[0]?.date;
+  const maxHistoryDate = data.lastMarketDate;
 
   return (
     <AppShell>
@@ -474,7 +527,7 @@ export function MarketDashboard() {
           </div>
         </div>
 
-        <div className="curve-options-row">
+        <div className="curve-controls">
           <label className="curve-check">
             <input
               type="checkbox"
@@ -483,7 +536,43 @@ export function MarketDashboard() {
             />
             <span>Nelson-Siegel</span>
           </label>
+
+          <div className="curve-date-control">
+            <span>Comparar con</span>
+            <input
+              type="date"
+              value={compareDate}
+              min={minHistoryDate}
+              max={maxHistoryDate}
+              onChange={(e) => setCompareDate(e.target.value)}
+            />
+            {compareDate && (
+              <button type="button" onClick={() => setCompareDate("")}>Quitar</button>
+            )}
+          </div>
         </div>
+
+        {compareDate && comparisonRow && (
+          <div className="comparison-note">
+            Comparación con cierre de <strong>{comparisonRow.date}</strong>
+            {comparisonRow.date !== compareDate && (
+              <span> · último dato disponible anterior a {compareDate}</span>
+            )}
+          </div>
+        )}
+
+        {movementSummary.length > 0 && (
+          <div className="curve-move-grid">
+            {movementSummary.map((item) => (
+              <div className="curve-move" key={item.term}>
+                <span>{item.term}a</span>
+                <strong className={(item.value ?? 0) < 0 ? "good" : (item.value ?? 0) > 0 ? "bad" : "muted"}>
+                  {formatBp(item.value)} bp
+                </strong>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="chart-box">
           <ResponsiveContainer width="100%" height="100%">
@@ -506,10 +595,13 @@ export function MarketDashboard() {
               <Tooltip
                 content={
                   <CurveTooltip
-                    curveData={curveData}
+                    currentCurve={currentCurve}
+                    comparisonCurve={comparisonCurve}
+                    comparisonDate={comparisonRow?.date ?? null}
                     nsFit={nsFit}
                     showNelsonSiegel={showNelsonSiegel}
                     curveType={curveType}
+                    currentDate={data.lastMarketDate}
                   />
                 }
               />
@@ -517,12 +609,25 @@ export function MarketDashboard() {
               <Line
                 type="linear"
                 dataKey="yield"
-                name="Mercado"
+                name={`Actual · ${data.lastMarketDate}`}
                 stroke="currentColor"
                 strokeWidth={2.5}
                 dot={{ r: 3.5 }}
                 connectNulls
               />
+              {comparisonRow && (
+                <Line
+                  type="linear"
+                  dataKey="compareYield"
+                  name={`Comparación · ${comparisonRow.date}`}
+                  stroke="#64748b"
+                  strokeWidth={2}
+                  strokeDasharray="6 5"
+                  dot={{ r: 3 }}
+                  connectNulls
+                  isAnimationActive={false}
+                />
+              )}
               {showNelsonSiegel && nsFit && (
                 <Line
                   type="monotone"
