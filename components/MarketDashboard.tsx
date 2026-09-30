@@ -64,8 +64,8 @@ function MarketTable({
               <th>Venc.</th>
               <th>Yield</th>
               <th>Δ Día</th>
-              <th>Δ 1S</th>
-              <th>Δ 1M</th>
+              <th>MTD</th>
+              <th>YTD</th>
             </tr>
           </thead>
           <tbody>
@@ -86,10 +86,10 @@ function MarketTable({
                     <Change value={s?.d1 ?? null} />
                   </td>
                   <td className="num">
-                    <Change value={s?.w1 ?? null} />
+                    <Change value={s?.mtd ?? null} />
                   </td>
                   <td className="num">
-                    <Change value={s?.m1 ?? null} />
+                    <Change value={s?.ytd ?? null} />
                   </td>
                 </tr>
               );
