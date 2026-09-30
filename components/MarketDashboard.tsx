@@ -511,32 +511,34 @@ export function MarketDashboard() {
             <h2>Curva de Bonos de Gobierno</h2>
           </div>
 
-          <div className="segmented">
-            <button
-              className={curveType === "BTP" ? "selected" : ""}
-              onClick={() => setCurveType("BTP")}
-            >
-              BTP
-            </button>
-            <button
-              className={curveType === "BTU" ? "selected" : ""}
-              onClick={() => setCurveType("BTU")}
-            >
-              BTU
-            </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div className="segmented">
+              <button
+                className={curveType === "BTP" ? "selected" : ""}
+                onClick={() => setCurveType("BTP")}
+              >
+                BTP
+              </button>
+              <button
+                className={curveType === "BTU" ? "selected" : ""}
+                onClick={() => setCurveType("BTU")}
+              >
+                BTU
+              </button>
+            </div>
+
+            <label className="curve-check">
+              <input
+                type="checkbox"
+                checked={showNelsonSiegel}
+                onChange={(e) => setShowNelsonSiegel(e.target.checked)}
+              />
+              <span>Nelson-Siegel</span>
+            </label>
           </div>
         </div>
 
         <div className="curve-controls">
-          <label className="curve-check">
-            <input
-              type="checkbox"
-              checked={showNelsonSiegel}
-              onChange={(e) => setShowNelsonSiegel(e.target.checked)}
-            />
-            <span>Nelson-Siegel</span>
-          </label>
-
           <div className="curve-date-control">
             <span>Comparar con</span>
             <input
