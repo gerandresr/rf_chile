@@ -6,9 +6,25 @@ type TPMMeetingsData = {
   dates: string[];
 };
 
+const MONTHS = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+];
+
 function formatMeetingDate(date: string) {
-  const [year, month, day] = date.split("-");
-  return `${day}-${month}-${year}`;
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month || !day || !MONTHS[month - 1]) return date;
+  return `${day} de ${MONTHS[month - 1]} de ${year}`;
 }
 
 export function TPMMeetings() {
@@ -56,18 +72,13 @@ export function TPMMeetings() {
       </button>
 
       {open && (
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
           {futureDates.length ? (
-            <table style={{ width: "100%", minWidth: 0 }}>
-              <thead>
-                <tr><th style={{ textAlign: "left" }}>Fecha</th></tr>
-              </thead>
-              <tbody>
-                {futureDates.map((date) => (
-                  <tr key={date}><td style={{ textAlign: "left" }}>{formatMeetingDate(date)}</td></tr>
-                ))}
-              </tbody>
-            </table>
+            futureDates.map((date) => (
+              <div key={date} style={{ fontSize: 13, lineHeight: 1.35 }}>
+                {formatMeetingDate(date)}
+              </div>
+            ))
           ) : (
             <span className="muted">Sin reuniones futuras cargadas</span>
           )}
