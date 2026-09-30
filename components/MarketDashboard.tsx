@@ -508,7 +508,7 @@ export function MarketDashboard() {
         <div className="panel-head">
           <div>
             <div className="eyebrow">Estructura temporal</div>
-            <h2>Curva de Bonos de Gobierno</h2>
+            <h2>Curvas de Rendimiento</h2>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
