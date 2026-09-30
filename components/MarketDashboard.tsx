@@ -50,7 +50,12 @@ function MarketTable({
         <span className="pill">{instruments.length} vigentes</span>
       </div>
 
-      <div className="table-wrap" role="region" aria-label={`Tabla ${title}`} tabIndex={0}>
+      <div
+        className="table-wrap"
+        role="region"
+        aria-label={`Tabla ${title}`}
+        tabIndex={0}
+      >
         <table className="market-table">
           <thead>
             <tr>
@@ -118,6 +123,45 @@ const macroKpis = [
   },
 ];
 
+function CurveTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    value?: number | string;
+    payload?: {
+      code?: string;
+      yield?: number | null;
+    };
+  }>;
+}) {
+  if (!active || !payload?.length) return null;
+
+  const point = payload[0]?.payload;
+  const yieldValue = point?.yield;
+
+  return (
+    <div
+      style={{
+        background: "var(--panel, #fff)",
+        border: "1px solid rgba(148, 163, 184, 0.35)",
+        borderRadius: 8,
+        padding: "8px 10px",
+        boxShadow: "0 6px 18px rgba(0,0,0,0.12)",
+      }}
+    >
+      <div style={{ fontWeight: 700, marginBottom: 3 }}>
+        {point?.code ?? "Instrumento"}
+      </div>
+      <div>
+        Yield:{" "}
+        {yieldValue != null ? `${Number(yieldValue).toFixed(3)}%` : "—"}
+      </div>
+    </div>
+  );
+}
+
 export function MarketDashboard() {
   const [data, setData] = useState<RFData | null>(null);
   const [curveType, setCurveType] = useState<"BTP" | "BTU">("BTP");
@@ -135,7 +179,8 @@ export function MarketDashboard() {
             .filter((i) => isActiveInstrument(i))
             .sort(
               (a, b) =>
-                a.maturityYear * 12 + a.maturityMonth -
+                a.maturityYear * 12 +
+                a.maturityMonth -
                 (b.maturityYear * 12 + b.maturityMonth),
             )
         : [],
@@ -183,6 +228,7 @@ export function MarketDashboard() {
             series historicas.
           </p>
         </div>
+
         <div className="asof">
           <span>Último cierre</span>
           <strong>{data.lastMarketDate}</strong>
@@ -207,6 +253,7 @@ export function MarketDashboard() {
             <div className="eyebrow">Estructura temporal</div>
             <h2>Curva de Bonos de Gobierno</h2>
           </div>
+
           <div className="segmented">
             <button
               className={curveType === "BTP" ? "selected" : ""}
@@ -235,12 +282,7 @@ export function MarketDashboard() {
                 domain={["auto", "auto"]}
                 tickFormatter={(v) => `${Number(v).toFixed(1)}%`}
               />
-              <Tooltip
-                labelFormatter={(label, payload) =>
-                  payload?.[0]?.payload?.code ?? label
-                }
-                formatter={(v) => [`${Number(v).toFixed(3)}%`, "Yield"]}
-              />
+              <Tooltip content={<CurveTooltip />} />
               <Line
                 type="monotone"
                 dataKey="yield"
