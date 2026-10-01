@@ -2,3 +2,36 @@
 
 /* Six macro indicators: three columns on desktop, two on smaller screens. */
 @media(min-width:1101px){.macro-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Expandable model catalogue. */
+.model-disclosure{padding:0;overflow:hidden}
+.model-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px;cursor:pointer;font-size:16px;font-weight:700;list-style:none}
+.model-disclosure>summary::-webkit-details-marker{display:none}
+.model-disclosure>summary:focus-visible,.model-methodology>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.model-disclosure[open]>summary{border-bottom:1px solid var(--line)}
+.model-disclosure[open]>summary svg{transform:rotate(180deg)}
+.model-content{padding:20px;min-width:0}
+.model-intro{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
+.model-intro p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.model-intro .pill{white-space:nowrap}
+.model-notice{background:#fff9ed;border:1px solid #f1dca7;border-radius:9px;padding:13px 15px;margin-bottom:18px;color:#765822;font-size:12px;line-height:1.6}
+.model-notice p{margin:4px 0 0}
+.model-kpi-grid .kpi{box-shadow:none}
+.model-kpi-grid .kpi-foot{line-height:1.5}
+.model-band-value{font-size:20px}
+.model-controls{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:20px}
+.model-sensitivity{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted)}
+.model-sensitivity select{border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--text);padding:7px;font:inherit}
+.model-caption{font-size:12px;line-height:1.6;color:var(--muted);margin:10px 0 20px}
+.model-chart-section{border-top:1px solid var(--line);padding-top:20px;margin-top:20px;min-width:0}
+.model-chart{height:350px;width:100%}
+.model-gap-chart{height:240px;width:100%}
+.model-methodology{border-top:1px solid var(--line);margin-top:20px;padding-top:16px;font-size:12px;line-height:1.7}
+.model-methodology>summary{cursor:pointer;font-weight:650;padding:4px 0;color:var(--text)}
+.model-methodology-body{color:var(--muted);padding-top:8px}
+.model-methodology-body a{color:var(--accent)}
+.model-methodology-body code{overflow-wrap:anywhere}
+.model-equation{background:#f4f7fb;border-radius:8px;padding:14px;color:var(--text);font-size:14px;line-height:1.8}
+.model-parameter-table td:nth-child(2),.model-parameter-table th:nth-child(2){text-align:right}
+@media(max-width:1100px){.model-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.model-disclosure>summary{padding:16px;font-size:14px}.model-content{padding:14px}.model-intro{align-items:flex-start;flex-direction:column}.model-sensitivity{align-items:flex-start;flex-direction:column}.model-chart-section .panel-head{align-items:flex-start;flex-direction:column;gap:8px}.model-chart{height:300px}.model-kpi-grid .kpi-value{font-size:21px}.model-kpi-grid .model-band-value{font-size:16px}}
