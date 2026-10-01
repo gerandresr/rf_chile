@@ -29,3 +29,9 @@
 
 .history-compare-group{margin-bottom:14px}
 .history-compare-title{margin:0 0 8px;font-size:12px;font-weight:750;color:var(--muted)}
+
+.model-disclosure + .model-disclosure{margin-top:18px}
+.taylor-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin-bottom:16px}
+.taylor-controls label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);flex:1 1 170px}
+.taylor-controls input{width:100%;min-height:38px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:white;color:var(--text);font:inherit}
+.taylor-reset{min-height:38px;padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:white;cursor:pointer;font-size:12px}

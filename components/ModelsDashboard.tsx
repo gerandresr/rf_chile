@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "./AppShell";
+import { TaylorModel } from "./TaylorModel";
 import monthlyData from "@/public/data/datos-mensuales.json";
 import { estimateNairu } from "@/lib/nairu";
 
@@ -95,11 +96,16 @@ function NairuModel() {
 
 export function ModelsDashboard() {
   const [open, setOpen] = useState(false);
+  const [taylorOpen, setTaylorOpen] = useState(false);
   return <AppShell>
     <header className="page-head"><div><div className="eyebrow">Trading Propietario</div><h1>Modelos</h1><p>Selecciona un modelo para consultar sus resultados.</p></div></header>
     <details className="panel model-disclosure" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary><span>NAIRU · Filtro de Kalman</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {open && <NairuModel />}
+    </details>
+    <details className="panel model-disclosure" onToggle={(event) => setTaylorOpen(event.currentTarget.open)}>
+      <summary><span>Regla de Taylor · IMACEC desestacionalizado</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      {taylorOpen && <TaylorModel />}
     </details>
   </AppShell>;
 }
