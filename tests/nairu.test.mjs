@@ -11,12 +11,37 @@ test("Kalman likelihood and RTS smoother match an independent matrix/scipy calcu
   // Run only when the supplied August 2026 data fixture is unchanged.
   if (rows.length !== 140 || rows.at(-1).fecha !== "2026-08-01") return;
   const result = estimateNairu(rows);
-  close(result.likelihood, -90.3402645826111, 0.00001);
-  close(result.parameters.kappa, 0.00184358, 0.000001);
-  close(result.parameters.rho, 0.36503626, 0.00001);
-  close(result.points[0].smoothed, 6.4109189, 0.00001);
-  close(result.points.at(-1).filtered, 6.41152162, 0.00001);
+  close(result.likelihood, -83.0395513679672, 0.00001);
+  close(result.parameters.kappa, 0.00218088, 0.000001);
+  close(result.parameters.rho, 0.36000445, 0.00001);
+  close(result.points[0].smoothed, 6.916766714286291, 0.00001);
+  close(result.points.at(-1).filtered, 6.917053450465877, 0.00001);
   assert.equal(result.weakSignal, true);
+});
+
+test("only the latest 120 calendar months influence initialization and estimates", () => {
+  const end = [...rows].sort((a, b) => a.fecha.localeCompare(b.fecha)).at(-1).fecha;
+  const monthIndex = (date) => Number(date.slice(0, 4)) * 12 + Number(date.slice(5, 7)) - 1;
+  const cutoff = monthIndex(end) - 119;
+  const recent = rows.filter((r) => monthIndex(r.fecha) >= cutoff);
+  const result = estimateNairu(rows);
+  assert.equal(result.observations, 120);
+  assert.equal(result.points.length, 118);
+  assert.deepEqual(result, estimateNairu(recent));
+  const changedOld = rows.map((r) => monthIndex(r.fecha) < cutoff ? { ...r, desempleo: 50, ipc_yoy: 100 } : r);
+  assert.deepEqual(result, estimateNairu(changedOld));
+  assert.deepEqual(result, estimateNairu(rows.filter((_, i) => i !== 5)));
+});
+
+test("the ten-year window advances when a new month is appended", () => {
+  const latest = [...rows].sort((a, b) => a.fecha.localeCompare(b.fecha)).at(-1);
+  const next = new Date(`${latest.fecha}T00:00:00Z`);
+  next.setUTCMonth(next.getUTCMonth() + 1);
+  const sample = [...rows, { ...latest, fecha: next.toISOString().slice(0, 10) }];
+  const result = estimateNairu(sample);
+  assert.equal(result.observations, 120);
+  assert.equal(result.points.at(-1).date, next.toISOString().slice(0, 10));
+  assert.ok(result.points[0].date > estimateNairu(rows).points[0].date);
 });
 
 test("smoothing preserves the endpoint and does not increase conditional state variance", () => {
