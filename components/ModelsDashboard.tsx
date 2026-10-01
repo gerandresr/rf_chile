@@ -26,18 +26,19 @@ function NairuModel() {
   }) ?? [], [result, view]);
   if (!result || !chartRows.length) return <div className="model-notice" role="alert">{estimation.error ?? "Sin datos disponibles."}</div>;
   const latest = chartRows[chartRows.length - 1];
+  const averageNairu = chartRows.reduce((sum, row) => sum + row.nairu, 0) / chartRows.length;
   const conclusive = latest.unemployment > latest.upper || latest.unemployment < latest.lower;
   const reading = !conclusive ? "Brecha no concluyente" : latest.gap > 0 ? "Holgura laboral estimada" : "Mercado laboral ajustado según el modelo";
   return (
     <div className="model-content">
       <div className="model-intro">
-        <p>Estima una tasa de desempleo compatible con una inflación que no acelera, a partir de desempleo e inflación anual de Chile.</p>
         <span className="pill">Experimental · {result.observations} meses · ventana de 10 años</span>
       </div>
       <div className="kpi-grid model-kpi-grid">
         <div className="kpi"><div className="kpi-label">NAIRU estimada</div><div className="kpi-value">{number(latest.nairu)}%</div><div className="kpi-foot kpi-foot-static">Dato {month(latest.date)}</div></div>
         <div className="kpi"><div className="kpi-label">Desempleo observado</div><div className="kpi-value">{number(latest.unemployment)}%</div><div className="kpi-foot kpi-foot-static">Dato {month(latest.date)}</div></div>
         <div className="kpi"><div className="kpi-label">Brecha de desempleo</div><div className="kpi-value">{latest.gap > 0 ? "+" : ""}{number(latest.gap)} pp</div><div className="kpi-foot kpi-foot-static">{reading}</div></div>
+        <div className="kpi"><div className="kpi-label">NAIRU Promedio</div><div className="kpi-value">{number(averageNairu)}%</div><div className="kpi-foot kpi-foot-static">Promedio del período completo mostrado</div></div>
       </div>
 
       <div className="model-controls">
@@ -79,12 +80,15 @@ function NairuModel() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5eaf2" />
               <XAxis dataKey="date" tickFormatter={(date) => month(date, true)} minTickGap={65} tick={{ fontSize: 11 }} />
               <YAxis tickFormatter={(value) => number(value, 1)} width={58} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="nairu-average" orientation="right" domain={[Math.min(0, Math.floor(averageNairu - 1)), Math.max(1, Math.ceil(averageNairu + 1))]} tickFormatter={(value) => `${number(value, 1)}%`} width={58} tick={{ fontSize: 11, fill: "#d94b4b" }} />
               <ReferenceLine y={0} stroke="#748096" />
+              <ReferenceLine yAxisId="nairu-average" y={averageNairu} stroke="#d94b4b" strokeWidth={2} label={{ value: `NAIRU Promedio: ${number(averageNairu)}%`, position: "insideTopLeft", fill: "#d94b4b", fontSize: 11 }} />
               <Tooltip labelFormatter={(date) => month(String(date))} formatter={(value) => [`${number(Number(value))} pp`, "Brecha"]} />
               <Bar dataKey="gap" isAnimationActive={false}>{chartRows.map((row) => <Cell key={row.date} fill={row.gap >= 0 ? "#2f6fed" : "#d94b4b"} fillOpacity={0.7} />)}</Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
+        <p className="model-caption">Eje izquierdo: brecha en puntos porcentuales. Eje derecho y línea roja: NAIRU promedio en porcentaje.</p>
       </section>
 
     </div>
