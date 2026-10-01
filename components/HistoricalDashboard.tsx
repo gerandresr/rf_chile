@@ -15,6 +15,11 @@ function cutoff(period: Period, lastDate: string) {
   const c = new Date(d); c.setMonth(c.getMonth() - (period === "1M" ? 1 : period === "3M" ? 3 : 12)); return c;
 }
 const colors = ["#2f6fed", "#10b981", "#f59e0b", "#8b5cf6"];
+function DailyChangeDot({ cx, cy, value }: { cx?: number; cy?: number; value?: number | string | (number | string)[] }) {
+  if (cx == null || cy == null || typeof value !== "number" || !Number.isFinite(value)) return <g/>;
+  const color = value > 0 ? "#d94b4b" : value < 0 ? "#0f9f6e" : "#748096";
+  return <circle cx={cx} cy={cy} r={3.5} fill={color} stroke={color}/>;
+}
 const indicatorSeries: Partial<Record<Technical, { key: string; name: string }[]>> = {
   rsi: [{ key: "rsi", name: "RSI 14" }],
   macd: [{ key: "macd", name: "MACD" }, { key: "signal", name: "Señal 9" }],
@@ -77,7 +82,8 @@ export function HistoricalDashboard() {
       {option && <p className="technical-description">{code} · {option.description} Pulsa la opción activa para quitarla.</p>}
       <div className="history-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={chart} syncId="historical-technicals" margin={{ left: 8, right: 18, top: 10, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="date" minTickGap={35}/><YAxis domain={["auto", "auto"]} tickFormatter={v => `${Number(v).toFixed(1)}${isBp ? "" : "%"}`}/><Tooltip formatter={(v, name) => [`${Number(v).toFixed(isBp ? 2 : 3)}${isBp ? " bp" : "%"}`, String(name)]}/><Legend/>
-        {lines.map((c, i) => <Line key={c} type="linear" dataKey={c} name={c} stroke={colors[i % colors.length]} dot={false} strokeWidth={i === 0 ? 2.3 : 1.7} connectNulls={false}/>)}
+        {metric === "change" && <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" ifOverflow="extendDomain"/>}
+        {lines.map((c, i) => <Line key={c} type="linear" dataKey={c} name={c} stroke={colors[i % colors.length]} dot={metric === "change" ? <DailyChangeDot/> : false} activeDot={metric === "change" ? <DailyChangeDot/> : undefined} strokeWidth={metric === "change" ? 0 : i === 0 ? 2.3 : 1.7} isAnimationActive={metric !== "change"} connectNulls={false}/>)}
         {overlay && <Line dataKey="ma20" name="Media 20" stroke="#f59e0b" dot={false} strokeWidth={1.8}/>}
         {selectedTechnical === "ma" && <Line dataKey="ma60" name="Media 60" stroke="#10b981" dot={false} strokeWidth={1.8}/>}
         {selectedTechnical === "bollinger" && ["upper", "lower"].map(key => <Line key={key} dataKey={key} name={key === "upper" ? "Banda superior" : "Banda inferior"} stroke="#8b5cf6" strokeDasharray="5 4" dot={false}/>)}
