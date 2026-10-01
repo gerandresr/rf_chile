@@ -13,6 +13,8 @@ import {
 } from "recharts";
 import { AppShell } from "./AppShell";
 import { TPMMeetings } from "./TPMMeetings";
+import monthlyMacroData from "@/public/data/datos-mensuales.json";
+import { monthlyMacroKpi } from "@/lib/macro";
 import {
   RFData,
   Instrument,
@@ -99,8 +101,10 @@ function DPFTable({ data }: { data: DPFData }) {
 
 const macroKpis = [
   { label: "TPM", value: "4,50%", description: "Tasa de Política Monetaria" },
-  { label: "Inflación Anual", value: "4,13%", description: "Variación IPC 12 meses" },
-  { label: "IPC Mensual", value: "0,60%", description: "Último dato mensual" },
+  monthlyMacroKpi(monthlyMacroData, "ipc_yoy", "Inflación Anual"),
+  monthlyMacroKpi(monthlyMacroData, "ipc_mom", "IPC MoM"),
+  monthlyMacroKpi(monthlyMacroData, "ipcsae_mom", "IPC SAE MoM"),
+  monthlyMacroKpi(monthlyMacroData, "imacec", "IMACEC"),
   { label: "Desempleo", value: "9,40%", description: "Tasa de desocupación" },
 ];
 
@@ -387,7 +391,7 @@ export function MarketDashboard() {
         <div className="asof"><span>Último cierre</span><strong>{data.lastMarketDate}</strong></div>
       </header>
 
-      <div className="kpi-grid">
+      <div className="kpi-grid macro-kpi-grid">
         {macroKpis.map((kpi) => (
           <div className="kpi" key={kpi.label}>
             <div className="kpi-label">{kpi.label}</div>
