@@ -26,3 +26,6 @@
 .model-gap-chart{height:240px;width:100%}
 @media(max-width:1100px){.model-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.model-disclosure>summary{padding:16px;font-size:14px}.model-content{padding:14px}.model-intro{align-items:flex-start;flex-direction:column}.model-chart-section .panel-head{align-items:flex-start;flex-direction:column;gap:8px}.model-chart{height:300px}.model-kpi-grid .kpi-value{font-size:21px}}
+
+.history-compare-group{margin-bottom:14px}
+.history-compare-title{margin:0 0 8px;font-size:12px;font-weight:750;color:var(--muted)}
