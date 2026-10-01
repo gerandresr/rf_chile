@@ -22,9 +22,9 @@ Sube esta carpeta a GitHub e importa el repositorio desde Vercel. Next.js será 
 
 La pestaña `/modelos` muestra un catálogo de secciones desplegables. El primer modelo es una NAIRU experimental de Chile mediante una curva de Phillips, filtro de Kalman y suavizador RTS. Utiliza `fecha`, `desempleo` e `ipc_yoy` de `public/data/datos-mensuales.json`; actualizar ese archivo y desplegar vuelve a estimar el modelo, sin generar otra serie manualmente.
 
-La curva usa el cambio mensual de inflación YoY y un rezago de ese cambio. No incluye una constante libre, para evitar confundirla con el nivel de NAIRU. Ajusta sensibilidad de inflación, persistencia y ruido por máxima verosimilitud; la desviación del paseo aleatorio de NAIRU es un supuesto seleccionable. Los primeros dos meses se pierden al construir los cambios y el rezago. Los meses conjuntos deben ser consecutivos y únicos.
+La curva usa el cambio mensual de inflación YoY y un rezago de ese cambio. No incluye una constante libre, para evitar confundirla con el nivel de NAIRU. Ajusta sensibilidad de inflación, persistencia y ruido por máxima verosimilitud; la desviación del paseo aleatorio de NAIRU se fija en 0,05 pp por mes. Los primeros dos meses se pierden al construir los cambios y el rezago. Los meses conjuntos deben ser consecutivos y únicos.
 
-La banda del 95% es condicional a parámetros y supuestos, y no representa toda la incertidumbre. La vista filtrada usa parámetros de muestra completa y un nivel inicial basado en la media de los primeros doce meses; no es una serie de estimaciones en tiempo real. La página explica los supuestos, muestra señales débiles y evita declarar una brecha concluyente si el desempleo queda dentro de la banda de NAIRU.
+La banda del 95% es condicional a parámetros y supuestos, y no representa toda la incertidumbre. La vista filtrada usa parámetros de muestra completa y un nivel inicial basado en la media de los primeros doce meses; no es una serie de estimaciones en tiempo real. La vista muestra tres cuadros (NAIRU, desempleo y brecha) y dos gráficos; mantiene la banda en el gráfico y evita declarar una brecha concluyente si el desempleo queda dentro de la banda de NAIRU. La metodología se conserva documentada aquí; no se presenta como una sección desplegable en la página.
 
 Pruebas del modelo (Node 22.6 o superior con soporte de eliminación de tipos):
 
