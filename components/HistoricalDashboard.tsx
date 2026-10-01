@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Bar, ComposedChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from "recharts";
 import { AppShell } from "./AppShell";
+import { spreadPair, yieldSpread } from "@/lib/yield-spreads";
 import { RealExchangeRateChart } from "./RealExchangeRateChart";
 import { RFData, isActiveInstrument, observations, rollingVolatility } from "@/lib/rf";
 import { calculateTechnicals, technicalOptions, Technical, TechnicalPoint } from "@/lib/technicals";
@@ -60,6 +61,13 @@ export function HistoricalDashboard() {
   }, [data, code, compare, metric, period, selectedTechnical]);
   if (!data) return <AppShell><div className="loading">Cargando históricos…</div></AppShell>;
   const lines = [code, ...(selectedTechnical ? [] : compare.filter(c => c !== code))];
+  const primary = data.instruments.find(i => i.code === code);
+  const spreads = metric === "yield" && !selectedTechnical && primary ? compare.filter(c => c !== code).flatMap(c => {
+    const comparison = data.instruments.find(i => i.code === c);
+    if (!comparison) return [];
+    const pair = spreadPair(primary, comparison);
+    return [{ ...pair, ...yieldSpread(chart, pair.left, pair.right) }];
+  }) : [];
   const changeSummary = metric === "change" ? [code].map(instrument => {
     const changes = chart.map(row => row[instrument]).filter((value): value is number => typeof value === "number" && Number.isFinite(value));
     const rises = changes.filter(value => value > 0);
@@ -106,6 +114,19 @@ export function HistoricalDashboard() {
         {selectedTechnical === "ma" && <Line dataKey="ma60" name="Media 60" stroke="#10b981" dot={false} strokeWidth={1.8}/>}
         {selectedTechnical === "bollinger" && ["upper", "lower"].map(key => <Line key={key} dataKey={key} name={key === "upper" ? "Banda superior" : "Banda inferior"} stroke="#8b5cf6" strokeDasharray="5 4" dot={false}/>)}
       </LineChart></ResponsiveContainer></div>
+      {spreads.map(spread => <div className="technical-panel" key={spread.label}>
+        <h3 className="history-compare-title">{spread.label} · Diferencia (pb)</h3>
+        {spread.average === null ? <p className="technical-description">No hay observaciones comunes en el período seleccionado.</p> : <>
+          <div className="technical-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={spread.points} syncId="historical-technicals" margin={{ left: 8, right: 18, top: 10, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="date" minTickGap={35}/>
+            <YAxis domain={["auto", "auto"]} tickFormatter={value => Number(value).toFixed(1)}/>
+            <Tooltip formatter={value => [`${Number(value).toFixed(2)} pb`, spread.label]}/>
+            <ReferenceLine y={spread.average} stroke="#d94b4b" strokeWidth={1.8} strokeDasharray="6 4" ifOverflow="extendDomain"/>
+            <Line dataKey="spread" name={spread.label} type="linear" stroke="#0f9f6e" strokeWidth={2} dot={false} connectNulls={false} isAnimationActive={false}/>
+          </LineChart></ResponsiveContainer></div>
+          <p className="technical-description">Promedio del período: <span style={{ color: "var(--red)" }}>{spread.average.toFixed(2)} pb</span> · línea roja punteada.</p>
+        </>}
+      </div>)}
       {metric === "change" && <div className="technical-panel">
         <h3 className="history-compare-title">Resumen de cambios diarios · {period === "MAX" ? "Todo el historial" : period}</h3>
         <div className="table-wrap"><table className="daily-change-summary">
