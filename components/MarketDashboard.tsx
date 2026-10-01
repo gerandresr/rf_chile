@@ -105,7 +105,7 @@ const macroKpis = [
   monthlyMacroKpi(monthlyMacroData, "ipc_mom", "IPC MoM"),
   monthlyMacroKpi(monthlyMacroData, "ipcsae_mom", "IPC SAE MoM"),
   monthlyMacroKpi(monthlyMacroData, "imacec", "IMACEC"),
-  { label: "Desempleo", value: "9,40%", description: "Tasa de desocupación" },
+  monthlyMacroKpi(monthlyMacroData, "desempleo", "Desempleo"),
 ];
 
 type CurveType = "BTP" | "BTU" | "DPF";
