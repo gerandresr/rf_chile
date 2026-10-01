@@ -84,13 +84,17 @@ export function HistoricalDashboard() {
     <section className="panel controls-panel">
       <div className="control"><label htmlFor="history-instrument">Instrumento</label><select id="history-instrument" value={code} onChange={e => setCode(e.target.value)}>{active.map(i => <option key={i.code}>{i.code}</option>)}</select></div>
       <div className="control wide"><label>Período</label><div className="segmented">{(["1M", "3M", "YTD", "1Y", "MAX"] as Period[]).map(p => <button key={p} className={period === p ? "selected" : ""} onClick={() => setPeriod(p)}>{p}</button>)}</div></div>
-      <div className="control"><label htmlFor="history-metric">Métrica</label><select id="history-metric" value={metric} onChange={e => { setMetric(e.target.value as Metric); setTechnical(null); }}><option value="yield">Yield</option><option value="change">Cambio diario</option><option value="vol10">Volatilidad 10d</option><option value="vol30">Volatilidad 30d</option><option value="vol90">Volatilidad 90d</option></select></div>
+      <div className="control"><label htmlFor="history-metric">Métrica</label><select id="history-metric" value={metric} onChange={e => { const nextMetric = e.target.value as Metric; setMetric(nextMetric); setTechnical(null); if (nextMetric === "yield") setCompare(current => { const first = current.find(c => c !== code); return first ? current.filter(c => c !== code && c.slice(0, 3) === first.slice(0, 3)) : []; }); }}><option value="yield">Yield</option><option value="change">Cambio diario</option><option value="vol10">Volatilidad 10d</option><option value="vol30">Volatilidad 30d</option><option value="vol90">Volatilidad 90d</option></select></div>
     </section>
     <section className="panel">
       <div className="panel-head"><div><div className="eyebrow">Comparación</div><h2>{isBp ? "Basis points" : "Yield (%)"}</h2></div></div>
       {(["BTP", "BTU"] as const).map(type => <div className="history-compare-group" key={type} role="group" aria-label={`Comparar instrumentos ${type}`}><h3 className="history-compare-title">{type}</h3><div className="compare-row">{active.filter(i => i.type === type && i.code !== code).map(i => {
         const on = compare.includes(i.code) && !selectedTechnical;
-        return <button key={i.code} className={`chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => { setTechnical(null); setCompare(c => on ? c.filter(x => x !== i.code) : c.filter(x => x !== code).length < 3 ? [...c.filter(x => x !== code), i.code] : c); }}>{i.code.replace("BTP", "BTP ").replace("BTU", "BTU ")}</button>;
+        return <button key={i.code} className={`chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => { setTechnical(null); setCompare(current => {
+          if (on) return current.filter(c => c !== i.code);
+          const sameGroup = current.filter(c => c !== code && (metric !== "yield" || c.slice(0, 3) === type));
+          return sameGroup.length < 3 ? [...sameGroup, i.code] : sameGroup;
+        }); }}>{i.code.replace("BTP", "BTP ").replace("BTU", "BTU ")}</button>;
       })}</div></div>)}
       {metric === "yield" && <div className="history-compare-group" role="group" aria-label="Indicadores técnicos"><h3 className="history-compare-title">Técnicos</h3><div className="compare-row">{technicalOptions.map(o => <button key={o.id} className={`chip ${selectedTechnical === o.id ? "on" : ""}`} aria-pressed={selectedTechnical === o.id} title={o.description} onClick={() => { setTechnical(current => current === o.id ? null : o.id); setCompare([]); }}>{o.label}</button>)}</div></div>}
       {option && <p className="technical-description">{code} · {option.description} Pulsa la opción activa para quitarla.</p>}
@@ -121,7 +125,7 @@ export function HistoricalDashboard() {
       </ComposedChart></ResponsiveContainer></div></div>}
       {selectedTechnical && !hasIndicatorData && <p className="technical-description" role="status">Historia insuficiente para calcular este indicador en el período seleccionado.</p>}
     </section>
-    <div className="note">{selectedTechnical ? "El indicador usa solamente el instrumento principal. Seleccionar un BTP o BTU adicional desactiva el indicador y permite comparar nuevamente. Las ventanas usan observaciones disponibles y se calculan antes de recortar el período visible." : "Puedes comparar hasta 4 series simultáneamente. La volatilidad usa desviación estándar muestral de 10, 30 o 90 cambios diarios de yield."}</div>
+    <div className="note">{selectedTechnical ? "El indicador usa solamente el instrumento principal. Seleccionar un BTP o BTU adicional desactiva el indicador y permite comparar nuevamente. Las ventanas usan observaciones disponibles y se calculan antes de recortar el período visible." : "Puedes comparar hasta 4 series simultáneamente. En Yield, las comparaciones deben ser todas BTP o todas BTU; seleccionar el otro grupo reemplaza las anteriores. La volatilidad usa desviación estándar muestral de 10, 30 o 90 cambios diarios de yield."}</div>
     <RealExchangeRateChart/>
   </AppShell>;
 }
