@@ -32,7 +32,7 @@ function NairuModel() {
     <div className="model-content">
       <div className="model-intro">
         <p>Estima una tasa de desempleo compatible con una inflación que no acelera, a partir de desempleo e inflación anual de Chile.</p>
-        <span className="pill">Experimental · {result.observations} meses</span>
+        <span className="pill">Experimental · {result.observations} meses · ventana de 10 años</span>
       </div>
       <div className="kpi-grid model-kpi-grid">
         <div className="kpi"><div className="kpi-label">NAIRU estimada</div><div className="kpi-value">{number(latest.nairu)}%</div><div className="kpi-foot kpi-foot-static">Dato {month(latest.date)}</div></div>

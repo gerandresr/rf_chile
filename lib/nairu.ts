@@ -16,6 +16,7 @@ export type NairuResult = {
 type Observation = { date: string; unemployment: number; inflation: number; change: number; lagChange: number };
 const INITIAL_VARIANCE = 4;
 const MIN_OBSERVATIONS = 60;
+const MAX_MONTHS = 120;
 
 function monthIndex(date: string) {
   if (!/^\d{4}-(0[1-9]|1[0-2])-01$/.test(date)) return NaN;
@@ -24,13 +25,17 @@ function monthIndex(date: string) {
 
 function prepare(rows: MonthlyMacroRow[]) {
   const dates = new Set<string>();
-  const valid = rows.filter((row) => {
+  const allValid = rows.filter((row) => {
     if (!Number.isFinite(monthIndex(row.fecha))) throw new Error(`Fecha mensual inválida: ${row.fecha}`);
     if (dates.has(row.fecha)) throw new Error(`Fecha duplicada: ${row.fecha}`);
     dates.add(row.fecha);
     return typeof row.desempleo === "number" && Number.isFinite(row.desempleo)
       && typeof row.ipc_yoy === "number" && Number.isFinite(row.ipc_yoy);
   }).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  // Keep only the latest ten calendar years of joint unemployment/inflation data.
+  // Apply the window before initialization, fitting and constructing inflation lags.
+  const latestMonth = allValid.length ? monthIndex(allValid[allValid.length - 1].fecha) : NaN;
+  const valid = allValid.filter((row) => monthIndex(row.fecha) >= latestMonth - MAX_MONTHS + 1);
   if (valid.some((r) => r.desempleo! < 0 || r.desempleo! > 100)) throw new Error("El desempleo debe estar expresado en porcentaje: 9,6 significa 9,6%.");
   // A missing month must never be treated as a one-month change.
   for (let i = 1; i < valid.length; i++) {
