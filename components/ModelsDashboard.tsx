@@ -26,7 +26,7 @@ function NairuModel() {
   }) ?? [], [result, view]);
   if (!result || !chartRows.length) return <div className="model-notice" role="alert">{estimation.error ?? "Sin datos disponibles."}</div>;
   const latest = chartRows[chartRows.length - 1];
-  const averageUnemployment = chartRows.reduce((sum, row) => sum + row.unemployment, 0) / chartRows.length;
+  const averageGap = chartRows.reduce((sum, row) => sum + row.gap, 0) / chartRows.length;
   const conclusive = latest.unemployment > latest.upper || latest.unemployment < latest.lower;
   const reading = !conclusive ? "Brecha no concluyente" : latest.gap > 0 ? "Holgura laboral estimada" : "Mercado laboral ajustado según el modelo";
   return (
@@ -79,15 +79,14 @@ function NairuModel() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5eaf2" />
               <XAxis dataKey="date" tickFormatter={(date) => month(date, true)} minTickGap={65} tick={{ fontSize: 11 }} />
               <YAxis tickFormatter={(value) => number(value, 1)} width={58} tick={{ fontSize: 11 }} />
-              <YAxis yAxisId="unemployment-average" orientation="right" domain={[Math.min(0, Math.floor(averageUnemployment - 1)), Math.max(1, Math.ceil(averageUnemployment + 1))]} tickFormatter={(value) => `${number(value, 1)}%`} width={58} tick={{ fontSize: 11, fill: "#d94b4b" }} />
               <ReferenceLine y={0} stroke="#748096" />
-              <ReferenceLine yAxisId="unemployment-average" y={averageUnemployment} stroke="#d94b4b" strokeWidth={2} label={{ value: `Desempleo Promedio: ${number(averageUnemployment)}%`, position: "insideTopLeft", fill: "#d94b4b", fontSize: 11 }} />
+              <ReferenceLine y={averageGap} stroke="#d94b4b" strokeWidth={2} label={{ value: `Brecha Promedio: ${number(averageGap)} pp`, position: "insideTopLeft", fill: "#d94b4b", fontSize: 11 }} />
               <Tooltip labelFormatter={(date) => month(String(date))} formatter={(value) => [`${number(Number(value))} pp`, "Brecha"]} />
               <Bar dataKey="gap" isAnimationActive={false}>{chartRows.map((row) => <Cell key={row.date} fill={row.gap >= 0 ? "#2f6fed" : "#d94b4b"} fillOpacity={0.7} />)}</Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <p className="model-caption">Eje izquierdo: brecha en puntos porcentuales. Eje derecho y línea roja: desempleo promedio en porcentaje.</p>
+        <p className="model-caption">La línea roja muestra el promedio de la brecha del período completo, en puntos porcentuales.</p>
       </section>
 
     </div>
