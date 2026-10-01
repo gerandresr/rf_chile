@@ -59,6 +59,19 @@ export function HistoricalDashboard() {
   }, [data, code, compare, metric, period, selectedTechnical]);
   if (!data) return <AppShell><div className="loading">Cargando históricos…</div></AppShell>;
   const lines = [code, ...(selectedTechnical ? [] : compare.filter(c => c !== code))];
+  const changeSummary = metric === "change" ? lines.map(instrument => {
+    const changes = chart.map(row => row[instrument]).filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+    const rises = changes.filter(value => value > 0);
+    const falls = changes.filter(value => value < 0);
+    return {
+      instrument,
+      rises: rises.length,
+      falls: falls.length,
+      averageRise: rises.length ? rises.reduce((sum, value) => sum + value, 0) / rises.length : null,
+      averageFall: falls.length ? falls.reduce((sum, value) => sum + value, 0) / falls.length : null,
+    };
+  }) : [];
+  const formatAverage = (value: number | null) => value === null ? "—" : `${value > 0 ? "+" : ""}${value.toFixed(2)} pb`;
   const isBp = metric !== "yield";
   const option = technicalOptions.find(o => o.id === selectedTechnical);
   const overlay = selectedTechnical === "bollinger" || selectedTechnical === "ma";
@@ -88,6 +101,16 @@ export function HistoricalDashboard() {
         {selectedTechnical === "ma" && <Line dataKey="ma60" name="Media 60" stroke="#10b981" dot={false} strokeWidth={1.8}/>}
         {selectedTechnical === "bollinger" && ["upper", "lower"].map(key => <Line key={key} dataKey={key} name={key === "upper" ? "Banda superior" : "Banda inferior"} stroke="#8b5cf6" strokeDasharray="5 4" dot={false}/>)}
       </LineChart></ResponsiveContainer></div>
+      {metric === "change" && <div className="technical-panel">
+        <h3 className="history-compare-title">Resumen de cambios diarios · {period === "MAX" ? "Todo el historial" : period}</h3>
+        <div className="table-wrap"><table className="daily-change-summary">
+          <thead><tr><th>Instrumento</th><th>Veces que subió</th><th>Promedio de las subidas</th><th>Veces que cayó</th><th>Promedio de las caídas</th></tr></thead>
+          <tbody>{changeSummary.map(row => <tr key={row.instrument}>
+            <td>{row.instrument}</td><td style={{ color: "var(--red)" }}>{row.rises} veces</td><td style={{ color: "var(--red)" }}>{formatAverage(row.averageRise)}</td><td style={{ color: "var(--green)" }}>{row.falls} veces</td><td style={{ color: "var(--green)" }}>{formatAverage(row.averageFall)}</td>
+          </tr>)}</tbody>
+        </table></div>
+        <p className="technical-description">Calculado sobre los cambios diarios del período seleccionado. Los cambios de cero se excluyen de ambos grupos.</p>
+      </div>}
       {selectedTechnical && !overlay && <div className="technical-panel"><h3 className="history-compare-title">{option?.label} · {code}{unit ? ` (${unit.trim()})` : ""}</h3><div className="technical-chart"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={chart} syncId="historical-technicals" margin={{ left: 8, right: 18, top: 10, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="date" minTickGap={35}/><YAxis domain={selectedTechnical === "rsi" || selectedTechnical === "percentile" ? [0, 100] : ["auto", "auto"]} tickFormatter={v => `${Number(v).toFixed(1)}${selectedTechnical === "percentile" ? "%" : ""}`}/><Tooltip formatter={(v, name) => [`${Number(v).toFixed(2)}${unit}`, String(name)]}/><Legend/>
         {(selectedTechnical === "rsi" ? [30, 70] : selectedTechnical === "zscore" ? [-2, 0, 2] : selectedTechnical === "macd" || selectedTechnical === "momentum" ? [0] : []).map(y => <ReferenceLine key={y} y={y} stroke="#94a3b8" strokeDasharray="4 4"/>)}
