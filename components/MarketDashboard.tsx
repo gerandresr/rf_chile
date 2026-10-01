@@ -14,7 +14,8 @@ import {
 import { AppShell } from "./AppShell";
 import { TPMMeetings } from "./TPMMeetings";
 import monthlyMacroData from "@/public/data/datos-mensuales.json";
-import { monthlyMacroKpi } from "@/lib/macro";
+import dailyMacroData from "@/public/data/datos-diarios.json";
+import { dailyTpmKpi, monthlyMacroKpi } from "@/lib/macro";
 import {
   RFData,
   Instrument,
@@ -100,7 +101,7 @@ function DPFTable({ data }: { data: DPFData }) {
 }
 
 const macroKpis = [
-  { label: "TPM", value: "4,50%", description: "Tasa de Política Monetaria" },
+  dailyTpmKpi(dailyMacroData),
   monthlyMacroKpi(monthlyMacroData, "ipc_yoy", "Inflación Anual"),
   monthlyMacroKpi(monthlyMacroData, "ipc_mom", "IPC MoM"),
   monthlyMacroKpi(monthlyMacroData, "ipcsae_mom", "IPC SAE MoM"),
