@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Landmark } from "lucide-react";
+import { Activity, BarChart3, Landmark, FlaskConical } from "lucide-react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const p = usePathname();
@@ -10,6 +10,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const nav = [
     { href: "/", label: "Mercados", icon: Landmark },
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
+    { href: "/modelos", label: "Modelos", icon: FlaskConical },
   ];
 
   return (
@@ -27,6 +28,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               key={href}
               href={href}
               className={`nav-item ${p === href ? "active" : ""}`}
+              aria-label={label}
+              aria-current={p === href ? "page" : undefined}
             >
               <Icon size={17} />
               <span>{label}</span>
