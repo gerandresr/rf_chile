@@ -24,7 +24,6 @@ export function TaylorModel() {
   const result = estimation.result;
   const latest = result?.points.at(-1);
   return <div className="model-content">
-    <div className="model-intro"><span className="pill">Regla de Taylor · Brecha de actividad estimada</span></div>
     <div className="taylor-controls">
       {controls.map(control => <label key={control.key}>{control.label}<input type="number" step="0.25" min={control.min} max={control.max} value={parameters[control.key]} onChange={event => {
         if (event.currentTarget.value === "") return;
@@ -68,6 +67,5 @@ export function TaylorModel() {
       </section>
       <p className="model-caption">Brecha = 100 × (log del IMACEC desestacionalizado − tendencia HP del logaritmo). Filtro mensual con λ = 129.600 sobre {result.activityMonths} meses consecutivos ({month(result.startDate)} – {month(result.endDate)}). La tendencia utiliza toda la muestra y puede revisar resultados históricos al incorporar nuevos datos, especialmente en sus extremos. Los meses sin inflación o TPM se omiten de la comparación; no se utiliza TPM de meses posteriores.</p>
     </>}
-    <p className="model-caption">Esta regla usa inflación observada y una aproximación estadística de la brecha de actividad. No reproduce el modelo del Banco Central ni constituye una proyección de sus decisiones. Fuentes metodológicas: <a href="https://www.frbsf.org/research-and-insights/publications/economic-letter/1998/12/describing-fed-behavior/" target="_blank" rel="noreferrer">regla de Taylor</a>, <a href="https://www.statsmodels.org/v0.14.3/generated/statsmodels.tsa.filters.hp_filter.hpfilter.html" target="_blank" rel="noreferrer">filtro HP mensual</a> y <a href="https://www.bcentral.cl/documents/33528/2246274/Uso_de_modelos_en_el_BCCh_2020.pdf" target="_blank" rel="noreferrer">modelos del BCCh</a>.</p>
   </div>;
 }

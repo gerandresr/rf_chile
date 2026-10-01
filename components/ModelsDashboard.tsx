@@ -104,7 +104,7 @@ export function ModelsDashboard() {
       {open && <NairuModel />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setTaylorOpen(event.currentTarget.open)}>
-      <summary><span>Regla de Taylor · IMACEC desestacionalizado</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      <summary><span>Regla de Taylor</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {taylorOpen && <TaylorModel />}
     </details>
   </AppShell>;
