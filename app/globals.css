@@ -39,3 +39,7 @@
 .technical-description{font-size:12px;color:var(--muted);line-height:1.6;margin:4px 0 12px}
 .technical-panel{border-top:1px solid var(--line);padding-top:16px;margin-top:12px}
 .technical-chart{height:240px;width:100%;min-width:0}
+.backtest-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:16px 0}
+.backtest-controls .control{min-width:0}
+.backtest-controls input,.backtest-controls select{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:9px;background:var(--panel);color:var(--text);font:inherit}
+.backtest-table{min-width:1000px}

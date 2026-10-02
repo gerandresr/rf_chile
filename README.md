@@ -20,6 +20,14 @@ Sube esta carpeta a GitHub e importa el repositorio desde Vercel. Next.js será 
 
 ## Modelos
 
+### Simulador de estrategias · RSI
+
+El simulador usa las tasas de `rf.json` y RSI 14 de Wilder. Compra el bono tras un cruce ascendente del umbral (o el primer RSI calculable si ya alcanza el umbral), con una sola posición y sin ventas cortas. Permite salir por RSI, por stop/take profit en pb desde la tasa de entrada, o por la primera condición de ambas reglas. Por defecto: entrada 70, stop 5 pb, take profit 15 pb y costo total 0 pb.
+
+Todas las señales se ejecutan en el siguiente cierre disponible, incluidos los stops; no asume ejecuciones exactas en los umbrales ni datos intradía. El RSI se inicializa con datos anteriores al período seleccionado, pero la estrategia comienza sin posición y no arrastra señales anteriores. No abre operaciones en el último cierre y liquida posiciones existentes al final. El resultado de cada compra es `(tasa de entrada - tasa de salida) * 100`, con tasas expresadas en porcentaje, menos el costo total por operación. La curva incluye valoración diaria de la posición y provisiona su costo completo; la caída máxima se calcula desde máximos previos, comenzando en cero. Los pb acumulados no equivalen a rentabilidad o P&L monetario y excluyen cupones, carry y financiamiento.
+
+Validación: `node tests/rsi-backtest.test.cjs`.
+
 La pestaña `/modelos` muestra un catálogo de secciones desplegables. El primer modelo es una NAIRU experimental de Chile mediante una curva de Phillips, filtro de Kalman y suavizador RTS. Utiliza `fecha`, `desempleo` e `ipc_yoy` de `public/data/datos-mensuales.json`; actualizar ese archivo y desplegar vuelve a estimar el modelo, sin generar otra serie manualmente.
 
 La curva usa el cambio mensual de inflación YoY y un rezago de ese cambio. No incluye una constante libre, para evitar confundirla con el nivel de NAIRU. Ajusta sensibilidad de inflación, persistencia y ruido por máxima verosimilitud; la desviación del paseo aleatorio de NAIRU se fija en 0,05 pp por mes. El modelo utiliza únicamente los últimos 120 meses calendario, anclados al último mes con desempleo e inflación disponibles; el histórico anterior no interviene en la estimación ni en el nivel inicial. La ventana avanza cuando se agregan datos nuevos. Si hay menos de diez años, utiliza los meses disponibles (mínimo 60). Los primeros dos meses de la ventana se pierden al construir los cambios y el rezago. Los meses conjuntos deben ser consecutivos y únicos.
