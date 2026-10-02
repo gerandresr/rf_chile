@@ -225,7 +225,7 @@ function curveAtDate(data: RFData, curveType: "BTP" | "BTU", marketDate: string,
 }
 function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null) {
   if (!row) return null;
-  return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, true));
+  return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
 }
 
 function buildBenchmarkRows(data: RFData): BenchmarkRow[] {
