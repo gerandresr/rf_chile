@@ -3,6 +3,17 @@ import type { DailyMacroRow } from "./macro";
 export type TaylorMonthlyRow = { fecha: string; imacec_ind_des?: number | null; ipc_yoy: number | null };
 export type TaylorParameters = { neutralReal: number; inflationTarget: number; inflationWeight: number; activityWeight: number };
 export const DEFAULT_TAYLOR_PARAMETERS: TaylorParameters = { neutralReal: 1.25, inflationTarget: 3, inflationWeight: 0.5, activityWeight: 0.5 };
+export type TaylorNominalParameters = Omit<TaylorParameters, "neutralReal"> & { neutralNominal: number };
+export const DEFAULT_TAYLOR_NOMINAL_PARAMETERS: TaylorNominalParameters = {
+  neutralNominal: DEFAULT_TAYLOR_PARAMETERS.neutralReal + DEFAULT_TAYLOR_PARAMETERS.inflationTarget,
+  inflationTarget: DEFAULT_TAYLOR_PARAMETERS.inflationTarget,
+  inflationWeight: DEFAULT_TAYLOR_PARAMETERS.inflationWeight,
+  activityWeight: DEFAULT_TAYLOR_PARAMETERS.activityWeight,
+};
+export function realTaylorParameters(parameters: TaylorNominalParameters): TaylorParameters {
+  const { neutralNominal, ...rest } = parameters;
+  return { ...rest, neutralReal: neutralNominal - parameters.inflationTarget };
+}
 export const HP_MONTHLY_LAMBDA = 129600;
 
 function validDate(date: string) {
