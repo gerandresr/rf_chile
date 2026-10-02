@@ -116,7 +116,7 @@ export function ModelsDashboard() {
     <details className="panel model-disclosure" onToggle={(event) => { setBacktestOpen(event.currentTarget.open); if (!event.currentTarget.open) setOscillatorOpen({}); }}>
       <summary><span>Técnicos para BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {backtestOpen && <div className="model-content">{oscillatorOptions.map(option => <details key={option.id} className="panel model-disclosure" onToggle={(event) => { const isOpen = event.currentTarget.open; setOscillatorOpen(current => ({ ...current, [option.id]: isOpen })); }}>
-        <summary><span>(Oscilador) {option.name}</span><ChevronDown size={20} aria-hidden="true" /></summary>
+        <summary><span>({option.category ?? "Oscilador"}) {option.name}</span><ChevronDown size={20} aria-hidden="true" /></summary>
         {oscillatorOpen[option.id] && <OscillatorBacktestModel oscillator={option.id} />}
       </details>)}</div>}
     </details>

@@ -9,6 +9,14 @@ import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 const bp = (v: number | null) => v === null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(2)} pb`;
 export function OscillatorBacktestModel({ oscillator }: { oscillator: Oscillator }) {
   const option = oscillatorOptions.find(o => o.id === oscillator)!;
+  const bollinger = oscillator.startsWith("bollinger-");
+  const momentum = oscillator === "bollinger-momentum";
+  const bounded = oscillator === "rsi" || oscillator === "stochastic";
+  const entryDescription = bollinger ? momentum
+    ? "Compra del bono cuando %B cruza hacia abajo el nivel de entrada (por defecto 0: ruptura de la banda inferior), buscando continuación de la caída de tasas. La salida por indicador ocurre cuando %B alcanza o supera el nivel de salida."
+    : "Compra del bono cuando %B vuelve desde arriba del nivel de entrada hasta ese nivel o por debajo (por defecto 100: reingreso desde la banda superior), buscando reversión de la subida de tasas. La salida por indicador ocurre cuando %B alcanza o cae bajo el nivel de salida."
+    : "Compra del bono cuando el oscilador cruza hacia arriba el nivel de entrada, o si su primer valor calculable ya está sobre ese nivel.";
+  const indicatorLabel = bollinger ? "%B" : option.name;
   const fieldId = (key: string) => `backtest-${oscillator}-${key}`;
   const [data, setData] = useState<RFData | null>(null);
   const [error, setError] = useState("");
@@ -26,19 +34,19 @@ export function OscillatorBacktestModel({ oscillator }: { oscillator: Oscillator
     catch (e) { return { result: null, error: e instanceof Error ? e.message : "Revisa los parámetros." }; }
   }, [data, code, parameters, oscillator]);
   const numeric = (key: "entryLevel" | "exitLevel" | "stopBp" | "takeBp" | "spreadBp", label: string, min?: number, max?: number) => <div className="control">
-    <label htmlFor={fieldId(key)}>{label}</label><input id={fieldId(key)} type="number" min={min} max={max} step={key.endsWith("Level") && oscillator !== "zscore" ? 1 : 0.1} value={Number.isFinite(parameters[key]) ? parameters[key] : ""} onChange={e => setParameters(p => ({ ...p, [key]: e.target.value === "" ? NaN : Number(e.target.value) }))}/>
+    <label htmlFor={fieldId(key)}>{label}</label><input id={fieldId(key)} type="number" min={min} max={max} step={key.endsWith("Level") && bounded ? 1 : 0.1} value={Number.isFinite(parameters[key]) ? parameters[key] : ""} onChange={e => setParameters(p => ({ ...p, [key]: e.target.value === "" ? NaN : Number(e.target.value) }))}/>
   </div>;
   if (!data) return <div className="model-content" role="status">{error || "Cargando tasas históricas…"}</div>;
   const result = estimation.result;
   return <div className="model-content">
-    <p className="model-caption">{option.description} Compra del bono cuando el oscilador cruza hacia arriba el nivel de entrada, o si su primer valor calculable ya está sobre ese nivel. Una posición a la vez; los puntos base positivos corresponden a una caída de tasa.</p>
+    <p className="model-caption">{option.description} {entryDescription} Una posición a la vez; los puntos base positivos corresponden a una caída de tasa.</p>
     <div className="backtest-controls">
       <div className="control"><label htmlFor={fieldId("instrument")}>Instrumento</label><select id={fieldId("instrument")} value={code} onChange={e => setCode(e.target.value)}>{instruments.map(i => <option key={i.code} value={i.code}>{i.code}</option>)}</select></div>
       <div className="control"><label htmlFor={fieldId("start")}>Desde</label><input id={fieldId("start")} type="date" min={data.history[0]?.date} max={data.lastMarketDate} value={parameters.start} onChange={e => setParameters(p => ({ ...p, start: e.target.value }))}/></div>
       <div className="control"><label htmlFor={fieldId("end")}>Hasta</label><input id={fieldId("end")} type="date" min={data.history[0]?.date} max={data.lastMarketDate} value={parameters.end} onChange={e => setParameters(p => ({ ...p, end: e.target.value }))}/></div>
-      {numeric("entryLevel", `${option.name} de entrada`, oscillator === "zscore" ? undefined : 1, oscillator === "zscore" ? undefined : 99)}
-      <div className="control"><label htmlFor={fieldId("mode")}>Salida</label><select id={fieldId("mode")} value={parameters.exitMode} onChange={e => setParameters(p => ({ ...p, exitMode: e.target.value as BacktestParameters["exitMode"] }))}><option value="indicator">{option.name}</option><option value="targets">Stop loss / take profit</option><option value="combined">{option.name} + stop / take profit</option></select></div>
-      {parameters.exitMode !== "targets" && numeric("exitLevel", `${option.name} de salida`, oscillator === "zscore" ? undefined : 0, oscillator === "zscore" ? undefined : 99)}
+      {numeric("entryLevel", `${indicatorLabel} de entrada`, bounded ? 1 : undefined, bounded ? 99 : undefined)}
+      <div className="control"><label htmlFor={fieldId("mode")}>Salida</label><select id={fieldId("mode")} value={parameters.exitMode} onChange={e => setParameters(p => ({ ...p, exitMode: e.target.value as BacktestParameters["exitMode"] }))}><option value="indicator">{indicatorLabel}</option><option value="targets">Stop loss / take profit</option><option value="combined">{indicatorLabel} + stop / take profit</option></select></div>
+      {parameters.exitMode !== "targets" && numeric("exitLevel", `${indicatorLabel} de salida`, bounded ? 0 : undefined, bounded ? 99 : undefined)}
       {parameters.exitMode !== "indicator" && <>{numeric("stopBp", "Stop loss (pb)", 0.1)}{numeric("takeBp", "Take profit (pb)", 0.1)}</>}
       {numeric("spreadBp", "Bid/ask spread (basis points)", 0)}
     </div>
