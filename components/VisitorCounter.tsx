@@ -2,31 +2,30 @@
 
 import { useEffect, useState } from "react";
 
-type VisitStats = {
-  pageviews: number;
-  visitors: number;
+type CounterResponse = {
+  value?: number;
 };
 
 export function VisitorCounter() {
-  const [stats, setStats] = useState<VisitStats | null>(null);
+  const [visits, setVisits] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/visits", { cache: "no-store" })
+    fetch("https://countapi.mileshilliard.com/api/v1/hit/rf-chile-mercados", { cache: "no-store" })
       .then((response) => {
-        if (!response.ok) throw new Error("No se pudieron cargar las visitas");
+        if (!response.ok) throw new Error("No se pudo cargar el contador");
         return response.json();
       })
-      .then((data: VisitStats) => setStats(data))
-      .catch(() => setStats(null));
+      .then((data: CounterResponse) => {
+        if (typeof data.value === "number") setVisits(data.value);
+      })
+      .catch(() => setVisits(null));
   }, []);
 
-  if (!stats) return null;
-
-  const format = (value: number) => new Intl.NumberFormat("es-CL").format(value);
+  if (visits == null) return null;
 
   return (
     <div
-      aria-label="Estadísticas de visitas del sitio"
+      aria-label="Contador de visitas"
       style={{
         marginTop: 18,
         padding: "10px 0 2px",
@@ -35,7 +34,7 @@ export function VisitorCounter() {
         opacity: 0.68,
       }}
     >
-      {format(stats.pageviews)} visitas · {format(stats.visitors)} visitantes
+      {new Intl.NumberFormat("es-CL").format(visits)} visitas
     </div>
   );
 }
