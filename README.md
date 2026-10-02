@@ -20,11 +20,11 @@ Sube esta carpeta a GitHub e importa el repositorio desde Vercel. Next.js será 
 
 ## Modelos
 
-### Simulador de estrategias · RSI
+### Técnicos para BTP/BTU · RSI
 
-El simulador usa las tasas de `rf.json` y RSI 14 de Wilder. Compra el bono tras un cruce ascendente del umbral (o el primer RSI calculable si ya alcanza el umbral), con una sola posición y sin ventas cortas. Permite salir por RSI, por stop/take profit en pb desde la tasa de entrada, o por la primera condición de ambas reglas. Por defecto: entrada 70, stop 5 pb, take profit 15 pb y costo total 0 pb.
+El simulador usa las tasas de `rf.json` y RSI 14 de Wilder. Compra el bono tras un cruce ascendente del umbral (o el primer RSI calculable si ya alcanza el umbral), con una sola posición y sin ventas cortas. Permite salir por RSI, por stop/take profit en pb desde la tasa de entrada, o por la primera condición de ambas reglas. Por defecto: entrada 70, stop 5 pb, take profit 15 pb y bid/ask spread de 0 pb por lado.
 
-Todas las señales se ejecutan en el siguiente cierre disponible, incluidos los stops; no asume ejecuciones exactas en los umbrales ni datos intradía. El RSI se inicializa con datos anteriores al período seleccionado, pero la estrategia comienza sin posición y no arrastra señales anteriores. No abre operaciones en el último cierre y liquida posiciones existentes al final. El resultado de cada compra es `(tasa de entrada - tasa de salida) * 100`, con tasas expresadas en porcentaje, menos el costo total por operación. La curva incluye valoración diaria de la posición y provisiona su costo completo; la caída máxima se calcula desde máximos previos, comenzando en cero. Los pb acumulados no equivalen a rentabilidad o P&L monetario y excluyen cupones, carry y financiamiento.
+Todas las señales se ejecutan en el siguiente cierre disponible, incluidos los stops; no asume ejecuciones exactas en los umbrales ni datos intradía. El RSI se inicializa con datos anteriores al período seleccionado, pero la estrategia comienza sin posición y no arrastra señales anteriores. No abre operaciones en el último cierre y liquida posiciones existentes al final. El spread ingresado es el castigo por cada lado: la tasa de compra es la tasa de mercado menos `spread / 100`, y la de venta es la tasa de mercado más `spread / 100`. El resultado neto es `(tasa de entrada ajustada - tasa de salida ajustada) * 100`, con tasas expresadas en porcentaje; una operación completa pierde dos veces el spread ingresado respecto del resultado bruto. Los stops y objetivos se evalúan sobre ese resultado neto. La caída máxima usa la valoración diaria neta desde máximos previos, comenzando en cero. El módulo tiene dos desplegables: «Técnicos para BTP/BTU» y «RSI», y muestra indicadores y tabla de operaciones, sin gráfico de resultado acumulado. Los pb acumulados no equivalen a rentabilidad o P&L monetario y excluyen cupones, carry y financiamiento.
 
 Validación: `node tests/rsi-backtest.test.cjs`.
 
