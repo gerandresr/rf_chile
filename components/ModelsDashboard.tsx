@@ -5,7 +5,8 @@ import { ChevronDown } from "lucide-react";
 import { Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "./AppShell";
 import { TaylorModel } from "./TaylorModel";
-import { RsiBacktestModel } from "./RsiBacktestModel";
+import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
+import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import monthlyData from "@/public/data/datos-mensuales.json";
 import { estimateNairu } from "@/lib/nairu";
 
@@ -99,7 +100,7 @@ export function ModelsDashboard() {
   const [open, setOpen] = useState(false);
   const [taylorOpen, setTaylorOpen] = useState(false);
   const [backtestOpen, setBacktestOpen] = useState(false);
-  const [rsiOpen, setRsiOpen] = useState(false);
+  const [oscillatorOpen, setOscillatorOpen] = useState<Partial<Record<Oscillator, boolean>>>({});
   return <AppShell>
     <header className="page-head"><div><div className="eyebrow">Trading Propietario</div><h1>Modelos</h1><p>Selecciona un modelo para consultar sus resultados.</p></div></header>
     <details className="panel model-disclosure" onToggle={(event) => setOpen(event.currentTarget.open)}>
@@ -110,12 +111,12 @@ export function ModelsDashboard() {
       <summary><span>Regla de Taylor</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {taylorOpen && <TaylorModel />}
     </details>
-    <details className="panel model-disclosure" onToggle={(event) => { setBacktestOpen(event.currentTarget.open); if (!event.currentTarget.open) setRsiOpen(false); }}>
+    <details className="panel model-disclosure" onToggle={(event) => { setBacktestOpen(event.currentTarget.open); if (!event.currentTarget.open) setOscillatorOpen({}); }}>
       <summary><span>Técnicos para BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
-      {backtestOpen && <div className="model-content"><details className="panel model-disclosure" onToggle={(event) => setRsiOpen(event.currentTarget.open)}>
-        <summary><span>RSI</span><ChevronDown size={20} aria-hidden="true" /></summary>
-        {rsiOpen && <RsiBacktestModel />}
-      </details></div>}
+      {backtestOpen && <div className="model-content">{oscillatorOptions.map(option => <details key={option.id} className="panel model-disclosure" onToggle={(event) => { const isOpen = event.currentTarget.open; setOscillatorOpen(current => ({ ...current, [option.id]: isOpen })); }}>
+        <summary><span>(Oscilador) {option.name}</span><ChevronDown size={20} aria-hidden="true" /></summary>
+        {oscillatorOpen[option.id] && <OscillatorBacktestModel oscillator={option.id} />}
+      </details>)}</div>}
     </details>
   </AppShell>;
 }
