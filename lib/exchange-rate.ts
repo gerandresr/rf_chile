@@ -26,8 +26,8 @@ export function exchangeRateSeries(monthly: MonthlyExchangeRate[], daily: DailyE
   return dates.map(fecha => {
     const tc_real = real.get(fecha) ?? null;
     const observations = dollars.get(fecha) ?? [];
-    const previous = Array.from({ length: 120 }, (_, i) => realByIndex.get(monthIndex(fecha) - i - 1));
-    const reference = previous.every(positive) ? (previous as number[]).reduce((a, b) => a + b, 0) / 120 : null;
+    const previous = Array.from({ length: 36 }, (_, i) => realByIndex.get(monthIndex(fecha) - i - 1));
+    const reference = previous.every(positive) ? (previous as number[]).reduce((a, b) => a + b, 0) / 36 : null;
     const gap = tc_real !== null && reference !== null ? (tc_real / reference - 1) * 100 : null;
     return { fecha, tc_real, usdclp: observations.length ? observations.reduce((a, b) => a + b, 0) / observations.length : null,
       dollarObservations: observations.length, reference, gap, positive: gap === null ? null : Math.max(0, gap), negative: gap === null ? null : Math.min(0, gap) };
