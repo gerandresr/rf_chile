@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, BarChart3, Landmark, FlaskConical, ArrowLeftRight } from "lucide-react";
+import { VisitorCounter } from "./VisitorCounter";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const p = usePathname();
@@ -39,7 +40,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      <main className="main">{children}</main>
+      <main className={`main ${p === "/" ? "markets-page" : ""}`}>
+        {children}
+        {p === "/" && <VisitorCounter />}
+      </main>
+
+      {p === "/" && <style>{`.markets-page .note { display: none !important; }`}</style>}
     </div>
   );
 }
