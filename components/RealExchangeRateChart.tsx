@@ -85,7 +85,7 @@ function RealExchangeRateContent() {
 export function RealExchangeRateChart() {
   const [open, setOpen] = useState(false);
   return <details className="panel model-disclosure" onToggle={event => setOpen(event.currentTarget.open)}>
-    <summary><span>Tipo de Cambio Real Chile</span><ChevronDown size={20} aria-hidden="true"/></summary>
+    <summary><span>Tipo de cambio real y desviaciones</span><ChevronDown size={20} aria-hidden="true"/></summary>
     {open && <RealExchangeRateContent/>}
   </details>;
 }

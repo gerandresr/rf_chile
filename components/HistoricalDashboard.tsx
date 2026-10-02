@@ -4,7 +4,6 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { Bar, ComposedChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from "recharts";
 import { AppShell } from "./AppShell";
 import { spreadPair, yieldSpread } from "@/lib/yield-spreads";
-import { RealExchangeRateChart } from "./RealExchangeRateChart";
 import { ChangeDistributionChart } from "./ChangeDistributionChart";
 import { RFData, isActiveInstrument, observations, rollingVolatility } from "@/lib/rf";
 import { calculateTechnicals, technicalOptions, Technical, TechnicalPoint } from "@/lib/technicals";
@@ -149,6 +148,5 @@ export function HistoricalDashboard() {
       {selectedTechnical && !hasIndicatorData && <p className="technical-description" role="status">Historia insuficiente para calcular este indicador en el período seleccionado.</p>}
     </section>
     <div className="note">{selectedTechnical ? "El indicador usa solamente el instrumento principal. Seleccionar un BTP o BTU adicional desactiva el indicador y permite comparar nuevamente. Las ventanas usan observaciones disponibles y se calculan antes de recortar el período visible." : "Puedes comparar hasta 4 series simultáneamente. En Yield, las comparaciones deben ser todas BTP o todas BTU; seleccionar el otro grupo reemplaza las anteriores. La volatilidad usa desviación estándar muestral de 10, 30 o 90 cambios diarios de yield."}</div>
-    <RealExchangeRateChart/>
   </AppShell>;
 }

@@ -5,6 +5,7 @@ import { ChevronDown } from "lucide-react";
 import { Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "./AppShell";
 import { TaylorModel } from "./TaylorModel";
+import { RealExchangeRateChart } from "./RealExchangeRateChart";
 import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import monthlyData from "@/public/data/datos-mensuales.json";
@@ -111,6 +112,7 @@ export function ModelsDashboard() {
       <summary><span>Regla de Taylor</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {taylorOpen && <TaylorModel />}
     </details>
+    <RealExchangeRateChart />
     <details className="panel model-disclosure" onToggle={(event) => { setBacktestOpen(event.currentTarget.open); if (!event.currentTarget.open) setOscillatorOpen({}); }}>
       <summary><span>Técnicos para BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {backtestOpen && <div className="model-content">{oscillatorOptions.map(option => <details key={option.id} className="panel model-disclosure" onToggle={(event) => { const isOpen = event.currentTarget.open; setOscillatorOpen(current => ({ ...current, [option.id]: isOpen })); }}>
