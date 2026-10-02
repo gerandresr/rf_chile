@@ -10,7 +10,7 @@ export function VisitorCounter() {
   const [visits, setVisits] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("https://countapi.mileshilliard.com/api/v1/hit/rf-chile-mercados", { cache: "no-store" })
+    fetch("/api/visits", { cache: "no-store" })
       .then((response) => {
         if (!response.ok) throw new Error("No se pudo cargar el contador");
         return response.json();
