@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Landmark, FlaskConical } from "lucide-react";
+import { Activity, BarChart3, Landmark, FlaskConical, ArrowLeftRight } from "lucide-react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const p = usePathname();
@@ -11,6 +11,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Mercados", icon: Landmark },
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
     { href: "/modelos", label: "Modelos", icon: FlaskConical },
+    { href: "/flujos", label: "Flujos", icon: ArrowLeftRight },
   ];
 
   return (
