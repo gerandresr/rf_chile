@@ -9,6 +9,23 @@ const number = (value: number) => value.toLocaleString("es-CL", { minimumFractio
 function month(date: string) {
   return new Date(`${date}T12:00:00Z`).toLocaleDateString("es-CL", { month: "short", year: "numeric", timeZone: "UTC" });
 }
+type GapKey = "cumulativeGap" | "gap" | "hpGap";
+function DeviationChart({ rows, gapKey, referenceKey, title, badge, caption, domain }: {
+  rows: ExchangeRatePoint[]; gapKey: GapKey; referenceKey: "cumulativeReference" | "reference" | "hpReference";
+  title: string; badge: string; caption: string; domain: [number, number];
+}) {
+  const points = rows.map(row => ({ ...row, deviation: row[gapKey], baseline: row[referenceKey],
+    above: row[gapKey] === null ? null : Math.max(0, row[gapKey]!), below: row[gapKey] === null ? null : Math.min(0, row[gapKey]!) }));
+  return <section className="model-chart-section"><div className="panel-head"><h2>{title}</h2><span className="pill">{badge}</span></div>
+    {points.some(row => row.deviation !== null) ? <div className="model-gap-chart" role="img" aria-label={title}><ResponsiveContainer width="100%" height="100%"><AreaChart data={points} syncId="exchange-rate" margin={{ left: 4, right: 4, top: 10, bottom: 4 }}>
+      <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="fecha" minTickGap={55} tickFormatter={month}/><YAxis width={60} domain={domain} tickFormatter={v => `${Number(v).toFixed(1)}%`}/><ReferenceLine y={0} stroke="#748096"/>
+      <Tooltip content={({ active, payload }) => { const row = payload?.[0]?.payload as typeof points[number] | undefined; return active && row?.deviation != null ? <div className="curve-tooltip"><strong>{month(row.fecha)}</strong><div>Desviación: {number(row.deviation)}%</div><div>TCR: {number(row.tc_real!)}</div><div>Referencia: {number(row.baseline!)}</div></div> : null; }}/><Legend/>
+      <Area dataKey="above" name="Sobre la referencia" stroke="#0f9f6e" fill="#0f9f6e" fillOpacity={0.25} type="linear" isAnimationActive={false} connectNulls={false}/>
+      <Area dataKey="below" name="Bajo la referencia" stroke="#d94b4b" fill="#d94b4b" fillOpacity={0.25} type="linear" isAnimationActive={false} connectNulls={false}/>
+    </AreaChart></ResponsiveContainer></div> : <p className="model-caption" role="status">Historia insuficiente para calcular esta desviación en el período seleccionado.</p>}
+    <p className="model-caption">{caption}</p>
+  </section>;
+}
 function RealExchangeRateContent() {
   const [rows, setRows] = useState<ExchangeRatePoint[] | null>(null);
   const [error, setError] = useState(false);
@@ -34,7 +51,9 @@ function RealExchangeRateContent() {
   if (!rows.length) return <div className="model-content">No hay datos disponibles.</div>;
   const lastReal = rows.filter(r => r.tc_real !== null).at(-1);
   const lastDollar = rows.filter(r => r.usdclp !== null).at(-1);
-  const gaps = visible.some(r => r.gap !== null);
+  const deviations = visible.flatMap(r => [r.cumulativeGap, r.gap, r.hpGap]).filter((v): v is number => v !== null);
+  const extent = Math.max(1, Math.ceil(Math.max(0, ...deviations.map(Math.abs))));
+  const domain: [number, number] = [-extent, extent];
   return <div className="model-content">
     <div className="model-intro"><p>Comparación mensual · {month(visible[0].fecha)} a {month(visible[visible.length - 1].fecha)}</p>
       <div className="segmented" role="group" aria-label="Período del tipo de cambio">{["1", "3", "5", "MAX"].map(p => <button key={p} className={period === p ? "selected" : ""} aria-pressed={period === p} onClick={() => setPeriod(p)}>{p === "MAX" ? "Todo" : `${p}A`}</button>)}</div>
@@ -51,15 +70,16 @@ function RealExchangeRateContent() {
       </LineChart></ResponsiveContainer>
     </div>
     <p className="model-caption">Último dato disponible del dólar: {lastDollar ? `$${number(lastDollar.usdclp!)} (${lastDollar.dollarDate})` : "sin datos"}. Último TCR: {lastReal ? `${number(lastReal.tc_real!)} (${month(lastReal.fecha)})` : "sin datos"}. En cada mes se usa el último dato válido de dólar observado; para el mes en curso, el último disponible. Las series pueden terminar en meses distintos.</p>
-    <section className="model-chart-section"><div className="panel-head"><h2>Desviación del TCR respecto a su promedio</h2><span className="pill">36 meses anteriores · %</span></div>
-      {gaps ? <div className="model-gap-chart" role="img" aria-label="Brecha porcentual del TCR frente al promedio de los 36 meses anteriores"><ResponsiveContainer width="100%" height="100%"><AreaChart data={visible} syncId="exchange-rate" margin={{ left: 4, right: 4, top: 10, bottom: 4 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="fecha" minTickGap={55} tickFormatter={month}/><YAxis width={60} tickFormatter={v => `${Number(v).toFixed(1)}%`}/><ReferenceLine y={0} stroke="#748096"/>
-        <Tooltip content={({ active, payload }) => { const row = payload?.[0]?.payload as ExchangeRatePoint | undefined; return active && row?.gap != null ? <div className="curve-tooltip"><strong>{month(row.fecha)}</strong><div>Brecha: {number(row.gap)}%</div><div>TCR: {number(row.tc_real!)}</div><div>Promedio previo: {number(row.reference!)}</div></div> : null; }}/><Legend/>
-        <Area dataKey="positive" name="Sobre el promedio" stroke="#0f9f6e" fill="#0f9f6e" fillOpacity={0.25} type="linear" isAnimationActive={false} connectNulls={false}/>
-        <Area dataKey="negative" name="Bajo el promedio" stroke="#d94b4b" fill="#d94b4b" fillOpacity={0.25} type="linear" isAnimationActive={false} connectNulls={false}/>
-      </AreaChart></ResponsiveContainer></div> : <p className="model-caption" role="status">No hay meses con los 36 valores mensuales previos necesarios para calcular la brecha en este período.</p>}
-      <p className="model-caption">Brecha = (TCR / promedio de los 36 meses anteriores − 1) × 100. El promedio excluye el mes actual y se calcula antes de recortar el período visible. Se requieren 36 meses consecutivos con datos. Verde indica TCR sobre su promedio y rojo bajo su promedio; no es una estimación de sobrevaloración o subvaloración del peso.</p>
-    </section>
+    <DeviationChart rows={visible} gapKey="cumulativeGap" referenceKey="cumulativeReference" domain={domain}
+      title="Desviación del TCR respecto a su promedio histórico (acumulado)" badge="Desde 36 meses previos · %"
+      caption="Referencia: promedio de todos los valores mensuales anteriores disponibles desde el inicio del histórico, excluyendo el mes actual. Comienza con 36 observaciones previas y se amplía cada mes." />
+    <DeviationChart rows={visible} gapKey="gap" referenceKey="reference" domain={domain}
+      title="Desviación del TCR respecto a su promedio de 36 meses rolling" badge="36 meses anteriores · %"
+      caption="Referencia: promedio móvil de los 36 meses calendario anteriores, excluyendo el mes actual. Se requieren 36 meses consecutivos con datos." />
+    <DeviationChart rows={visible} gapKey="hpGap" referenceKey="hpReference" domain={domain}
+      title="Desviación del TCR respecto a su tendencia Hodrick-Prescott" badge="HP mensual · λ = 129.600 · %"
+      caption="Referencia: tendencia HP del logaritmo del TCR, convertida a índice. Usa toda la muestra de cada tramo mensual continuo (mínimo 36 meses); puede revisar las desviaciones históricas al llegar nuevos datos, especialmente en los extremos." />
+    <p className="model-caption">Las tres desviaciones usan (TCR / referencia − 1) × 100, se calculan antes de recortar el período visible y comparten la misma escala vertical. Verde indica TCR sobre la referencia y rojo bajo ella; no son estimaciones del tipo de cambio de equilibrio.</p>
   </div>;
 }
 export function RealExchangeRateChart() {
