@@ -1,10 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { estimateTaylor, hpTrend } from "../lib/taylor.ts";
+import { estimateTaylor, hpTrend, realTaylorParameters, DEFAULT_TAYLOR_NOMINAL_PARAMETERS, DEFAULT_TAYLOR_PARAMETERS } from "../lib/taylor.ts";
 
 const close = (actual, expected, tolerance = 1e-7) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
 const monthly = Array.from({ length: 48 }, (_, i) => ({ fecha: `${2020 + Math.floor(i / 12)}-${String(i % 12 + 1).padStart(2, "0")}-01`, imacec_ind_des: 100 * Math.exp(i * .002), ipc_yoy: 3 }));
 const daily = monthly.map(row => ({ fecha: row.fecha.slice(0, 7) + "-28", tpm: 4.25 }));
+
+test("nominal neutral rate implies real neutral rate and preserves the original default", () => {
+  assert.equal(DEFAULT_TAYLOR_NOMINAL_PARAMETERS.neutralNominal, 4.25);
+  assert.deepEqual(realTaylorParameters(DEFAULT_TAYLOR_NOMINAL_PARAMETERS), DEFAULT_TAYLOR_PARAMETERS);
+  const changed = { ...DEFAULT_TAYLOR_NOMINAL_PARAMETERS, inflationTarget: 2 };
+  assert.equal(realTaylorParameters(changed).neutralReal, 2.25);
+  estimateTaylor(monthly.map(row => ({ ...row, ipc_yoy: 2 })), daily, realTaylorParameters(changed)).points.forEach(point => close(point.taylor, 4.25));
+  const higher = { ...DEFAULT_TAYLOR_NOMINAL_PARAMETERS, neutralNominal: 4.5 };
+  estimateTaylor(monthly, daily, realTaylorParameters(higher)).points.forEach(point => close(point.taylor, 4.5));
+});
 
 test("HP preserves affine log trends and agrees with an independent NumPy solution", () => {
   const linear = Array.from({ length: 48 }, (_, i) => 4 + .002 * i);

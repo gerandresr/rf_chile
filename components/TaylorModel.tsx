@@ -4,21 +4,21 @@ import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import monthlyData from "@/public/data/datos-mensuales.json";
 import dailyData from "@/public/data/datos-diarios.json";
-import { DEFAULT_TAYLOR_PARAMETERS, estimateTaylor, type TaylorParameters } from "@/lib/taylor";
+import { DEFAULT_TAYLOR_NOMINAL_PARAMETERS, estimateTaylor, realTaylorParameters, type TaylorNominalParameters } from "@/lib/taylor";
 
 const number = (value: number) => new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 const month = (date: string) => new Intl.DateTimeFormat("es-CL", { month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
-const controls: { key: keyof TaylorParameters; label: string; min: number; max: number }[] = [
-  { key: "neutralReal", label: "Tasa neutral real (%)", min: -5, max: 10 },
+const controls: { key: keyof TaylorNominalParameters; label: string; min: number; max: number }[] = [
+  { key: "neutralNominal", label: "TPM Neutral (%)", min: -5, max: 20 },
   { key: "inflationTarget", label: "Meta de inflación (%)", min: 0, max: 15 },
   { key: "inflationWeight", label: "Peso de brecha de inflación", min: 0, max: 5 },
   { key: "activityWeight", label: "Peso de brecha de actividad", min: 0, max: 5 },
 ];
 
 export function TaylorModel() {
-  const [parameters, setParameters] = useState(DEFAULT_TAYLOR_PARAMETERS);
+  const [parameters, setParameters] = useState(DEFAULT_TAYLOR_NOMINAL_PARAMETERS);
   const estimation = useMemo(() => {
-    try { return { result: estimateTaylor(monthlyData, dailyData, parameters), error: null }; }
+    try { return { result: estimateTaylor(monthlyData, dailyData, realTaylorParameters(parameters)), error: null }; }
     catch (error) { return { result: null, error: error instanceof Error ? error.message : "No fue posible calcular la regla." }; }
   }, [parameters]);
   const result = estimation.result;
@@ -30,9 +30,9 @@ export function TaylorModel() {
         const value = event.currentTarget.valueAsNumber;
         if (Number.isFinite(value) && value >= control.min && value <= control.max) setParameters(previous => ({ ...previous, [control.key]: value }));
       }} /></label>)}
-      <button className="taylor-reset" onClick={() => setParameters(DEFAULT_TAYLOR_PARAMETERS)}>Restablecer parámetros</button>
+      <button className="taylor-reset" onClick={() => setParameters(DEFAULT_TAYLOR_NOMINAL_PARAMETERS)}>Restablecer parámetros</button>
     </div>
-    <p className="model-caption">Taylor = tasa neutral real + inflación anual + peso de inflación × (inflación − meta) + peso de actividad × brecha de actividad. La tasa neutral real inicial de 1,25% es un supuesto modificable, constante en toda la muestra.</p>
+    <p className="model-caption">Taylor = TPM neutral + (1 + peso de inflación) × (inflación anual − meta) + peso de actividad × brecha de actividad. Tasa neutral real implícita = TPM neutral − meta de inflación: {number(parameters.neutralNominal - parameters.inflationTarget)}%. Los parámetros son constantes en toda la muestra.</p>
     {!result || !latest ? <div className="model-notice" role="alert">{estimation.error}</div> : <>
       <div className="kpi-grid model-kpi-grid">
         <div className="kpi"><div className="kpi-label">Tasa Taylor</div><div className="kpi-value">{number(latest.taylor)}%</div><div className="kpi-foot kpi-foot-static">Dato {month(latest.date)}</div></div>
