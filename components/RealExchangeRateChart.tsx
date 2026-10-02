@@ -51,14 +51,14 @@ function RealExchangeRateContent() {
       </LineChart></ResponsiveContainer>
     </div>
     <p className="model-caption">Último promedio mensual disponible del dólar: {lastDollar ? `$${number(lastDollar.usdclp!)} (${month(lastDollar.fecha)}; ${lastDollar.dollarObservations} observaciones)` : "sin datos"}. Último TCR: {lastReal ? `${number(lastReal.tc_real!)} (${month(lastReal.fecha)})` : "sin datos"}. El promedio del mes en curso es parcial; las series pueden terminar en meses distintos.</p>
-    <section className="model-chart-section"><div className="panel-head"><h2>Desviación del TCR respecto a su promedio</h2><span className="pill">120 meses anteriores · %</span></div>
-      {gaps ? <div className="model-gap-chart" role="img" aria-label="Brecha porcentual del TCR frente al promedio de los 120 meses anteriores"><ResponsiveContainer width="100%" height="100%"><AreaChart data={visible} syncId="exchange-rate" margin={{ left: 4, right: 4, top: 10, bottom: 4 }}>
+    <section className="model-chart-section"><div className="panel-head"><h2>Desviación del TCR respecto a su promedio</h2><span className="pill">36 meses anteriores · %</span></div>
+      {gaps ? <div className="model-gap-chart" role="img" aria-label="Brecha porcentual del TCR frente al promedio de los 36 meses anteriores"><ResponsiveContainer width="100%" height="100%"><AreaChart data={visible} syncId="exchange-rate" margin={{ left: 4, right: 4, top: 10, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="fecha" minTickGap={55} tickFormatter={month}/><YAxis width={60} tickFormatter={v => `${Number(v).toFixed(1)}%`}/><ReferenceLine y={0} stroke="#748096"/>
         <Tooltip content={({ active, payload }) => { const row = payload?.[0]?.payload as ExchangeRatePoint | undefined; return active && row?.gap != null ? <div className="curve-tooltip"><strong>{month(row.fecha)}</strong><div>Brecha: {number(row.gap)}%</div><div>TCR: {number(row.tc_real!)}</div><div>Promedio previo: {number(row.reference!)}</div></div> : null; }}/><Legend/>
         <Area dataKey="positive" name="Sobre el promedio" stroke="#0f9f6e" fill="#0f9f6e" fillOpacity={0.25} type="linear" isAnimationActive={false} connectNulls={false}/>
         <Area dataKey="negative" name="Bajo el promedio" stroke="#d94b4b" fill="#d94b4b" fillOpacity={0.25} type="linear" isAnimationActive={false} connectNulls={false}/>
-      </AreaChart></ResponsiveContainer></div> : <p className="model-caption" role="status">No hay meses con los 120 valores mensuales previos necesarios para calcular la brecha en este período.</p>}
-      <p className="model-caption">Brecha = (TCR / promedio de los 120 meses anteriores − 1) × 100. El promedio excluye el mes actual y se calcula antes de recortar el período visible. Se requieren 120 meses consecutivos con datos. Verde indica TCR sobre su promedio y rojo bajo su promedio; no es una estimación de sobrevaloración o subvaloración del peso.</p>
+      </AreaChart></ResponsiveContainer></div> : <p className="model-caption" role="status">No hay meses con los 36 valores mensuales previos necesarios para calcular la brecha en este período.</p>}
+      <p className="model-caption">Brecha = (TCR / promedio de los 36 meses anteriores − 1) × 100. El promedio excluye el mes actual y se calcula antes de recortar el período visible. Se requieren 36 meses consecutivos con datos. Verde indica TCR sobre su promedio y rojo bajo su promedio; no es una estimación de sobrevaloración o subvaloración del peso.</p>
     </section>
   </div>;
 }
