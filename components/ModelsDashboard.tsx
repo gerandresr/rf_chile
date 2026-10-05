@@ -44,7 +44,6 @@ function NairuModel() {
         <div className="kpi"><div className="kpi-label">Desempleo observado</div><div className="kpi-value">{number(latest.unemployment)}%</div><div className="kpi-foot kpi-foot-static">Dato {month(latest.date)}</div></div>
         <div className="kpi"><div className="kpi-label">Brecha de desempleo</div><div className="kpi-value">{latest.gap > 0 ? "+" : ""}{number(latest.gap)} pp</div><div className="kpi-foot kpi-foot-static">{reading}</div></div>
       </div>
-
       <div className="model-controls">
         <div className="segmented" role="group" aria-label="Tipo de estimación">
           <button className={view === "smoothed" ? "selected" : ""} aria-pressed={view === "smoothed"} onClick={() => setView("smoothed")}>Suavizada</button>
@@ -52,7 +51,6 @@ function NairuModel() {
         </div>
       </div>
       <p className="model-caption">{view === "smoothed" ? "La estimación suavizada utiliza toda la muestra y revisa el pasado con información posterior." : "El filtro actualiza el estado hacia adelante. Los parámetros y el nivel inicial se calibran con información de la muestra: esta vista no reproduce estimaciones en tiempo real."}</p>
-
       <section className="model-chart-section" aria-label="Gráfico de desempleo y NAIRU">
         <div className="panel-head"><h2>Desempleo y NAIRU</h2><span className="pill">{month(chartRows[0].date, true)} – {month(latest.date, true)}</span></div>
         <div className="model-chart">
@@ -74,7 +72,6 @@ function NairuModel() {
           </ResponsiveContainer>
         </div>
       </section>
-
       <section className="model-chart-section" aria-label="Gráfico de brecha de desempleo">
         <div className="panel-head"><h2>Brecha de desempleo</h2><span className="pill">Desempleo − NAIRU · pp</span></div>
         <p className="model-caption">Una brecha positiva sugiere holgura laboral; una negativa, mayor presión laboral. El signo por sí solo no permite concluir si la incertidumbre incluye cero.</p>
@@ -93,7 +90,6 @@ function NairuModel() {
         </div>
         <p className="model-caption">La línea roja muestra el promedio de la brecha del período completo, en puntos porcentuales.</p>
       </section>
-
     </div>
   );
 }
@@ -107,7 +103,7 @@ export function ModelsDashboard() {
   return <AppShell>
     <header className="page-head"><div><div className="eyebrow">Trading Propietario</div><h1>Modelos</h1><p>Selecciona un modelo para consultar sus resultados.</p></div></header>
     <details className="panel model-disclosure" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary><span>NAIRU · Filtro de Kalman</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      <summary><span>Nairu (con Filtro de Kalman)</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {open && <NairuModel />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setTaylorOpen(event.currentTarget.open)}>
@@ -116,7 +112,7 @@ export function ModelsDashboard() {
     </details>
     <RealExchangeRateChart />
     <details className="panel model-disclosure" onToggle={(event) => setGarchOpen(event.currentTarget.open)}>
-      <summary><span>GARCH(1,1) · Pronóstico de Yield BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      <summary><span>Modelo GARCH (BTP/BTU)</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {garchOpen && <GarchYieldModel />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => { setBacktestOpen(event.currentTarget.open); if (!event.currentTarget.open) setOscillatorOpen({}); }}>
