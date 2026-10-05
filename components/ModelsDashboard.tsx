@@ -116,7 +116,7 @@ export function ModelsDashboard() {
     </details>
     <RealExchangeRateChart />
     <details className="panel model-disclosure" onToggle={(event) => setGarchOpen(event.currentTarget.open)}>
-      <summary><span>GARCH(1,1) · Volatilidad Yield BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      <summary><span>GARCH(1,1) · Pronóstico de Yield BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {garchOpen && <GarchYieldModel />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => { setBacktestOpen(event.currentTarget.open); if (!event.currentTarget.open) setOscillatorOpen({}); }}>
