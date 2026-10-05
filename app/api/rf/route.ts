@@ -8,14 +8,16 @@ type Instrument = {
   coupon: number | null;
   maturityMonth: number;
   maturityYear: number;
+  duration: number | null;
 };
 
 type InstrumentHistory = {
   fecha?: string[];
   tir?: Array<number | null>;
+  duracion?: Array<number | null>;
 };
 
-function instrumentFromCode(code: string): Instrument | null {
+function instrumentFromCode(code: string): Omit<Instrument, "duration"> | null {
   const match = code.match(/^(BTP|BTU)(\d{3})(\d{2})(\d{2})$/);
   if (!match) return null;
   const [, type, couponRaw, monthRaw, yearRaw] = match;
@@ -42,15 +44,26 @@ export async function GET() {
 
     await Promise.all(files.map(async (file) => {
       const code = file.replace(/\.json$/, "");
-      const instrument = instrumentFromCode(code);
-      if (!instrument) return;
+      const baseInstrument = instrumentFromCode(code);
+      if (!baseInstrument) return;
 
       const raw = await fs.readFile(path.join(directory, file), "utf8");
       const parsed = JSON.parse(raw) as Record<string, InstrumentHistory>;
       const series = parsed[code];
       if (!series || !Array.isArray(series.fecha) || !Array.isArray(series.tir)) return;
 
-      instruments.push(instrument);
+      let duration: number | null = null;
+      if (Array.isArray(series.duracion)) {
+        for (let i = Math.min(series.fecha.length, series.duracion.length) - 1; i >= 0; i--) {
+          const value = series.duracion[i];
+          if (typeof value === "number" && Number.isFinite(value)) {
+            duration = value;
+            break;
+          }
+        }
+      }
+      instruments.push({ ...baseInstrument, duration });
+
       const length = Math.min(series.fecha.length, series.tir.length);
       for (let i = 0; i < length; i++) {
         const date = series.fecha[i];
