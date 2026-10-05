@@ -1,4 +1,4 @@
-export type Instrument={code:string;type:"BTP"|"BTU";coupon:number|null;maturityMonth:number;maturityYear:number};
+export type Instrument={code:string;type:"BTP"|"BTU";coupon:number|null;maturityMonth:number;maturityYear:number;duration?:number|null};
 export type HistoryRow={date:string;values:Record<string,number>};
 export type RFData={sourceSheet:string;lastMarketDate:string;instruments:Instrument[];history:HistoryRow[]};
 
@@ -49,12 +49,7 @@ export function instrumentSnapshot(data:RFData,code:string){
   const monthStart=`${year}-${String(month).padStart(2,"0")}-01`;
   const yearStart=`${year}-01-01`;
 
-  // MTD: cierre previo al inicio del mes. Si el instrumento todavía no tenía
-  // historia, usa su primera observación disponible dentro del mes.
   const mtdBase=previousObservationBefore(o,monthStart)??firstObservationFrom(o,monthStart);
-
-  // YTD: cierre previo al inicio del año. Si no existe, usa la primera
-  // observación disponible del año (por ejemplo, un bono emitido durante el año).
   const ytdBase=previousObservationBefore(o,yearStart)??firstObservationFrom(o,yearStart);
 
   const mtd=mtdBase?(l.value-mtdBase.value)*100:null;
@@ -66,7 +61,6 @@ export function instrumentSnapshot(data:RFData,code:string){
     d1:p?(l.value-p.value)*100:null,
     mtd,
     ytd,
-    // Alias temporales para mantener compatibilidad con la tabla actual.
     w1:mtd,
     m1:ytd,
   };
