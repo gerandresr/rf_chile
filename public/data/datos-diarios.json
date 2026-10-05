@@ -21458,5 +21458,20 @@
     "fecha": "2026-10-02",
     "tpm": 4.5,
     "usdclp_obs": 983.84
+  },
+  {
+    "fecha": "2026-10-03",
+    "tpm": null,
+    "usdclp_obs": null
+  },
+  {
+    "fecha": "2026-10-04",
+    "tpm": null,
+    "usdclp_obs": null
+  },
+  {
+    "fecha": "2026-10-05",
+    "tpm": 4.5,
+    "usdclp_obs": 984.82
   }
 ]
