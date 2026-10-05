@@ -7,9 +7,31 @@ module.exports = function marketCarryLoader(source) {
   return value == null || !Number.isFinite(value) ? "—" : value.toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function carry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined) {
+function rateCarry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined) {
   if (yieldPct == null || tpmPct == null || duration == null || !Number.isFinite(duration) || duration === 0) return null;
   return (((yieldPct / 100) / 365 - (tpmPct / 100) / 360) / duration) * 10000;
+}
+
+function ufCarryInputs() {
+  const rows = monthlyMacroData
+    .filter((row) => typeof row.ipc_mom === "number")
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const latest = rows.at(-1);
+  if (!latest || typeof latest.ipc_mom !== "number") return null;
+  const ipcDate = new Date(\`${'${latest.fecha}'}T12:00:00Z\`);
+  const start = new Date(Date.UTC(ipcDate.getUTCFullYear(), ipcDate.getUTCMonth() + 1, 10));
+  const endExclusive = new Date(Date.UTC(ipcDate.getUTCFullYear(), ipcDate.getUTCMonth() + 2, 10));
+  const days = Math.round((endExclusive.getTime() - start.getTime()) / 86400000);
+  return { ipc: latest.ipc_mom, days };
+}
+
+function carry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined, type: Instrument["type"]) {
+  const rateCarry = rateCarry1d(yieldPct, tpmPct, duration);
+  if (rateCarry == null || type !== "BTU" || duration == null || duration === 0) return rateCarry;
+  const uf = ufCarryInputs();
+  if (!uf || uf.days <= 0) return rateCarry;
+  const ufCarry = (((uf.ipc / 100) / uf.days) / duration) * 10000;
+  return rateCarry + ufCarry;
 }
 
 function formatCarry(value: number | null) {
@@ -36,7 +58,7 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
 
   s = s.replace(
     `                  <td>{maturityLabel(inst)}</td>\n                  <td className="num strong">{formatPercent(s?.value, 3)}</td>\n                  <td className="num"><Change value={s?.d1 ?? null} /></td>\n                  <td className="num"><Change value={s?.mtd ?? null} /></td>\n                  <td className="num"><Change value={s?.ytd ?? null} /></td>`,
-    `                  <td className="num">{formatDuration(inst.duration)}</td>\n                  <td className="num strong">{formatPercent(s?.value, 2)}</td>\n                  <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration)} /></td>\n                  <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>\n                  <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>\n                  <td className="num"><MarketDelta value={s?.ytd ?? null} /></td>`
+    `                  <td className="num">{formatDuration(inst.duration)}</td>\n                  <td className="num strong">{formatPercent(s?.value, 2)}</td>\n                  <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration, inst.type)} /></td>\n                  <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>\n                  <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>\n                  <td className="num"><MarketDelta value={s?.ytd ?? null} /></td>`
   );
 
   s = s.replace(
