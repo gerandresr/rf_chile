@@ -70,7 +70,7 @@ export function GarchYieldModel() {
 
   return <div className="model-content">
     <p className="model-caption">
-      GARCH(1,1) estimado exclusivamente sobre cambios diarios de yield, expresados en puntos base. El modelo usa media constante, distribución gaussiana y variance targeting para estimar la volatilidad condicional; no utiliza precio, cupón, carry ni duración.
+      GARCH(1,1) estimado exclusivamente sobre cambios diarios de yield, expresados en puntos base. El modelo pronostica volatilidad y rangos probables de la yield; no utiliza precio, cupón, carry ni duración. La dirección esperada proviene solo de la media histórica diaria de la muestra.
     </p>
 
     <div className="backtest-controls">
@@ -96,19 +96,19 @@ export function GarchYieldModel() {
     {result && <>
       <div className="kpi-grid model-kpi-grid">
         <div className="kpi">
-          <div className="kpi-label">Volatilidad GARCH actual</div>
-          <div className="kpi-value">{number(result.latestVolatilityBp)} pb</div>
-          <div className="kpi-foot kpi-foot-static">Desvío estándar diario condicional</div>
+          <div className="kpi-label">Yield actual</div>
+          <div className="kpi-value">{number(result.latestYield, 3)}%</div>
+          <div className="kpi-foot kpi-foot-static">Último dato disponible</div>
         </div>
         <div className="kpi">
-          <div className="kpi-label">Pronóstico 1 día</div>
-          <div className="kpi-value">{number(result.forecastVolatilityBp)} pb</div>
-          <div className="kpi-foot kpi-foot-static">Volatilidad esperada del próximo cambio de yield</div>
+          <div className="kpi-label">Volatilidad esperada 1 día</div>
+          <div className="kpi-value">{number(result.nextDayVolatilityBp)} pb</div>
+          <div className="kpi-foot kpi-foot-static">Desvío estándar del próximo cambio de yield</div>
         </div>
         <div className="kpi">
           <div className="kpi-label">Volatilidad de largo plazo</div>
           <div className="kpi-value">{number(result.longRunVolatilityBp)} pb</div>
-          <div className="kpi-foot kpi-foot-static">Nivel implícito por variance targeting</div>
+          <div className="kpi-foot kpi-foot-static">Nivel diario de reversión del modelo</div>
         </div>
         <div className="kpi">
           <div className="kpi-label">Persistencia α + β</div>
@@ -117,12 +117,42 @@ export function GarchYieldModel() {
         </div>
       </div>
 
+      <section className="model-chart-section" aria-label="Pronósticos GARCH de yield">
+        <div className="panel-head">
+          <h2>Pronóstico de yield</h2>
+          <span className="pill">Horizontes 1, 5 y 20 días</span>
+        </div>
+        <p className="model-caption">La volatilidad acumulada corresponde al desvío estándar del movimiento total de yield hasta cada horizonte. Los rangos 68% y 95% asumen innovaciones gaussianas y no son garantías.</p>
+        <div className="table-wrap">
+          <table className="backtest-table">
+            <thead>
+              <tr>
+                <th>Horizonte</th>
+                <th>Yield esperada</th>
+                <th>Vol. acumulada</th>
+                <th>Rango 68%</th>
+                <th>Rango 95%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.forecasts.map(forecast => <tr key={forecast.horizonDays}>
+                <td>{forecast.horizonDays} día{forecast.horizonDays === 1 ? "" : "s"}</td>
+                <td>{number(forecast.expectedYield, 3)}%</td>
+                <td>{number(forecast.cumulativeVolatilityBp)} pb</td>
+                <td>{number(forecast.lower68, 3)}% – {number(forecast.upper68, 3)}%</td>
+                <td>{number(forecast.lower95, 3)}% – {number(forecast.upper95, 3)}%</td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section className="model-chart-section" aria-label="Yield y volatilidad GARCH">
         <div className="panel-head">
-          <h2>Yield y volatilidad condicional</h2>
+          <h2>Yield y volatilidad condicional histórica</h2>
           <span className="pill">{result.observations} cambios diarios · α {number(result.alpha, 3)} · β {number(result.beta, 3)}</span>
         </div>
-        <p className="model-caption">La línea de yield usa el eje izquierdo. La volatilidad GARCH se muestra en puntos base diarios en el eje derecho.</p>
+        <p className="model-caption">La línea de yield usa el eje izquierdo. La volatilidad GARCH histórica se muestra en puntos base diarios en el eje derecho.</p>
         <div className="model-chart">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={result.points} margin={{ top: 12, right: 12, bottom: 8, left: 0 }}>
@@ -149,7 +179,7 @@ export function GarchYieldModel() {
       </section>
 
       <p className="model-caption">
-        Lectura: una volatilidad GARCH superior a su nivel de largo plazo indica un régimen de movimientos de tasa más intenso. El modelo estima magnitud, no dirección. Media diaria estimada del cambio de yield: {result.meanChangeBp > 0 ? "+" : ""}{number(result.meanChangeBp, 2)} pb.
+        Media diaria estimada del cambio de yield: {result.meanChangeBp > 0 ? "+" : ""}{number(result.meanChangeBp, 2)} pb. GARCH modela principalmente la incertidumbre, no la dirección; por eso la yield esperada debe interpretarse con cautela y los rangos son el resultado más informativo del modelo.
       </p>
     </>}
   </div>;
