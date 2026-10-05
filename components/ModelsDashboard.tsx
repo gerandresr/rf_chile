@@ -7,6 +7,7 @@ import { AppShell } from "./AppShell";
 import { TaylorModel } from "./TaylorModel";
 import { RealExchangeRateChart } from "./RealExchangeRateChart";
 import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
+import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import monthlyData from "@/public/data/datos-mensuales.json";
 import { estimateNairu } from "@/lib/nairu";
@@ -100,6 +101,7 @@ function NairuModel() {
 export function ModelsDashboard() {
   const [open, setOpen] = useState(false);
   const [taylorOpen, setTaylorOpen] = useState(false);
+  const [garchOpen, setGarchOpen] = useState(false);
   const [backtestOpen, setBacktestOpen] = useState(false);
   const [oscillatorOpen, setOscillatorOpen] = useState<Partial<Record<Oscillator, boolean>>>({});
   return <AppShell>
@@ -113,6 +115,10 @@ export function ModelsDashboard() {
       {taylorOpen && <TaylorModel />}
     </details>
     <RealExchangeRateChart />
+    <details className="panel model-disclosure" onToggle={(event) => setGarchOpen(event.currentTarget.open)}>
+      <summary><span>GARCH(1,1) · Volatilidad Yield BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      {garchOpen && <GarchYieldModel />}
+    </details>
     <details className="panel model-disclosure" onToggle={(event) => { setBacktestOpen(event.currentTarget.open); if (!event.currentTarget.open) setOscillatorOpen({}); }}>
       <summary><span>Técnicos para BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {backtestOpen && <div className="model-content">{oscillatorOptions.map(option => <details key={option.id} className="panel model-disclosure" onToggle={(event) => { const isOpen = event.currentTarget.open; setOscillatorOpen(current => ({ ...current, [option.id]: isOpen })); }}>
