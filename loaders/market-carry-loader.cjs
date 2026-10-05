@@ -53,5 +53,49 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
     '<MarketTable title="Bonos de Gobierno en UF" instruments={btu} data={data} tpm={latestTpm} />'
   );
 
+  s = s.replace(
+    'type BenchmarkRow = { benchmark: string; yield: number | null; d1: number | null; mtd: number | null; ytd: number | null };',
+    'type BenchmarkRow = { benchmark: string; yield: number | null; d1: number | null; mtd: number | null; ytd: number | null };\ntype BenchmarkMode = "maturity" | "duration";'
+  );
+
+  s = s.replace(
+    'function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null) {\n  if (!row) return null;\n  return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));\n}',
+    `function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null, mode: BenchmarkMode) {
+  if (!row) return null;
+  if (mode === "maturity") return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
+  const refDate = new Date(\`${'${row.date}'}T12:00:00\`);
+  const points = data.instruments
+    .filter((inst) => inst.type === type && isActiveInstrument(inst, refDate) && (type !== "BTP" || (inst.coupon ?? 0) !== 0))
+    .map((inst) => ({ term: inst.duration ?? 0, yield: typeof row.values[inst.code] === "number" ? row.values[inst.code] : null, code: inst.code, name: maturityLabel(inst) }))
+    .filter((p) => p.term > 0 && p.yield != null)
+    .sort((a, b) => a.term - b.term);
+  return interpolateMarketYield(term, points);
+}`
+  );
+
+  s = s.replace('function buildBenchmarkRows(data: RFData): BenchmarkRow[] {', 'function buildBenchmarkRows(data: RFData, mode: BenchmarkMode): BenchmarkRow[] {');
+  s = s.replace(/benchmarkYield\(data, type, term, (current|d1Base|mtdBase|ytdBase)\)/g, 'benchmarkYield(data, type, term, $1, mode)');
+
+  s = s.replace(
+    'function BenchmarkTable({ rows }: { rows: BenchmarkRow[] }) {',
+    'function BenchmarkTable({ rows, mode, onModeChange }: { rows: BenchmarkRow[]; mode: BenchmarkMode; onModeChange: (mode: BenchmarkMode) => void }) {'
+  );
+  s = s.replace(
+    '<div><h2>Tasas Benchmark</h2></div>',
+    `<div><h2>Tasas Benchmark</h2><div className="segmented" style={{ marginTop: 10 }}><button className={mode === "maturity" ? "selected" : ""} onClick={() => onModeChange("maturity")}>Por vencimiento</button><button className={mode === "duration" ? "selected" : ""} onClick={() => onModeChange("duration")}>Por duración</button></div></div>`
+  );
+  s = s.replace(
+    'const [compareDate, setCompareDate] = useState("");',
+    'const [compareDate, setCompareDate] = useState("");\n  const [benchmarkMode, setBenchmarkMode] = useState<BenchmarkMode>("maturity");'
+  );
+  s = s.replace(
+    'const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data) : [], [data]);',
+    'const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data, benchmarkMode) : [], [data, benchmarkMode]);'
+  );
+  s = s.replace(
+    '<BenchmarkTable rows={benchmarkRows} />',
+    '<BenchmarkTable rows={benchmarkRows} mode={benchmarkMode} onModeChange={setBenchmarkMode} />'
+  );
+
   return s;
 };
