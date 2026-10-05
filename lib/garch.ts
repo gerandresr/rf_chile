@@ -7,15 +7,28 @@ export type GarchPoint = {
   volatilityBp: number;
 };
 
+export type GarchForecast = {
+  horizonDays: number;
+  expectedYield: number;
+  cumulativeVolatilityBp: number;
+  endDayVolatilityBp: number;
+  lower68: number;
+  upper68: number;
+  lower95: number;
+  upper95: number;
+};
+
 export type GarchResult = {
   points: GarchPoint[];
+  forecasts: GarchForecast[];
   alpha: number;
   beta: number;
   omega: number;
   persistence: number;
   meanChangeBp: number;
+  latestYield: number;
   latestVolatilityBp: number;
-  forecastVolatilityBp: number;
+  nextDayVolatilityBp: number;
   longRunVolatilityBp: number;
   halfLifeDays: number | null;
   observations: number;
@@ -98,20 +111,48 @@ export function fitGarch11Yield(observations: YieldObservation[]): GarchResult {
     });
   }
 
+  const latestYield = sorted[sorted.length - 1].value;
   const lastResidual = residuals[residuals.length - 1];
-  const forecastVariance = omega + alpha * lastResidual ** 2 + beta * h;
+  const nextVariance = Math.max(omega + alpha * lastResidual ** 2 + beta * h, 1e-8);
   const longRunVariance = omega / Math.max(1 - persistence, 1e-8);
   const halfLifeDays = persistence > 0 && persistence < 1 ? Math.log(0.5) / Math.log(persistence) : null;
 
+  const horizons = [1, 5, 20];
+  const forecasts = horizons.map(horizonDays => {
+    let cumulativeVariance = 0;
+    let endVariance = nextVariance;
+    for (let step = 1; step <= horizonDays; step++) {
+      const stepVariance = longRunVariance + Math.pow(persistence, step - 1) * (nextVariance - longRunVariance);
+      cumulativeVariance += Math.max(stepVariance, 0);
+      endVariance = stepVariance;
+    }
+    const cumulativeVolatilityBp = Math.sqrt(cumulativeVariance);
+    const expectedYield = latestYield + (meanChangeBp * horizonDays) / 100;
+    const oneSigmaYield = cumulativeVolatilityBp / 100;
+    const twoSigmaYield = 1.96 * oneSigmaYield;
+    return {
+      horizonDays,
+      expectedYield,
+      cumulativeVolatilityBp,
+      endDayVolatilityBp: Math.sqrt(Math.max(endVariance, 0)),
+      lower68: expectedYield - oneSigmaYield,
+      upper68: expectedYield + oneSigmaYield,
+      lower95: expectedYield - twoSigmaYield,
+      upper95: expectedYield + twoSigmaYield,
+    };
+  });
+
   return {
     points,
+    forecasts,
     alpha,
     beta,
     omega,
     persistence,
     meanChangeBp,
+    latestYield,
     latestVolatilityBp: Math.sqrt(h),
-    forecastVolatilityBp: Math.sqrt(Math.max(forecastVariance, 0)),
+    nextDayVolatilityBp: Math.sqrt(nextVariance),
     longRunVolatilityBp: Math.sqrt(Math.max(longRunVariance, 0)),
     halfLifeDays,
     observations: changes.length,
