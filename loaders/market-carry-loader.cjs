@@ -31,7 +31,7 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
 
   s = s.replace(
     '<thead><tr><th>Instrumento</th><th>Venc.</th><th>Yield</th><th>Δ Día</th><th>MTD</th><th>YTD</th></tr></thead>',
-    '<thead><tr><th>Instrumento</th><th>Duración</th><th>Yield</th><th>Carry 1d</th><th>Delta 1D</th><th>MTD</th><th>YTD</th></tr></thead>'
+    '<thead><tr><th>Instrumento</th><th>Duración</th><th>Yield</th><th>Carry 1d</th><th>1 Día</th><th>MTD</th><th>YTD</th></tr></thead>'
   );
 
   s = s.replace(
