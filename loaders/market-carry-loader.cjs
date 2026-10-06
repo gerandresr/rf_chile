@@ -54,7 +54,7 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
     `function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null, mode: BenchmarkMode) {
   if (!row) return null;
   if (mode === "maturity") return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
-  const refDate = new Date(\`${row.date}T12:00:00\`);
+  const refDate = new Date(row.date + "T12:00:00");
   const points: CurvePoint[] = data.instruments
     .filter((inst) => inst.type === type && isActiveInstrument(inst, refDate) && (type !== "BTP" || (inst.coupon ?? 0) !== 0))
     .map((inst) => ({ term: inst.duration ?? 0, yield: typeof row.values[inst.code] === "number" ? row.values[inst.code] : null, code: inst.code, name: maturityLabel(inst) }))
