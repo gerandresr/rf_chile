@@ -13,7 +13,7 @@ function carry1d(yieldPct: number | null | undefined, tpmPct: number | null, dur
 }
 
 function formatCarry(value: number | null) {
-  return value == null || !Number.isFinite(value) ? "—" : \`${value.toLocaleString("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} bp\`;
+  return value == null || !Number.isFinite(value) ? "—" : value.toLocaleString("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " bp";
 }
 
 function Carry({ value }: { value: number | null }) {
