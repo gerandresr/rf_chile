@@ -35,7 +35,25 @@ function Change({ value }: { value: number | null }) {
   );
 }
 
-function MarketTable({ title, instruments, data }: { title: string; instruments: Instrument[]; data: RFData }) {
+function formatDuration(value: number | null | undefined) {
+  return value == null || !Number.isFinite(value) ? "—" : value.toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function carry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined) {
+  if (yieldPct == null || tpmPct == null || duration == null || !Number.isFinite(duration) || duration === 0) return null;
+  return (((yieldPct / 100) / 365 - (tpmPct / 100) / 360) / duration) * 10000;
+}
+function formatCarry(value: number | null) {
+  return value == null || !Number.isFinite(value) ? "—" : value.toLocaleString("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " bp";
+}
+function Carry({ value }: { value: number | null }) {
+  if (value == null || !Number.isFinite(value)) return <span className="muted">—</span>;
+  return <span className={value > 0 ? "good" : value < 0 ? "bad" : "muted"}>{formatCarry(value)}</span>;
+}
+function MarketDelta({ value }: { value: number | null }) {
+  if (value == null) return <span className="muted">—</span>;
+  return <span className={value < 0 ? "good" : value > 0 ? "bad" : "muted"}>{formatBp(value, 0)} bp</span>;
+}
+function MarketTable({ title, instruments, data, tpm }: { title: string; instruments: Instrument[]; data: RFData; tpm: number | null }) {
   return (
     <section className="panel market-table-panel">
       <div className="panel-head">
@@ -47,18 +65,19 @@ function MarketTable({ title, instruments, data }: { title: string; instruments:
       </div>
       <div className="table-wrap" role="region" aria-label={`Tabla ${title}`} tabIndex={0}>
         <table className="market-table">
-          <thead><tr><th>Instrumento</th><th>Venc.</th><th>Yield</th><th>Δ Día</th><th>MTD</th><th>YTD</th></tr></thead>
+          <thead><tr><th>Instrumento</th><th>Duración</th><th>Yield</th><th>Carry 1d</th><th>1 Día</th><th>MTD</th><th>YTD</th></tr></thead>
           <tbody>
             {instruments.map((inst) => {
               const s = instrumentSnapshot(data, inst.code);
               return (
                 <tr key={inst.code}>
                   <td><strong>{inst.code}</strong><div className="subcell">Cupón {inst.coupon?.toFixed(1) ?? "—"}%</div></td>
-                  <td>{maturityLabel(inst)}</td>
-                  <td className="num strong">{formatPercent(s?.value, 3)}</td>
-                  <td className="num"><Change value={s?.d1 ?? null} /></td>
-                  <td className="num"><Change value={s?.mtd ?? null} /></td>
-                  <td className="num"><Change value={s?.ytd ?? null} /></td>
+                  <td className="num">{formatDuration(inst.duration)}</td>
+                  <td className="num strong">{formatPercent(s?.value, 2)}</td>
+                  <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration)} /></td>
+                  <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>
+                  <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>
+                  <td className="num"><MarketDelta value={s?.ytd ?? null} /></td>
                 </tr>
               );
             })}
@@ -100,6 +119,8 @@ function DPFTable({ data }: { data: DPFData }) {
   );
 }
 
+const latestTpm = [...dailyMacroData].reverse().find((row) => typeof row.tpm === "number")?.tpm ?? null;
+
 const macroKpis = [
   dailyTpmKpi(dailyMacroData),
   monthlyMacroKpi(monthlyMacroData, "ipc_yoy", "Inflación Anual"),
@@ -113,6 +134,7 @@ type CurveType = "BTP" | "BTU" | "DPF";
 type CurvePoint = { term: number; yield: number | null; code: string; name: string };
 type NelsonSiegelFit = { beta0: number; beta1: number; beta2: number; tau: number };
 type BenchmarkRow = { benchmark: string; yield: number | null; d1: number | null; mtd: number | null; ytd: number | null };
+type BenchmarkMode = "maturity" | "duration";
 
 function yearsToMaturity(inst: Instrument, marketDate: string) {
   const d = new Date(`${marketDate}T00:00:00`);
@@ -223,12 +245,19 @@ function curveAtDate(data: RFData, curveType: "BTP" | "BTU", marketDate: string,
     .filter((p) => p.term > 0 && p.yield != null)
     .sort((a, b) => a.term - b.term);
 }
-function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null) {
+function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null, mode: BenchmarkMode) {
   if (!row) return null;
-  return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
+  if (mode === "maturity") return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
+  const refDate = new Date(row.date + "T12:00:00");
+  const points: CurvePoint[] = data.instruments
+    .filter((inst) => inst.type === type && isActiveInstrument(inst, refDate) && (type !== "BTP" || (inst.coupon ?? 0) !== 0))
+    .map((inst) => ({ term: inst.duration ?? 0, yield: typeof row.values[inst.code] === "number" ? row.values[inst.code] : null, code: inst.code, name: maturityLabel(inst) }))
+    .filter((p) => p.term > 0 && p.yield != null)
+    .sort((a, b) => a.term - b.term);
+  return interpolateMarketYield(term, points);
 }
 
-function buildBenchmarkRows(data: RFData): BenchmarkRow[] {
+function buildBenchmarkRows(data: RFData, mode: BenchmarkMode): BenchmarkRow[] {
   const current = findHistoryOnOrBefore(data, data.lastMarketDate);
   if (!current) return [];
   const d1Base = findHistoryBefore(data, current.date);
@@ -246,10 +275,10 @@ function buildBenchmarkRows(data: RFData): BenchmarkRow[] {
     { benchmark: "UF-10", type: "BTU", term: 10 },
   ];
   return specs.map(({ benchmark, type, term }) => {
-    const value = benchmarkYield(data, type, term, current);
-    const d1Value = benchmarkYield(data, type, term, d1Base);
-    const mtdValue = benchmarkYield(data, type, term, mtdBase);
-    const ytdValue = benchmarkYield(data, type, term, ytdBase);
+    const value = benchmarkYield(data, type, term, current, mode);
+    const d1Value = benchmarkYield(data, type, term, d1Base, mode);
+    const mtdValue = benchmarkYield(data, type, term, mtdBase, mode);
+    const ytdValue = benchmarkYield(data, type, term, ytdBase, mode);
     return {
       benchmark,
       yield: value,
@@ -269,11 +298,11 @@ function BenchmarkChange({ value }: { value: number | null }) {
   );
 }
 
-function BenchmarkTable({ rows }: { rows: BenchmarkRow[] }) {
+function BenchmarkTable({ rows, mode, onModeChange }: { rows: BenchmarkRow[]; mode: BenchmarkMode; onModeChange: (mode: BenchmarkMode) => void }) {
   return (
     <section className="panel market-table-panel" style={{ maxWidth: 820, margin: "14px auto" }}>
       <div className="panel-head" style={{ justifyContent: "center", textAlign: "center" }}>
-        <div><h2>Tasas Benchmark</h2></div>
+        <div><h2>Tasas Benchmark</h2><div className="segmented" style={{ marginTop: 10 }}><button className={mode === "maturity" ? "selected" : ""} onClick={() => onModeChange("maturity")}>Por vencimiento</button><button className={mode === "duration" ? "selected" : ""} onClick={() => onModeChange("duration")}>Por duración</button></div></div>
       </div>
       <div className="table-wrap" role="region" aria-label="Tasas Benchmark" tabIndex={0}>
         <table className="benchmark-table">
@@ -291,6 +320,7 @@ function BenchmarkTable({ rows }: { rows: BenchmarkRow[] }) {
           </tbody>
         </table>
       </div>
+      <div className="muted" style={{ textAlign: "center", marginTop: 10, fontSize: 12 }}>El benchmark en pesos no incluye letras en su composición.</div>
     </section>
   );
 }
@@ -328,6 +358,7 @@ export function MarketDashboard() {
   const [dpfRateView, setDpfRateView] = useState<DPFRateView>("monthly");
   const [showNelsonSiegel, setShowNelsonSiegel] = useState(false);
   const [compareDate, setCompareDate] = useState("");
+  const [benchmarkMode, setBenchmarkMode] = useState<BenchmarkMode>("maturity");
 
   useEffect(() => {
     fetch("/data/rf.json").then((r) => r.json()).then(setData);
@@ -337,7 +368,7 @@ export function MarketDashboard() {
   const active = useMemo(() => data ? data.instruments.filter((i) => isActiveInstrument(i)).sort((a, b) => a.maturityYear * 12 + a.maturityMonth - (b.maturityYear * 12 + b.maturityMonth)) : [], [data]);
   const btp = active.filter((i) => i.type === "BTP");
   const btu = active.filter((i) => i.type === "BTU");
-  const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data) : [], [data]);
+  const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data, benchmarkMode) : [], [data, benchmarkMode]);
 
   const currentCurve = useMemo<CurvePoint[]>(() => {
     if (curveType === "DPF") {
@@ -443,11 +474,11 @@ export function MarketDashboard() {
         </div>
       </section>
 
-      <BenchmarkTable rows={benchmarkRows} />
+      <BenchmarkTable rows={benchmarkRows} mode={benchmarkMode} onModeChange={setBenchmarkMode} />
 
       <div className="two-col">
-        <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} />
-        <div style={{ display: "grid", gap: 14 }}><MarketTable title="Bonos de Gobierno en UF" instruments={btu} data={data} /><DPFTable data={dpfData} /></div>
+        <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} tpm={latestTpm} />
+        <div style={{ display: "grid", gap: 14 }}><MarketTable title="Bonos de Gobierno en UF" instruments={btu} data={data} tpm={latestTpm} /><DPFTable data={dpfData} /></div>
       </div>
 
       <div className="note">Regla de vigencia: el instrumento se mantiene visible durante su mes de vencimiento y el mes siguiente. Luego se oculta automáticamente.</div>
