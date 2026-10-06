@@ -90,6 +90,44 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
 
 type DPFInstrument = { code: string; days: number; value: number; d1: number; mtd: number; ytd: number };
 type DPFData = { lastMarketDate: string; rateConvention?: "monthly"; annualization: string; instruments: DPFInstrument[] };
+
+async function loadDPFData(): Promise<DPFData> {
+  const days = [7, 30, 90, 180, 270, 360];
+  const series = await Promise.all(days.map(async (day) => {
+    const code = `DPF_${day}`;
+    const response = await fetch(`/data/historico/${code}.json`);
+    if (!response.ok) return null;
+    const json = await response.json();
+    const item = json[code] as { fecha?: string[]; tir?: number[] } | undefined;
+    if (!item?.fecha?.length || !item.tir?.length) return null;
+    const rows = item.fecha.map((date, index) => ({ date, value: item.tir?.[index] })).filter((row): row is { date: string; value: number } => typeof row.value === "number" && Number.isFinite(row.value));
+    return { code, days: day, rows };
+  }));
+  const valid = series.filter((item): item is NonNullable<typeof item> => item != null && item.rows.length > 0);
+  const lastMarketDate = valid.flatMap((item) => item.rows.map((row) => row.date)).sort().at(-1) ?? "";
+  const instruments = valid.map(({ code, days, rows }) => {
+    const currentIndex = rows.findLastIndex((row) => row.date <= lastMarketDate);
+    const current = rows[currentIndex];
+    if (!current) return null;
+    const previous = currentIndex > 0 ? rows[currentIndex - 1] : null;
+    const d = new Date(current.date + "T00:00:00");
+    const monthStart = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+    const yearStart = `${d.getFullYear()}-01-01`;
+    const baseFor = (start: string) => {
+      const before = [...rows].reverse().find((row) => row.date < start);
+      return before ?? rows.find((row) => row.date >= start) ?? null;
+    };
+    const mtdBase = baseFor(monthStart);
+    const ytdBase = baseFor(yearStart);
+    return {
+      code, days, value: current.value,
+      d1: previous ? (current.value - previous.value) * 100 : 0,
+      mtd: mtdBase ? (current.value - mtdBase.value) * 100 : 0,
+      ytd: ytdBase ? (current.value - ytdBase.value) * 100 : 0,
+    };
+  }).filter((item): item is DPFInstrument => item != null);
+  return { lastMarketDate, rateConvention: "monthly", annualization: "monthly_rate_x12", instruments };
+}
 type DPFRateView = "monthly" | "annual";
 
 function DPFTable({ data }: { data: DPFData }) {
@@ -362,7 +400,7 @@ export function MarketDashboard() {
 
   useEffect(() => {
     fetch("/data/rf.json").then((r) => r.json()).then(setData);
-    fetch("/data/dpf.json").then((r) => r.json()).then(setDpfData);
+    loadDPFData().then(setDpfData);
   }, []);
 
   const active = useMemo(() => data ? data.instruments.filter((i) => isActiveInstrument(i)).sort((a, b) => a.maturityYear * 12 + a.maturityMonth - (b.maturityYear * 12 + b.maturityMonth)) : [], [data]);
