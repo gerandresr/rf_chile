@@ -89,7 +89,8 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
 }
 
 type DPFInstrument = { code: string; days: number; value: number; d1: number; mtd: number; ytd: number };
-type DPFData = { lastMarketDate: string; rateConvention?: "monthly"; annualization: string; instruments: DPFInstrument[] };
+type DPFHistorySeries = { code: string; days: number; rows: { date: string; value: number }[] };
+type DPFData = { lastMarketDate: string; rateConvention?: "monthly"; annualization: string; instruments: DPFInstrument[]; history: DPFHistorySeries[] };
 
 async function loadDPFData(): Promise<DPFData> {
   const days = [7, 30, 90, 180, 270, 360];
@@ -126,7 +127,7 @@ async function loadDPFData(): Promise<DPFData> {
       ytd: ytdBase ? (current.value - ytdBase.value) * 100 : 0,
     };
   }).filter((item): item is DPFInstrument => item != null);
-  return { lastMarketDate, rateConvention: "monthly", annualization: "monthly_rate_x12", instruments };
+  return { lastMarketDate, rateConvention: "monthly", annualization: "monthly_rate_x12", instruments, history: valid };
 }
 type DPFRateView = "monthly" | "annual";
 
@@ -420,7 +421,23 @@ export function MarketDashboard() {
   }, [data, dpfData, curveType, dpfRateView]);
 
   const comparisonRow = useMemo(() => data && compareDate && curveType !== "DPF" ? findHistoryOnOrBefore(data, compareDate) : null, [data, compareDate, curveType]);
-  const comparisonCurve = useMemo<CurvePoint[]>(() => !data || !comparisonRow || curveType === "DPF" ? [] : curveAtDate(data, curveType, comparisonRow.date, comparisonRow.values), [data, comparisonRow, curveType]);
+  const dpfComparisonDate = useMemo(() => {
+    if (!dpfData || !compareDate || curveType !== "DPF") return null;
+    const dates = dpfData.history.flatMap((series) => series.rows.map((row) => row.date)).filter((date) => date <= compareDate).sort();
+    return dates.at(-1) ?? null;
+  }, [dpfData, compareDate, curveType]);
+  const comparisonCurve = useMemo<CurvePoint[]>(() => {
+    if (curveType === "DPF") {
+      if (!dpfData || !dpfComparisonDate) return [];
+      const factor = dpfRateView === "annual" ? 12 : 1;
+      return dpfData.history.map((series) => {
+        const row = [...series.rows].reverse().find((item) => item.date <= dpfComparisonDate);
+        return { term: series.days / 365.25, yield: row ? row.value * factor : null, code: series.code, name: `${series.days} días` };
+      }).filter((point) => point.yield != null).sort((a, b) => a.term - b.term);
+    }
+    return !data || !comparisonRow ? [] : curveAtDate(data, curveType, comparisonRow.date, comparisonRow.values);
+  }, [data, dpfData, comparisonRow, dpfComparisonDate, curveType, dpfRateView]);
+  const effectiveComparisonDate = curveType === "DPF" ? dpfComparisonDate : comparisonRow?.date ?? null;
   const nsFit = useMemo(() => curveType === "DPF" ? null : fitNelsonSiegel(currentCurve), [currentCurve, curveType]);
   const curveAxis = useMemo(() => {
     if (curveType === "DPF") return { ticks: (dpfData?.instruments ?? []).map((item) => item.days / 365.25), max: 430 / 365.25 };
@@ -493,8 +510,8 @@ export function MarketDashboard() {
           </div>
         </div>
 
-        {curveType !== "DPF" && <div className="curve-controls"><div className="curve-date-control"><span>Comparar con</span><input type="date" value={compareDate} min={minHistoryDate} max={maxHistoryDate} onChange={(e) => setCompareDate(e.target.value)} />{compareDate && <button type="button" onClick={() => setCompareDate("")}>Quitar</button>}</div></div>}
-        {curveType !== "DPF" && compareDate && comparisonRow && <div className="comparison-note"><strong>{comparisonRow.date}</strong></div>}
+        <div className="curve-controls"><div className="curve-date-control"><span>Comparar con</span><input type="date" value={compareDate} min={curveType === "DPF" ? dpfData.history.flatMap((series) => series.rows.map((row) => row.date)).sort()[0] : minHistoryDate} max={curveType === "DPF" ? dpfData.lastMarketDate : maxHistoryDate} onChange={(e) => setCompareDate(e.target.value)} />{compareDate && <button type="button" onClick={() => setCompareDate("")}>Quitar</button>}</div></div>
+        {compareDate && effectiveComparisonDate && <div className="comparison-note"><strong>{effectiveComparisonDate}</strong></div>}
 
         <div className="chart-box">
           <ResponsiveContainer width="100%" height="100%">
@@ -502,10 +519,10 @@ export function MarketDashboard() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="term" type="number" domain={[0, curveAxis.max]} ticks={curveAxis.ticks} tickFormatter={(v) => curveType === "DPF" ? `${Math.round(Number(v) * 365.25)}d` : `${Number(v).toFixed(0)}a`} />
               <YAxis domain={["auto", "auto"]} tickFormatter={(v) => `${Number(v).toFixed(curveType === "DPF" && dpfRateView === "monthly" ? 3 : 1)}%`} />
-              <Tooltip content={<CurveTooltip currentCurve={currentCurve} comparisonCurve={comparisonCurve} comparisonDate={comparisonRow?.date ?? null} nsFit={nsFit} showNelsonSiegel={showNelsonSiegel} curveType={curveType} currentDate={currentDate} dpfRateView={dpfRateView} />} />
+              <Tooltip content={<CurveTooltip currentCurve={currentCurve} comparisonCurve={comparisonCurve} comparisonDate={effectiveComparisonDate} nsFit={nsFit} showNelsonSiegel={showNelsonSiegel} curveType={curveType} currentDate={currentDate} dpfRateView={dpfRateView} />} />
               <Legend />
               <Line type="linear" dataKey="yield" name={currentSeriesName} stroke="currentColor" strokeWidth={2.5} dot={{ r: 3.5 }} connectNulls />
-              {comparisonRow && curveType !== "DPF" && <Line type="linear" dataKey="compareYield" name={`Comparación · ${comparisonRow.date}`} stroke="#64748b" strokeWidth={2} strokeDasharray="6 5" dot={{ r: 3 }} connectNulls isAnimationActive={false} />}
+              {effectiveComparisonDate && <Line type="linear" dataKey="compareYield" name={`Comparación · ${effectiveComparisonDate}`} stroke="#64748b" strokeWidth={2} strokeDasharray="6 5" dot={{ r: 3 }} connectNulls isAnimationActive={false} />}
               {curveType !== "DPF" && showNelsonSiegel && nsFit && <Line type="monotone" dataKey="nsYield" name="Nelson-Siegel" stroke="#f59e0b" strokeWidth={2.25} strokeDasharray="7 5" dot={false} isAnimationActive={false} />}
             </LineChart>
           </ResponsiveContainer>
