@@ -7,35 +7,13 @@ module.exports = function marketCarryLoader(source) {
   return value == null || !Number.isFinite(value) ? "—" : value.toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function rateCarry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined) {
+function carry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined) {
   if (yieldPct == null || tpmPct == null || duration == null || !Number.isFinite(duration) || duration === 0) return null;
   return (((yieldPct / 100) / 365 - (tpmPct / 100) / 360) / duration) * 10000;
 }
 
-function ufCarryInputs() {
-  const rows = monthlyMacroData
-    .filter((row) => typeof row.ipc_mom === "number")
-    .sort((a, b) => a.fecha.localeCompare(b.fecha));
-  const latest = rows.at(-1);
-  if (!latest || typeof latest.ipc_mom !== "number") return null;
-  const ipcDate = new Date(\`${'${latest.fecha}'}T12:00:00Z\`);
-  const start = new Date(Date.UTC(ipcDate.getUTCFullYear(), ipcDate.getUTCMonth() + 1, 10));
-  const endExclusive = new Date(Date.UTC(ipcDate.getUTCFullYear(), ipcDate.getUTCMonth() + 2, 10));
-  const days = Math.round((endExclusive.getTime() - start.getTime()) / 86400000);
-  return { ipc: latest.ipc_mom, days };
-}
-
-function carry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined, type: Instrument["type"]) {
-  const rateCarry = rateCarry1d(yieldPct, tpmPct, duration);
-  if (rateCarry == null || type !== "BTU" || duration == null || duration === 0) return rateCarry;
-  const uf = ufCarryInputs();
-  if (!uf || uf.days <= 0) return rateCarry;
-  const ufCarry = (((uf.ipc / 100) / uf.days) / duration) * 10000;
-  return rateCarry + ufCarry;
-}
-
 function formatCarry(value: number | null) {
-  return value == null || !Number.isFinite(value) ? "—" : \`${'${value.toLocaleString("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}'} bp\`;
+  return value == null || !Number.isFinite(value) ? "—" : \`${value.toLocaleString("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} bp\`;
 }
 
 function Carry({ value }: { value: number | null }) {
@@ -58,7 +36,7 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
 
   s = s.replace(
     `                  <td>{maturityLabel(inst)}</td>\n                  <td className="num strong">{formatPercent(s?.value, 3)}</td>\n                  <td className="num"><Change value={s?.d1 ?? null} /></td>\n                  <td className="num"><Change value={s?.mtd ?? null} /></td>\n                  <td className="num"><Change value={s?.ytd ?? null} /></td>`,
-    `                  <td className="num">{formatDuration(inst.duration)}</td>\n                  <td className="num strong">{formatPercent(s?.value, 2)}</td>\n                  <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration, inst.type)} /></td>\n                  <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>\n                  <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>\n                  <td className="num"><MarketDelta value={s?.ytd ?? null} /></td>`
+    `                  <td className="num">{formatDuration(inst.duration)}</td>\n                  <td className="num strong">{formatPercent(s?.value, 2)}</td>\n                  <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration)} /></td>\n                  <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>\n                  <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>\n                  <td className="num"><MarketDelta value={s?.ytd ?? null} /></td>`
   );
 
   s = s.replace(
@@ -76,7 +54,7 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
     `function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null, mode: BenchmarkMode) {
   if (!row) return null;
   if (mode === "maturity") return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
-  const refDate = new Date(\`${'${row.date}'}T12:00:00\`);
+  const refDate = new Date(\`${row.date}T12:00:00\`);
   const points: CurvePoint[] = data.instruments
     .filter((inst) => inst.type === type && isActiveInstrument(inst, refDate) && (type !== "BTP" || (inst.coupon ?? 0) !== 0))
     .map((inst) => ({ term: inst.duration ?? 0, yield: typeof row.values[inst.code] === "number" ? row.values[inst.code] : null, code: inst.code, name: maturityLabel(inst) }))
@@ -87,8 +65,13 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
   );
   s = s.replace('function buildBenchmarkRows(data: RFData): BenchmarkRow[] {','function buildBenchmarkRows(data: RFData, mode: BenchmarkMode): BenchmarkRow[] {');
   s = s.replace(/benchmarkYield\(data, type, term, (current|d1Base|mtdBase|ytdBase)\)/g, 'benchmarkYield(data, type, term, $1, mode)');
+
   s = s.replace('function BenchmarkTable({ rows }: { rows: BenchmarkRow[] }) {','function BenchmarkTable({ rows, mode, onModeChange }: { rows: BenchmarkRow[]; mode: BenchmarkMode; onModeChange: (mode: BenchmarkMode) => void }) {');
   s = s.replace('<div><h2>Tasas Benchmark</h2></div>',`<div><h2>Tasas Benchmark</h2><div className="segmented" style={{ marginTop: 10 }}><button className={mode === "maturity" ? "selected" : ""} onClick={() => onModeChange("maturity")}>Por vencimiento</button><button className={mode === "duration" ? "selected" : ""} onClick={() => onModeChange("duration")}>Por duración</button></div></div>`);
+  s = s.replace(
+    '      </div>\n    </section>\n  );\n}\n\nfunction CurveTooltip',
+    '      </div>\n      <div className="muted" style={{ textAlign: "center", marginTop: 10, fontSize: 12 }}>El benchmark en pesos no incluye letras en su composición.</div>\n    </section>\n  );\n}\n\nfunction CurveTooltip'
+  );
   s = s.replace('const [compareDate, setCompareDate] = useState("");','const [compareDate, setCompareDate] = useState("");\n  const [benchmarkMode, setBenchmarkMode] = useState<BenchmarkMode>("maturity");');
   s = s.replace('const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data) : [], [data]);','const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data, benchmarkMode) : [], [data, benchmarkMode]);');
   s = s.replace('<BenchmarkTable rows={benchmarkRows} />','<BenchmarkTable rows={benchmarkRows} mode={benchmarkMode} onModeChange={setBenchmarkMode} />');
