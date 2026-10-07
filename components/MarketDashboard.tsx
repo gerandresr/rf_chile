@@ -145,6 +145,65 @@ async function loadDPFData(): Promise<DPFData> {
   }).filter((item): item is DPFInstrument => item != null);
   return { lastMarketDate, rateConvention: "monthly", annualization: "monthly_rate_x12", instruments, history: valid };
 }
+type SwapRow = { code: string; label: string; tenorYears: number; duration: number; value: number; d1m: number | null; mtd: number | null; ytd: number | null };
+
+const CLPCAM_TENORS = [
+  { code: "clpcam_1m", label: "1mo", years: 1 / 12 },
+  { code: "clpcam_3m", label: "3mo", years: 3 / 12 },
+  { code: "clpcam_6m", label: "6mo", years: 6 / 12 },
+  { code: "clpcam_9m", label: "9mo", years: 9 / 12 },
+  { code: "clpcam_1y", label: "1yr", years: 1 },
+  { code: "clpcam_2y", label: "2yr", years: 2 },
+  { code: "clpcam_5y", label: "5yr", years: 5 },
+  { code: "clpcam_7y", label: "7yr", years: 7 },
+  { code: "clpcam_10y", label: "10yr", years: 10 },
+];
+
+function approxSwapDuration(years: number, yieldPct: number) {
+  if (years <= 1) return years / (1 + yieldPct / 100);
+  const frequency = 2;
+  const n = Math.max(1, Math.round(years * frequency));
+  const coupon = yieldPct / 100 / frequency;
+  const periodYield = yieldPct / 100 / frequency;
+  let price = 0, weighted = 0;
+  for (let i = 1; i <= n; i++) {
+    const cashFlow = coupon + (i === n ? 1 : 0);
+    const pv = cashFlow / Math.pow(1 + periodYield, i);
+    price += pv;
+    weighted += (i / frequency) * pv;
+  }
+  const macaulay = weighted / price;
+  return macaulay / (1 + periodYield);
+}
+
+async function loadCLPCamData(): Promise<SwapRow[]> {
+  const series = await Promise.all(CLPCAM_TENORS.map(async (tenor) => {
+    const response = await fetch(`/data/historico_bloomberg/${tenor.code}.json`);
+    if (!response.ok) return null;
+    const json = await response.json();
+    const item = json[tenor.code] as { fecha?: string[]; valor?: number[] } | undefined;
+    if (!item?.fecha?.length || !item.valor?.length) return null;
+    const rows = item.fecha.map((date, index) => ({ date, value: item.valor?.[index] })).filter((row): row is { date: string; value: number } => typeof row.value === "number" && Number.isFinite(row.value)).sort((a,b)=>a.date.localeCompare(b.date));
+    const current = rows.at(-1); if (!current) return null;
+    const d = new Date(current.date + "T00:00:00");
+    const monthStart = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;
+    const yearStart = `${d.getFullYear()}-01-01`;
+    const oneMonthAgo = new Date(d); oneMonthAgo.setMonth(oneMonthAgo.getMonth()-1);
+    const oneMonthKey = oneMonthAgo.toISOString().slice(0,10);
+    const base = (date:string) => [...rows].reverse().find(r=>r.date<=date) ?? rows.find(r=>r.date>=date) ?? null;
+    const change = (b:{value:number}|null) => b ? (current.value-b.value)*100 : null;
+    return { code: tenor.code, label: tenor.label, tenorYears: tenor.years, duration: approxSwapDuration(tenor.years,current.value), value: current.value, d1m: change(base(oneMonthKey)), mtd: change(base(monthStart)), ytd: change(base(yearStart)) };
+  }));
+  return series.filter((row): row is SwapRow => row != null);
+}
+
+function SwapCLPTable({ rows }: { rows: SwapRow[] }) {
+  return <section className="panel market-table-panel"><div className="panel-head"><div><div className="eyebrow">Curva swap CLP</div><h2>Swap Promedio Cámara CLP</h2></div><span className="pill">{rows.length} plazos</span></div>
+    <div className="table-wrap" role="region" aria-label="Tabla Swap Promedio Cámara CLP" tabIndex={0}><table className="market-table"><thead><tr><th>Instrumento</th><th>Duración app</th><th>Yield</th><th>Δ 1M</th><th>MTD</th><th>YTD</th></tr></thead><tbody>
+    {rows.map(row=><tr key={row.code}><td><strong>{row.label}</strong></td><td className="num">{formatDuration(row.duration)}</td><td className="num strong">{formatPercent(row.value,2)}</td><td className="num"><MarketDelta value={row.d1m}/></td><td className="num"><MarketDelta value={row.mtd}/></td><td className="num"><MarketDelta value={row.ytd}/></td></tr>)}
+    </tbody></table></div></section>;
+}
+
 type DPFRateView = "monthly" | "annual";
 
 function DPFTable({ data }: { data: DPFData }) {
@@ -409,6 +468,7 @@ function CurveTooltip({ active, label, currentCurve, comparisonCurve, comparison
 export function MarketDashboard() {
   const [data, setData] = useState<RFData | null>(null);
   const [dpfData, setDpfData] = useState<DPFData | null>(null);
+  const [swapCLP, setSwapCLP] = useState<SwapRow[]>([]);
   const [curveType, setCurveType] = useState<CurveType>("BTP");
   const [dpfRateView, setDpfRateView] = useState<DPFRateView>("monthly");
   const [showNelsonSiegel, setShowNelsonSiegel] = useState(false);
@@ -418,6 +478,7 @@ export function MarketDashboard() {
   useEffect(() => {
     fetch("/data/rf.json").then((r) => r.json()).then(setData);
     loadDPFData().then(setDpfData);
+    loadCLPCamData().then(setSwapCLP);
   }, []);
 
   const active = useMemo(() => data ? data.instruments.filter((i) => isActiveInstrument(i)).sort((a, b) => a.maturityYear * 12 + a.maturityMonth - (b.maturityYear * 12 + b.maturityMonth)) : [], [data]);
@@ -551,6 +612,8 @@ export function MarketDashboard() {
         <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} tpm={latestTpm} />
         <div style={{ display: "grid", gap: 14 }}><MarketTable title="Bonos de Gobierno en UF" instruments={btu} data={data} tpm={latestTpm} /><DPFTable data={dpfData} /></div>
       </div>
+
+      <SwapCLPTable rows={swapCLP} />
 
       <div className="note">Regla de vigencia: el instrumento se mantiene visible durante su mes de vencimiento y el mes siguiente. Luego se oculta automáticamente.</div>
     </AppShell>
