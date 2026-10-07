@@ -34,7 +34,7 @@ function instrumentFromCode(code: string): Omit<Instrument, "duration"> | null {
 
 export async function GET() {
   try {
-    const directory = path.join(process.cwd(), "public", "data", "historico");
+    const directory = path.join(process.cwd(), "public", "data", "historicos_riskamerica");
     const files = (await fs.readdir(directory))
       .filter((name) => /^(BTP|BTU)\d{7}\.json$/.test(name))
       .sort();
@@ -82,7 +82,7 @@ export async function GET() {
     const lastMarketDate = history.at(-1)?.date ?? "";
 
     return NextResponse.json({
-      sourceSheet: "public/data/historico/*.json",
+      sourceSheet: "public/data/historicos_riskamerica/*.json",
       lastMarketDate,
       instruments,
       history,
