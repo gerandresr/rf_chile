@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const folders = [
-    { path: path.join(process.cwd(), "public", "data", "historicos_riskamerica"), source: "RiskAmerica" },
+    { path: path.join(process.cwd(), "public", "data", "historico_riskamerica"), source: "RiskAmerica" },
     { path: path.join(process.cwd(), "public", "data", "json_bbg"), source: "Bloomberg" },
   ];
   const instruments = folders.flatMap(({ path: folder, source }) => {
