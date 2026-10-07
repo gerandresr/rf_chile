@@ -85,6 +85,26 @@ function interpolatedSwapYield(duration: number | null | undefined, swaps: SwapR
 }
 
 
+function interpolatedSwapYieldByMaturity(inst: Instrument, marketDate: string, swaps: SwapRow[]) {
+  const market = new Date(marketDate + "T00:00:00");
+  if (Number.isNaN(market.getTime())) return null;
+  const bondMaturity = new Date(inst.maturityYear, inst.maturityMonth - 1, 1);
+  const targetYears = (bondMaturity.getTime() - market.getTime()) / (365.25 * 86400000);
+  if (targetYears < 0) return null;
+  const curve = swaps.filter(s => Number.isFinite(s.tenorYears) && Number.isFinite(s.value)).sort((a,b)=>a.tenorYears-b.tenorYears);
+  if (!curve.length || targetYears < curve[0].tenorYears || targetYears > curve[curve.length-1].tenorYears) return null;
+  const exact = curve.find(s => Math.abs(s.tenorYears-targetYears)<1e-9);
+  if (exact) return exact.value;
+  for (let i=1;i<curve.length;i++) {
+    const left=curve[i-1], right=curve[i];
+    if (targetYears <= right.tenorYears) {
+      const weight=(targetYears-left.tenorYears)/(right.tenorYears-left.tenorYears);
+      return left.value + weight*(right.value-left.value);
+    }
+  }
+  return null;
+}
+
 function MarketTable({ title, instruments, data, tpm, swaps = [] }: { title: string; instruments: Instrument[]; data: RFData; tpm: number | null; swaps?: SwapRow[] }) {
   const ipc = activeIpcMom(data.lastMarketDate);
   return (
@@ -98,18 +118,20 @@ function MarketTable({ title, instruments, data, tpm, swaps = [] }: { title: str
       </div>
       <div className="table-wrap" role="region" aria-label={`Tabla ${title}`} tabIndex={0}>
         <table className="market-table">
-          <thead><tr><th>Instrumento</th><th>Dur.</th><th>Yield</th>{swaps.length > 0 && <th>ASW Dur.</th>}<th>Carry 1d</th><th>Delta 1d</th><th>MTD</th><th>YTD</th></tr></thead>
+          <thead><tr><th>Instrumento</th><th>Dur.</th><th>Yield</th>{swaps.length > 0 && <><th>ASW Dur.</th><th>ASW Venc.</th></>}<th>Carry 1d</th><th>Delta 1d</th><th>MTD</th><th>YTD</th></tr></thead>
           <tbody>
             {instruments.map((inst) => {
               const s = instrumentSnapshot(data, inst.code);
               const swapYield = swaps.length ? interpolatedSwapYield(inst.duration, swaps) : null;
               const aswDur = s?.value != null && swapYield != null ? (s.value - swapYield) * 100 : null;
+              const swapYieldMaturity = swaps.length ? interpolatedSwapYieldByMaturity(inst, data.lastMarketDate, swaps) : null;
+              const aswMaturity = s?.value != null && swapYieldMaturity != null ? (s.value - swapYieldMaturity) * 100 : null;
               return (
                 <tr key={inst.code}>
                   <td><strong>{inst.code}</strong><div className="subcell">Cupón {inst.coupon?.toFixed(1) ?? "—"}%</div></td>
                   <td className="num">{formatDuration(inst.duration)}</td>
                   <td className="num strong">{formatPercent(s?.value, 2)}</td>
-                  {swaps.length > 0 && <td className="num"><MarketDelta value={aswDur} /></td>}
+                  {swaps.length > 0 && <><td className="num"><MarketDelta value={aswDur} /></td><td className="num"><MarketDelta value={aswMaturity} /></td></>}
                   <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration, inst.type === "BTU" ? ipc.value : 0, inst.type === "BTU" ? ipc.days : null)} /></td>
                   <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>
                   <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>
