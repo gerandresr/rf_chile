@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Landmark, FlaskConical, ArrowLeftRight } from "lucide-react";
+import { Activity, BarChart3, Landmark, FlaskConical, ArrowLeftRight, Database } from "lucide-react";
 import { VisitorCounter } from "./VisitorCounter";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -13,6 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
     { href: "/modelos", label: "Modelos", icon: FlaskConical },
     { href: "/flujos", label: "Flujos", icon: ArrowLeftRight },
+    { href: "/base-de-datos", label: "Base de Datos", icon: Database },
   ];
 
   return (
