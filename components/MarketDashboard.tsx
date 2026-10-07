@@ -145,7 +145,7 @@ async function loadDPFData(): Promise<DPFData> {
   }).filter((item): item is DPFInstrument => item != null);
   return { lastMarketDate, rateConvention: "monthly", annualization: "monthly_rate_x12", instruments, history: valid };
 }
-type SwapRow = { code: string; label: string; tenorYears: number; duration: number; value: number; d1m: number | null; mtd: number | null; ytd: number | null };
+type SwapRow = { code: string; label: string; tenorYears: number; duration: number; value: number; d1: number | null; mtd: number | null; ytd: number | null };
 
 const CLPCAM_TENORS = [
   { code: "clpcam_1m", label: "1mo", years: 1 / 12 },
@@ -192,15 +192,15 @@ async function loadCLPCamData(): Promise<SwapRow[]> {
     const oneMonthKey = oneMonthAgo.toISOString().slice(0,10);
     const base = (date:string) => [...rows].reverse().find(r=>r.date<=date) ?? rows.find(r=>r.date>=date) ?? null;
     const change = (b:{value:number}|null) => b ? (current.value-b.value)*100 : null;
-    return { code: tenor.code, label: tenor.label, tenorYears: tenor.years, duration: approxSwapDuration(tenor.years,current.value), value: current.value, d1m: change(base(oneMonthKey)), mtd: change(base(monthStart)), ytd: change(base(yearStart)) };
+    return { code: tenor.code, label: tenor.label, tenorYears: tenor.years, duration: approxSwapDuration(tenor.years,current.value), value: current.value, d1: change(rows.length > 1 ? rows.at(-2)! : null), mtd: change(base(monthStart)), ytd: change(base(yearStart)) };
   }));
   return series.filter((row): row is SwapRow => row != null);
 }
 
 function SwapCLPTable({ rows }: { rows: SwapRow[] }) {
   return <section className="panel market-table-panel"><div className="panel-head"><div><div className="eyebrow">Curva swap CLP</div><h2>Swap Promedio Cámara CLP</h2></div><span className="pill">{rows.length} plazos</span></div>
-    <div className="table-wrap" role="region" aria-label="Tabla Swap Promedio Cámara CLP" tabIndex={0}><table className="market-table"><thead><tr><th>Instrumento</th><th>Duración app</th><th>Yield</th><th>Δ 1M</th><th>MTD</th><th>YTD</th></tr></thead><tbody>
-    {rows.map(row=><tr key={row.code}><td><strong>{row.label}</strong></td><td className="num">{formatDuration(row.duration)}</td><td className="num strong">{formatPercent(row.value,2)}</td><td className="num"><MarketDelta value={row.d1m}/></td><td className="num"><MarketDelta value={row.mtd}/></td><td className="num"><MarketDelta value={row.ytd}/></td></tr>)}
+    <div className="table-wrap" role="region" aria-label="Tabla Swap Promedio Cámara CLP" tabIndex={0}><table className="market-table"><thead><tr><th>Instrumento</th><th>Duración app</th><th>Yield</th><th>Δ 1D</th><th>MTD</th><th>YTD</th></tr></thead><tbody>
+    {rows.map(row=><tr key={row.code}><td><strong>{row.label}</strong></td><td className="num">{formatDuration(row.duration)}</td><td className="num strong">{formatPercent(row.value,2)}</td><td className="num"><MarketDelta value={row.d1}/></td><td className="num"><MarketDelta value={row.mtd}/></td><td className="num"><MarketDelta value={row.ytd}/></td></tr>)}
     </tbody></table></div></section>;
 }
 
