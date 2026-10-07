@@ -68,7 +68,23 @@ function MarketDelta({ value }: { value: number | null }) {
   if (value == null) return <span className="muted">—</span>;
   return <span className={value < 0 ? "good" : value > 0 ? "bad" : "muted"}>{formatBp(value, 0)} bp</span>;
 }
-function MarketTable({ title, instruments, data, tpm }: { title: string; instruments: Instrument[]; data: RFData; tpm: number | null }) {
+function interpolatedSwapYield(duration: number | null | undefined, swaps: SwapRow[]) {
+  if (duration == null || !Number.isFinite(duration)) return null;
+  const curve = swaps.filter((s) => Number.isFinite(s.duration) && Number.isFinite(s.value)).sort((a,b)=>a.duration-b.duration);
+  if (!curve.length || duration < curve[0].duration || duration > curve[curve.length-1].duration) return null;
+  const exact = curve.find((s)=>Math.abs(s.duration-duration)<1e-9);
+  if (exact) return exact.value;
+  for (let i=1;i<curve.length;i++) {
+    const left=curve[i-1], right=curve[i];
+    if (duration <= right.duration) {
+      const weight=(duration-left.duration)/(right.duration-left.duration);
+      return left.value + weight*(right.value-left.value);
+    }
+  }
+  return null;
+}
+
+function MarketTable({ title, instruments, data, tpm, swaps = [] }: { title: string; instruments: Instrument[]; data: RFData; tpm: number | null; swaps?: SwapRow[] }) {
   const ipc = activeIpcMom(data.lastMarketDate);
   return (
     <section className="panel market-table-panel">
@@ -81,15 +97,18 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
       </div>
       <div className="table-wrap" role="region" aria-label={`Tabla ${title}`} tabIndex={0}>
         <table className="market-table">
-          <thead><tr><th>Instrumento</th><th>Duración</th><th>Yield</th><th>Carry 1d</th><th>1 Día</th><th>MTD</th><th>YTD</th></tr></thead>
+          <thead><tr><th>Instrumento</th><th>Duración</th><th>Yield</th>{swaps.length > 0 && <th>ASW Dur</th>}<th>Carry 1d</th><th>1 Día</th><th>MTD</th><th>YTD</th></tr></thead>
           <tbody>
             {instruments.map((inst) => {
               const s = instrumentSnapshot(data, inst.code);
+              const swapYield = swaps.length ? interpolatedSwapYield(inst.duration, swaps) : null;
+              const aswDur = s?.value != null && swapYield != null ? (s.value - swapYield) * 100 : null;
               return (
                 <tr key={inst.code}>
                   <td><strong>{inst.code}</strong><div className="subcell">Cupón {inst.coupon?.toFixed(1) ?? "—"}%</div></td>
                   <td className="num">{formatDuration(inst.duration)}</td>
                   <td className="num strong">{formatPercent(s?.value, 2)}</td>
+                  {swaps.length > 0 && <td className="num"><MarketDelta value={aswDur} /></td>}
                   <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration, inst.type === "BTU" ? ipc.value : 0, inst.type === "BTU" ? ipc.days : null)} /></td>
                   <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>
                   <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>
@@ -609,7 +628,7 @@ export function MarketDashboard() {
       <BenchmarkTable rows={benchmarkRows} mode={benchmarkMode} onModeChange={setBenchmarkMode} />
 
       <div className="two-col">
-        <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} tpm={latestTpm} />
+        <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} tpm={latestTpm} swaps={swapCLP} />
         <div style={{ display: "grid", gap: 14 }}><MarketTable title="Bonos de Gobierno en UF" instruments={btu} data={data} tpm={latestTpm} /><DPFTable data={dpfData} /></div>
       </div>
 
