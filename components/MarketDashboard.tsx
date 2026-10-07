@@ -98,7 +98,7 @@ function MarketTable({ title, instruments, data, tpm, swaps = [] }: { title: str
       </div>
       <div className="table-wrap" role="region" aria-label={`Tabla ${title}`} tabIndex={0}>
         <table className="market-table">
-          <thead><tr><th>Instrumento</th><th>Duración</th><th>Yield</th>{swaps.length > 0 && <th>ASW Dur</th>}<th>Carry 1d</th><th>1 Día</th><th>MTD</th><th>YTD</th></tr></thead>
+          <thead><tr><th>Instrumento</th><th>Dur.</th><th>Yield</th>{swaps.length > 0 && <th>ASW Dur.</th>}<th>Carry 1d</th><th>Delta 1d</th><th>MTD</th><th>YTD</th></tr></thead>
           <tbody>
             {instruments.map((inst) => {
               const s = instrumentSnapshot(data, inst.code);
