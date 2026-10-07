@@ -112,7 +112,7 @@ async function loadDPFData(): Promise<DPFData> {
   const days = [7, 30, 90, 180, 270, 360];
   const series = await Promise.all(days.map(async (day) => {
     const code = `DPF_${day}`;
-    const response = await fetch(`/data/historicos_riskamerica/${code}.json`);
+    const response = await fetch(`/data/historico_riskamerica/${code}.json`);
     if (!response.ok) return null;
     const json = await response.json();
     const item = json[code] as { fecha?: string[]; tir?: number[] } | undefined;
