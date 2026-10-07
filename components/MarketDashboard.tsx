@@ -38,9 +38,24 @@ function Change({ value }: { value: number | null }) {
 function formatDuration(value: number | null | undefined) {
   return value == null || !Number.isFinite(value) ? "—" : value.toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function carry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined) {
+function carry1d(yieldPct: number | null | undefined, tpmPct: number | null, duration: number | null | undefined, ipcMomPct = 0, ipcWindowDays: number | null = null) {
   if (yieldPct == null || tpmPct == null || duration == null || !Number.isFinite(duration) || duration === 0) return null;
-  return (((yieldPct / 100) / 365 - (tpmPct / 100) / 360) / duration) * 10000;
+  const baseCarry = (((yieldPct / 100) / 365 - (tpmPct / 100) / 360) / duration) * 10000;
+  if (!ipcWindowDays || ipcWindowDays <= 0) return baseCarry;
+  const ipcCarry = ((ipcMomPct / ipcWindowDays) / duration) * 100;
+  return baseCarry + ipcCarry;
+}
+
+function activeIpcMom(marketDate: string) {
+  const market = new Date(marketDate + "T00:00:00");
+  if (Number.isNaN(market.getTime())) return { value: 0, days: null as number | null };
+  const start = new Date(market.getFullYear(), market.getMonth() - (market.getDate() < 10 ? 1 : 0), 10);
+  const end = new Date(start.getFullYear(), start.getMonth() + 1, 9);
+  const ipcMonth = new Date(start.getFullYear(), start.getMonth() - 1, 1);
+  const key = `${ipcMonth.getFullYear()}-${String(ipcMonth.getMonth() + 1).padStart(2, "0")}-01`;
+  const row = monthlyMacroData.find((item) => item.fecha === key && typeof item.ipc_mom === "number");
+  const days = Math.round((end.getTime() - start.getTime()) / 86400000);
+  return { value: row?.ipc_mom ?? 0, days };
 }
 function formatCarry(value: number | null) {
   return value == null || !Number.isFinite(value) ? "—" : value.toLocaleString("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " bp";
@@ -54,6 +69,7 @@ function MarketDelta({ value }: { value: number | null }) {
   return <span className={value < 0 ? "good" : value > 0 ? "bad" : "muted"}>{formatBp(value, 0)} bp</span>;
 }
 function MarketTable({ title, instruments, data, tpm }: { title: string; instruments: Instrument[]; data: RFData; tpm: number | null }) {
+  const ipc = activeIpcMom(data.lastMarketDate);
   return (
     <section className="panel market-table-panel">
       <div className="panel-head">
@@ -74,7 +90,7 @@ function MarketTable({ title, instruments, data, tpm }: { title: string; instrum
                   <td><strong>{inst.code}</strong><div className="subcell">Cupón {inst.coupon?.toFixed(1) ?? "—"}%</div></td>
                   <td className="num">{formatDuration(inst.duration)}</td>
                   <td className="num strong">{formatPercent(s?.value, 2)}</td>
-                  <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration)} /></td>
+                  <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration, inst.type === "BTU" ? ipc.value : 0, inst.type === "BTU" ? ipc.days : null)} /></td>
                   <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>
                   <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>
                   <td className="num"><MarketDelta value={s?.ytd ?? null} /></td>
