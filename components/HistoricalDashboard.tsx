@@ -9,7 +9,13 @@ import { RFData, isActiveInstrument, observations, rollingVolatility } from "@/l
 import { calculateTechnicals, technicalOptions, Technical, TechnicalPoint } from "@/lib/technicals";
 
 type Period = "1M" | "3M" | "YTD" | "1Y" | "MAX";
-type Metric = "yield" | "change" | "vol10" | "vol30" | "vol90";
+type Metric = "yield" | "change" | "aswDur" | "vol10" | "vol30" | "vol90";
+
+type SwapHistory = { code: string; years: number; rows: { date: string; value: number }[] };
+const swapTenors = [["clpcam_1m",1/12],["clpcam_3m",3/12],["clpcam_6m",6/12],["clpcam_9m",9/12],["clpcam_1y",1],["clpcam_2y",2],["clpcam_5y",5],["clpcam_7y",7],["clpcam_10y",10]] as const;
+function approxSwapDuration(years:number,yieldPct:number){if(years<=1)return years/(1+yieldPct/100);const n=Math.max(1,Math.round(years*2)),coupon=yieldPct/200,y=yieldPct/200;let price=0,weighted=0;for(let i=1;i<=n;i++){const cf=coupon+(i===n?1:0),pv=cf/Math.pow(1+y,i);price+=pv;weighted+=(i/2)*pv;}return (weighted/price)/(1+y);}
+function swapValueOnOrBefore(series:SwapHistory,date:string){return [...series.rows].reverse().find(r=>r.date<=date)?.value??null;}
+function interpolateSwapAtDuration(swaps:SwapHistory[],date:string,duration:number){const curve=swaps.map(s=>{const value=swapValueOnOrBefore(s,date);return value==null?null:{duration:approxSwapDuration(s.years,value),value};}).filter((x):x is {duration:number;value:number}=>x!=null).sort((a,b)=>a.duration-b.duration);if(!curve.length||duration<curve[0].duration||duration>curve[curve.length-1].duration)return null;for(let i=0;i<curve.length;i++){if(Math.abs(curve[i].duration-duration)<1e-9)return curve[i].value;if(i&&duration<curve[i].duration){const l=curve[i-1],r=curve[i],w=(duration-l.duration)/(r.duration-l.duration);return l.value+w*(r.value-l.value);}}return null;}
 function cutoff(period: Period, lastDate: string) {
   const d = new Date(`${lastDate}T12:00:00`);
   if (period === "MAX") return new Date(1900, 0, 1);
@@ -32,12 +38,16 @@ const indicatorSeries: Partial<Record<Technical, { key: string; name: string }[]
 };
 export function HistoricalDashboard() {
   const [data, setData] = useState<RFData | null>(null);
+  const [swapHistory, setSwapHistory] = useState<SwapHistory[]>([]);
   const [code, setCode] = useState("BTP0581029");
   const [period, setPeriod] = useState<Period>("1Y");
   const [metric, setMetric] = useState<Metric>("yield");
   const [compare, setCompare] = useState<string[]>([]);
   const [technical, setTechnical] = useState<Technical | null>(null);
-  useEffect(() => { fetch("/data/rf.json").then(r => r.json()).then(setData); }, []);
+  useEffect(() => {
+    fetch("/data/rf.json").then(r => r.json()).then(setData);
+    Promise.all(swapTenors.map(async ([code,years])=>{const r=await fetch(`/data/historico_bloomberg/${code}.json`);if(!r.ok)return null;const j=await r.json();const s=j[code] as {fecha?:string[];valor?:number[]}|undefined;if(!s?.fecha||!s.valor)return null;return {code,years,rows:s.fecha.map((date,i)=>({date,value:s.valor![i]})).filter(x=>Number.isFinite(x.value)).sort((a,b)=>a.date.localeCompare(b.date))} as SwapHistory;})).then(rows=>setSwapHistory(rows.filter((x):x is SwapHistory=>x!=null)));
+  }, []);
   const active = useMemo(() => data ? data.instruments.filter(i => isActiveInstrument(i) && (i.type === "BTP" || i.type === "BTU")).sort((a, b) => a.type.localeCompare(b.type) || a.maturityYear - b.maturityYear || a.maturityMonth - b.maturityMonth || a.code.localeCompare(b.code)) : [], [data]);
   const selectedTechnical = metric === "yield" ? technical : null;
   const chart = useMemo(() => {
@@ -47,7 +57,8 @@ export function HistoricalDashboard() {
     const start = cutoff(period, data.lastMarketDate);
     for (const c of codes) {
       const obs = observations(data, c).filter(p => Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
-      const series = metric === "yield" ? obs : metric === "change" ? obs.slice(1).map((p, i) => ({ date: p.date, value: (p.value - obs[i].value) * 100 })) : rollingVolatility(obs, metric === "vol10" ? 10 : metric === "vol30" ? 30 : 90);
+      const instrument = data.instruments.find(i=>i.code===c);
+      const series = metric === "yield" ? obs : metric === "change" ? obs.slice(1).map((p, i) => ({ date: p.date, value: (p.value - obs[i].value) * 100 })) : metric === "aswDur" && instrument?.type === "BTP" ? obs.map(p=>{const historyRow=data.history.find(h=>h.date===p.date);const historicalDuration=(historyRow?.values?.[c] as any)?.duration ?? instrument.duration;const swap=historicalDuration!=null?interpolateSwapAtDuration(swapHistory,p.date,historicalDuration):null;return {date:p.date,value:swap==null?NaN:(p.value-swap)*100};}).filter(p=>Number.isFinite(p.value)) : rollingVolatility(obs, metric === "vol10" ? 10 : metric === "vol30" ? 30 : 90);
       for (const p of series) {
         if (new Date(`${p.date}T12:00:00`) < start) continue;
         if (!map.has(p.date)) map.set(p.date, { date: p.date });
@@ -58,7 +69,7 @@ export function HistoricalDashboard() {
       }
     }
     return [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
-  }, [data, code, compare, metric, period, selectedTechnical]);
+  }, [data, code, compare, metric, period, selectedTechnical, swapHistory]);
   if (!data) return <AppShell><div className="loading">Cargando históricos…</div></AppShell>;
   const lines = [code, ...(selectedTechnical ? [] : compare.filter(c => c !== code))];
   const primary = data.instruments.find(i => i.code === code);
@@ -92,7 +103,7 @@ export function HistoricalDashboard() {
     <section className="panel controls-panel">
       <div className="control"><label htmlFor="history-instrument">Instrumento</label><select id="history-instrument" value={code} onChange={e => setCode(e.target.value)}>{active.map(i => <option key={i.code}>{i.code}</option>)}</select></div>
       <div className="control wide"><label>Período</label><div className="segmented">{(["1M", "3M", "YTD", "1Y", "MAX"] as Period[]).map(p => <button key={p} className={period === p ? "selected" : ""} onClick={() => setPeriod(p)}>{p}</button>)}</div></div>
-      <div className="control"><label htmlFor="history-metric">Métrica</label><select id="history-metric" value={metric} onChange={e => { const nextMetric = e.target.value as Metric; setMetric(nextMetric); setTechnical(null); if (nextMetric === "yield") setCompare(current => { const first = current.find(c => c !== code); return first ? current.filter(c => c !== code && c.slice(0, 3) === first.slice(0, 3)) : []; }); }}><option value="yield">Yield</option><option value="change">Cambio diario</option><option value="vol10">Volatilidad 10d</option><option value="vol30">Volatilidad 30d</option><option value="vol90">Volatilidad 90d</option></select></div>
+      <div className="control"><label htmlFor="history-metric">Métrica</label><select id="history-metric" value={metric} onChange={e => { const nextMetric = e.target.value as Metric; setMetric(nextMetric); setTechnical(null); if (nextMetric === "yield") setCompare(current => { const first = current.find(c => c !== code); return first ? current.filter(c => c !== code && c.slice(0, 3) === first.slice(0, 3)) : []; }); }}><option value="yield">Yield</option><option value="change">Cambio diario</option><option value="aswDur">ASW Dur</option><option value="vol10">Volatilidad 10d</option><option value="vol30">Volatilidad 30d</option><option value="vol90">Volatilidad 90d</option></select></div>
     </section>
     <section className="panel">
       <div className="panel-head"><div><div className="eyebrow">Comparación</div><h2>{isBp ? "Basis points" : "Yield (%)"}</h2></div></div>
