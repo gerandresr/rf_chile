@@ -68,6 +68,10 @@ function MarketDelta({ value }: { value: number | null }) {
   if (value == null) return <span className="muted">—</span>;
   return <span className={value < 0 ? "good" : value > 0 ? "bad" : "muted"}>{formatBp(value, 0)} bp</span>;
 }
+function ASWValue({ value }: { value: number | null }) {
+  if (value == null) return <span className="muted">—</span>;
+  return <span className={value > 0 ? "good" : value < 0 ? "bad" : "muted"}>{formatBp(value, 0)} bp</span>;
+}
 function interpolatedSwapYield(duration: number | null | undefined, swaps: SwapRow[]) {
   if (duration == null || !Number.isFinite(duration)) return null;
   const curve = swaps.filter((s) => Number.isFinite(s.duration) && Number.isFinite(s.value)).sort((a,b)=>a.duration-b.duration);
@@ -131,7 +135,7 @@ function MarketTable({ title, instruments, data, tpm, swaps = [] }: { title: str
                   <td><strong>{inst.code}</strong><div className="subcell">Cupón {inst.coupon?.toFixed(1) ?? "—"}%</div></td>
                   <td className="num">{formatDuration(inst.duration)}</td>
                   <td className="num strong">{formatPercent(s?.value, 2)}</td>
-                  {swaps.length > 0 && <><td className="num"><MarketDelta value={aswDur} /></td><td className="num"><MarketDelta value={aswMaturity} /></td></>}
+                  {swaps.length > 0 && <><td className="num"><ASWValue value={aswDur} /></td><td className="num"><ASWValue value={aswMaturity} /></td></>}
                   <td className="num"><Carry value={carry1d(s?.value, tpm, inst.duration, inst.type === "BTU" ? ipc.value : 0, inst.type === "BTU" ? ipc.days : null)} /></td>
                   <td className="num"><MarketDelta value={s?.d1 ?? null} /></td>
                   <td className="num"><MarketDelta value={s?.mtd ?? null} /></td>
