@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -12,6 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { AppShell } from "./AppShell";
+import { chileToday, latestBenchmarkEstimate, type BenchmarkCode, type BenchmarkEstimate } from "@/lib/benchmark-estimates";
 import { TPMMeetings } from "./TPMMeetings";
 import monthlyMacroData from "@/public/data/datos-mensuales.json";
 import dailyMacroData from "@/public/data/datos-diarios.json";
@@ -345,7 +346,7 @@ const macroKpis = [
 type CurveType = "BTP" | "BTU" | "DPF" | "SPC_CLP" | "SPC_UF";
 type CurvePoint = { term: number; yield: number | null; code: string; name: string };
 type NelsonSiegelFit = { beta0: number; beta1: number; beta2: number; tau: number };
-type BenchmarkRow = { benchmark: string; yield: number | null; d1: number | null; mtd: number | null; ytd: number | null };
+type BenchmarkRow = { benchmark: BenchmarkCode; yield: number | null; d1: number | null; mtd: number | null; ytd: number | null };
 type BenchmarkMode = "maturity" | "duration";
 
 function yearsToMaturity(inst: Instrument, marketDate: string) {
@@ -478,7 +479,7 @@ function buildBenchmarkRows(data: RFData, mode: BenchmarkMode): BenchmarkRow[] {
   const yearStart = `${date.getFullYear()}-01-01`;
   const mtdBase = findHistoryBefore(data, monthStart) ?? firstHistoryOnOrAfter(data, monthStart);
   const ytdBase = findHistoryBefore(data, yearStart) ?? firstHistoryOnOrAfter(data, yearStart);
-  const specs: Array<{ benchmark: string; type: "BTP" | "BTU"; term: number }> = [
+  const specs: Array<{ benchmark: BenchmarkCode; type: "BTP" | "BTU"; term: number }> = [
     { benchmark: "PESOS-02", type: "BTP", term: 2 },
     { benchmark: "PESOS-05", type: "BTP", term: 5 },
     { benchmark: "PESOS-10", type: "BTP", term: 10 },
@@ -501,38 +502,71 @@ function buildBenchmarkRows(data: RFData, mode: BenchmarkMode): BenchmarkRow[] {
   });
 }
 
-function BenchmarkChange({ value }: { value: number | null }) {
+function BenchmarkChange({ value, digits = 0 }: { value: number | null; digits?: number }) {
   if (value == null) return <span className="muted">—</span>;
   return (
     <span className={value < 0 ? "good" : value > 0 ? "bad" : "muted"}>
-      {formatBp(value, 0)} bp
+      {formatBp(value, digits)} bp
     </span>
   );
 }
 
-function BenchmarkTable({ rows, mode, onModeChange }: { rows: BenchmarkRow[]; mode: BenchmarkMode; onModeChange: (mode: BenchmarkMode) => void }) {
+function BenchmarkTable({
+  rows, mode, onModeChange, officialDate, estimate, hasEstimateError, onRefresh,
+}: {
+  rows: BenchmarkRow[];
+  mode: BenchmarkMode;
+  onModeChange: (mode: BenchmarkMode) => void;
+  officialDate: string;
+  estimate: BenchmarkEstimate | null;
+  hasEstimateError: boolean;
+  onRefresh: () => void;
+}) {
   return (
-    <section className="panel market-table-panel" style={{ maxWidth: 820, margin: "14px auto" }}>
-      <div className="panel-head" style={{ justifyContent: "center", textAlign: "center" }}>
-        <div><h2>Tasas Benchmark</h2><div className="segmented" style={{ marginTop: 10 }}><button className={mode === "maturity" ? "selected" : ""} onClick={() => onModeChange("maturity")}>Por vencimiento</button><button className={mode === "duration" ? "selected" : ""} onClick={() => onModeChange("duration")}>Por duración</button></div></div>
+    <section className="panel market-table-panel" style={{ maxWidth: 1080, margin: "14px auto" }}>
+      <div className="panel-head" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div>
+          <div className="eyebrow">Cierre oficial y estimación intradía</div>
+          <h2>Tasas Benchmark</h2>
+          <div className="segmented" style={{ marginTop: 10, width: "fit-content" }}>
+            <button className={mode === "maturity" ? "selected" : ""} onClick={() => onModeChange("maturity")}>Por vencimiento</button>
+            <button className={mode === "duration" ? "selected" : ""} onClick={() => onModeChange("duration")}>Por duración</button>
+          </div>
+        </div>
+        <button type="button" className="benchmark-refresh" onClick={onRefresh} title="Volver a leer el JSON de estimaciones">Actualizar estimación</button>
+      </div>
+      <div className="benchmark-timestamps" aria-live="polite">
+        <span>Cierre oficial: <strong>{officialDate}</strong></span>
+        {estimate
+          ? <span>Última estimación: <strong>{estimate.fecha} · {estimate.hora} (Chile)</strong></span>
+          : <span className="muted">{hasEstimateError ? "No se pudo leer el archivo de estimaciones." : "Sin estimación vigente para este modo."}</span>}
       </div>
       <div className="table-wrap" role="region" aria-label="Tasas Benchmark" tabIndex={0}>
         <table className="benchmark-table">
-          <thead><tr><th>Benchmark</th><th style={{ textAlign: "right" }}>Yield</th><th>Δ 1 Día</th><th>MTD</th><th>YTD</th></tr></thead>
+          <thead>
+            <tr><th>Benchmark</th><th>Cierre oficial</th><th>Est. hoy</th><th>Δ hoy</th><th>MTD</th><th>YTD</th></tr>
+          </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.benchmark}>
-                <td><strong>{row.benchmark}</strong></td>
-                <td className="num strong" style={{ textAlign: "right" }}>{formatPercent(row.yield, 2)}</td>
-                <td className="num"><BenchmarkChange value={row.d1} /></td>
-                <td className="num"><BenchmarkChange value={row.mtd} /></td>
-                <td className="num"><BenchmarkChange value={row.ytd} /></td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const estimatedYield = estimate?.benchmark[row.benchmark] ?? null;
+              const dayChange = estimatedYield != null && row.yield != null ? (estimatedYield - row.yield) * 100 : null;
+              return (
+                <tr key={row.benchmark}>
+                  <td><strong>{row.benchmark}</strong></td>
+                  <td className="num strong">{formatPercent(row.yield, 3)}</td>
+                  <td className="num">{estimatedYield != null ? <strong>{formatPercent(estimatedYield, 3)}</strong> : <span className="muted">—</span>}</td>
+                  <td className="num"><BenchmarkChange value={dayChange} digits={1} /></td>
+                  <td className="num"><BenchmarkChange value={row.mtd} /></td>
+                  <td className="num"><BenchmarkChange value={row.ytd} /></td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
-      <div className="muted" style={{ textAlign: "center", marginTop: 10, fontSize: 12 }}>El benchmark en pesos no incluye letras en su composición.</div>
+      <div className="muted" style={{ marginTop: 10, fontSize: 12 }}>
+        Δ hoy = Est. hoy − cierre oficial (bp). MTD y YTD corresponden al cierre oficial. El benchmark en pesos no incluye letras en su composición.
+      </div>
     </section>
   );
 }
@@ -575,18 +609,39 @@ export function MarketDashboard() {
   const [showNelsonSiegel, setShowNelsonSiegel] = useState(false);
   const [compareDate, setCompareDate] = useState("");
   const [benchmarkMode, setBenchmarkMode] = useState<BenchmarkMode>("maturity");
+  const [estimateFile, setEstimateFile] = useState<unknown>(null);
+  const [estimateDate, setEstimateDate] = useState("");
+  const [hasEstimateError, setHasEstimateError] = useState(false);
+
+  const refreshBenchmarkEstimate = useCallback(async () => {
+    setEstimateDate(chileToday());
+    try {
+      const response = await fetch("/data/cierre-estimado-rf.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("No se pudo obtener el archivo");
+      setEstimateFile(await response.json());
+      setHasEstimateError(false);
+    } catch {
+      setEstimateFile(null);
+      setHasEstimateError(true);
+    }
+  }, []);
 
   useEffect(() => {
     fetch("/data/rf.json").then((r) => r.json()).then(setData);
     loadDPFData().then(setDpfData);
     loadSwapHistory(CLPCAM_TENORS).then(setSwapCLPHistory);
     loadSwapHistory(UFCAM_TENORS).then(setSwapUFHistory);
-  }, []);
+    void refreshBenchmarkEstimate();
+  }, [refreshBenchmarkEstimate]);
 
   const active = useMemo(() => data ? data.instruments.filter((i) => isActiveInstrument(i)).sort((a, b) => a.maturityYear * 12 + a.maturityMonth - (b.maturityYear * 12 + b.maturityMonth)) : [], [data]);
   const btp = active.filter((i) => i.type === "BTP");
   const btu = active.filter((i) => i.type === "BTU");
   const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data, benchmarkMode) : [], [data, benchmarkMode]);
+  const benchmarkEstimate = useMemo(
+    () => data && estimateDate ? latestBenchmarkEstimate(estimateFile, benchmarkMode, data.lastMarketDate, estimateDate) : null,
+    [data, estimateDate, estimateFile, benchmarkMode],
+  );
   const selectedSwapHistory = curveType === "SPC_CLP" ? swapCLPHistory : curveType === "SPC_UF" ? swapUFHistory : null;
   const swapCurrentDate = useMemo(() => selectedSwapHistory ? latestSwapDate(selectedSwapHistory) : null, [selectedSwapHistory]);
   const swapComparisonDate = useMemo(() => selectedSwapHistory && compareDate ? latestSwapDate(selectedSwapHistory, compareDate) : null, [selectedSwapHistory, compareDate]);
@@ -718,7 +773,7 @@ export function MarketDashboard() {
         </div>
       </section>
 
-      <BenchmarkTable rows={benchmarkRows} mode={benchmarkMode} onModeChange={setBenchmarkMode} />
+      <BenchmarkTable rows={benchmarkRows} mode={benchmarkMode} onModeChange={setBenchmarkMode} officialDate={data.lastMarketDate} estimate={benchmarkEstimate} hasEstimateError={hasEstimateError} onRefresh={() => { void refreshBenchmarkEstimate(); }} />
 
       <div className="two-col">
         <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} tpm={latestTpm} swaps={swapCLP} />
