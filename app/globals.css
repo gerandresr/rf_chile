@@ -54,3 +54,11 @@
 .database-instrument-list{gap:7px}
 .database-instrument-chip.on{background:#e5f6ed;border-color:#86cba7;color:#176b44;font-weight:700}
 .database-instrument-chip:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+/* Base de Datos: recuadros por familia de instrumentos. */
+.database-instrument-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:stretch}
+.database-instrument-group{min-width:0;border:1px solid var(--line);border-radius:12px;padding:16px;background:#f8fafc}
+.database-instrument-group-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px 12px;margin-bottom:14px}
+.database-instrument-group-head h3{font-size:14px;font-weight:700;margin:0;color:var(--text)}
+.database-instrument-group-count{color:var(--muted);font-size:11px;white-space:nowrap}
+.database-instrument-group .database-instrument-list{margin-bottom:0}
