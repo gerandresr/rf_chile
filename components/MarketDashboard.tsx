@@ -624,94 +624,29 @@ function CurveTooltip({ active, label, currentCurve, comparisonCurve, comparison
 }
 
 
-type QuoteInstrument = { code: string; label: string; kind: "price" | "rate" };
-type MarketQuote = { value: number; date: string; previousDate: string | null; change: number | null };
+type FedFundObservation = { date: string; value: number };
+const fedFundFormatter = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const MARKET_QUOTE_INSTRUMENTS: QuoteInstrument[] = [
-  { code: "usdclp", label: "USD/CLP", kind: "price" },
-  { code: "cobre", label: "Cobre", kind: "price" },
-  { code: "ipsa", label: "IPSA", kind: "price" },
-  { code: "spx", label: "S&P 500", kind: "price" },
-  { code: "treasury_10y", label: "Treasury 10Y", kind: "rate" },
-  { code: "vix", label: "VIX", kind: "price" },
-  { code: "wti", label: "WTI", kind: "price" },
-  { code: "brent", label: "Brent", kind: "price" },
-];
-
-const quoteNumberFormat = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const quoteBasisPointFormat = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-async function loadMarketQuote(instrument: QuoteInstrument): Promise<MarketQuote | null> {
+// Última tasa válida del histórico Bloomberg; no inventar ni convertir errores/null en cero.
+async function loadLatestFedFund(): Promise<FedFundObservation | null> {
   try {
-    const response = await fetch("/data/historico_bloomberg/" + instrument.code + ".json");
+    const response = await fetch("/data/historico_bloomberg/fedfund.json", { cache: "no-store" });
     if (!response.ok) return null;
     const json = (await response.json()) as Record<string, { fecha?: unknown; valor?: unknown }>;
-    const series = json?.[instrument.code];
+    const series = json?.fedfund;
     if (!Array.isArray(series?.fecha) || !Array.isArray(series?.valor)) return null;
-
-    // Ignorar errores de BBG, null y otros valores no numéricos sin reemplazarlos por cero.
-    // Tomar las dos últimas fechas distintas con observaciones válidas.
-    const byDate = new Map<string, number>();
+    let latest: FedFundObservation | null = null;
     for (let index = 0; index < Math.min(series.fecha.length, series.valor.length); index++) {
       const date: unknown = series.fecha[index];
       const value: unknown = series.valor[index];
-      if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) &&
-          typeof value === "number" && Number.isFinite(value)) {
-        byDate.set(date, value);
-      }
+      if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+          typeof value !== "number" || !Number.isFinite(value)) continue;
+      if (!latest || date > latest.date) latest = { date, value };
     }
-    const observations = [...byDate.entries()].sort(([a], [b]) => b.localeCompare(a));
-    if (!observations.length) return null;
-    const [date, value] = observations[0];
-    const previous = observations[1] ?? null;
-    const change = previous && previous[1] !== 0
-      ? instrument.kind === "rate"
-        ? (value - previous[1]) * 100 // Tasas expresadas en %; delta en puntos básicos.
-        : ((value / previous[1]) - 1) * 100
-      : null;
-    return { value, date, previousDate: previous?.[0] ?? null, change };
+    return latest;
   } catch {
     return null;
   }
-}
-
-function MarketQuoteCards({ quotes }: { quotes: Record<string, MarketQuote | null> }) {
-  return (
-    <section className="market-quotes" aria-labelledby="market-quotes-title">
-      <div className="market-quotes-heading">
-        <h2 id="market-quotes-title">Precios de mercado</h2>
-        <span>Última observación disponible · Bloomberg</span>
-      </div>
-      <div className="market-quotes-grid">
-        {MARKET_QUOTE_INSTRUMENTS.map((instrument) => {
-          const quote = quotes[instrument.code];
-          const change = quote?.change ?? null;
-          const trend = change == null || change === 0 ? "flat" : change > 0 ? "up" : "down";
-          const sign = change == null ? "" : change > 0 ? "+" : change < 0 ? "−" : "";
-          const changeText = change == null ? "—" :
-            sign + (instrument.kind === "rate" ? quoteBasisPointFormat : quoteNumberFormat).format(Math.abs(change)) +
-            (instrument.kind === "rate" ? " pb" : "%");
-          const title = quote
-            ? "Bloomberg · " + quote.date + (quote.previousDate ? " · Comparación: " + quote.previousDate : "")
-            : "Sin observaciones disponibles";
-          return (
-            <article className="market-quote-card" key={instrument.code} title={title}>
-              <div className="market-quote-name">{instrument.label}</div>
-              <div className="market-quote-metrics">
-                <strong className="market-quote-value">
-                  {quote ? quoteNumberFormat.format(quote.value) + (instrument.kind === "rate" ? "%" : "") : "—"}
-                </strong>
-                <span className={"market-quote-change " + trend} aria-label={change == null ? "Variación no disponible" : "Variación: " + changeText}>
-                  {trend !== "flat" && <span aria-hidden="true">{trend === "up" ? "↗" : "↘"}</span>}
-                  {changeText}
-                </span>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
 }
 
 export function MarketDashboard() {
@@ -719,7 +654,7 @@ export function MarketDashboard() {
   const [dpfData, setDpfData] = useState<DPFData | null>(null);
   const [swapCLPHistory, setSwapCLPHistory] = useState<SwapHistorySeries[]>([]);
   const [swapUFHistory, setSwapUFHistory] = useState<SwapHistorySeries[]>([]);
-  const [marketQuotes, setMarketQuotes] = useState<Record<string, MarketQuote | null>>({});
+  const [fedFund, setFedFund] = useState<FedFundObservation | null>(null);
   const swapCLP = useMemo(() => swapRowsFromHistory(swapCLPHistory), [swapCLPHistory]);
   const swapUF = useMemo(() => swapRowsFromHistory(swapUFHistory), [swapUFHistory]);
   const [curveType, setCurveType] = useState<CurveType>("BTP");
@@ -735,9 +670,7 @@ export function MarketDashboard() {
     loadDPFData().then(setDpfData);
     loadSwapHistory(CLPCAM_TENORS).then(setSwapCLPHistory);
     loadSwapHistory(UFCAM_TENORS).then(setSwapUFHistory);
-    Promise.all(MARKET_QUOTE_INSTRUMENTS.map(loadMarketQuote)).then((results) => {
-      setMarketQuotes(Object.fromEntries(MARKET_QUOTE_INSTRUMENTS.map((item, index) => [item.code, results[index]])));
-    });
+    loadLatestFedFund().then(setFedFund);
     setEstimateDate(chileToday());
     fetch("/data/cierre-estimado-rf.json", { cache: "no-store" })
       .then(response => { if (!response.ok) throw new Error("No se pudo obtener el archivo"); return response.json(); })
@@ -817,6 +750,15 @@ export function MarketDashboard() {
 
   if (!data || !dpfData) return <AppShell><div className="loading">Cargando mercado…</div></AppShell>;
 
+  const displayMacroKpis = [
+    ...macroKpis,
+    {
+      label: "Tasa Fed Fund",
+      value: fedFund ? fedFundFormatter.format(fedFund.value) + "%" : "—",
+      description: fedFund ? "Dato " + fedFund.date.split("-").reverse().join("/") + " · Bloomberg" : "Sin datos disponibles",
+    },
+  ];
+
   const minHistoryDate = data.history[0]?.date;
   const maxHistoryDate = data.lastMarketDate;
   const currentDate = selectedSwapHistory ? swapCurrentDate ?? "—" : curveType === "DPF" ? dpfData.lastMarketDate : data.lastMarketDate;
@@ -832,8 +774,9 @@ export function MarketDashboard() {
       </header>
 
       <div className="kpi-grid macro-kpi-grid">
-        {macroKpis.map((kpi) => (
-          <div className="kpi" key={kpi.label}>
+        {displayMacroKpis.map((kpi) => (
+          <div className={`kpi ${kpi.label === "Tasa Fed Fund" ? "macro-kpi-us" : "macro-kpi-cl"}`} key={kpi.label}>
+            <span className="macro-kpi-country">{kpi.label === "Tasa Fed Fund" ? "US" : "CL"}</span>
             <div className="kpi-label">{kpi.label}</div>
             <div className="kpi-value">{kpi.value}</div>
             <div className="kpi-foot kpi-foot-static">
@@ -842,8 +785,6 @@ export function MarketDashboard() {
           </div>
         ))}
       </div>
-
-      <MarketQuoteCards quotes={marketQuotes} />
 
       <section className="panel curve-panel">
         <div className="panel-head">
