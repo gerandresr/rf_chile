@@ -462,11 +462,28 @@ function curveAtDate(data: RFData, curveType: "BTP" | "BTU", marketDate: string,
     .filter((p) => p.term > 0 && p.yield != null)
     .sort((a, b) => a.term - b.term);
 }
+/**
+ * Interpola dentro del rango de los bonos elegidos. Fuera de él mantiene
+ * constante la TIR del instrumento más corto o más largo disponible.
+ * Solo se utiliza para Tasas Benchmark; no altera curvas ni ASW.
+ */
+function interpolateBenchmarkYield(term: number, points: CurvePoint[]) {
+  if (!Number.isFinite(term)) return null;
+  const valid = points
+    .filter((p): p is CurvePoint & { yield: number } =>
+      Number.isFinite(p.term) && typeof p.yield === "number" && Number.isFinite(p.yield))
+    .sort((a, b) => a.term - b.term);
+  if (!valid.length) return null;
+  if (term <= valid[0].term) return valid[0].yield;
+  if (term >= valid[valid.length - 1].term) return valid[valid.length - 1].yield;
+  return interpolateMarketYield(term, valid);
+}
+
 function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null) {
   if (!row) return null;
   const selectedPoints = curveAtDate(data, type, row.date, row.values, type === "BTP")
     .filter((point) => BENCHMARK_PAPERS[type].has(point.code));
-  return interpolateMarketYield(term, selectedPoints);
+  return interpolateBenchmarkYield(term, selectedPoints);
 }
 
 function buildBenchmarkRows(data: RFData): BenchmarkRow[] {
@@ -562,6 +579,7 @@ function BenchmarkTable({
         <strong>Papeles a considerar:</strong>
         <div><strong>BTP:</strong> {benchmarkInstruments.BTP.join(", ")}</div>
         <div><strong>BTU:</strong> {benchmarkInstruments.BTU.join(", ")}</div>
+        <div>Fuera del rango de vencimientos seleccionados se utiliza la TIR del bono del extremo más cercano.</div>
       </div>
     </section>
   );
