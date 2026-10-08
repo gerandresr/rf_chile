@@ -574,8 +574,8 @@ function BenchmarkTable({
               return (
                 <tr key={row.benchmark}>
                   <td><strong>{row.benchmark}</strong></td>
-                  <td className="num strong">{formatPercent(row.yield, 3)}</td>
-                  <td className="num">{estimatedYield != null ? <strong>{formatPercent(estimatedYield, 3)}</strong> : <span className="muted">—</span>}</td>
+                  <td className="num strong">{formatPercent(row.yield, 2)}</td>
+                  <td className="num">{estimatedYield != null ? <strong>{formatPercent(estimatedYield, 2)}</strong> : <span className="muted">—</span>}</td>
                   <td className="num"><BenchmarkChange value={dayChange} digits={1} /></td>
                   <td className="num"><BenchmarkChange value={row.mtd} /></td>
                   <td className="num"><BenchmarkChange value={row.ytd} /></td>
@@ -592,7 +592,6 @@ function BenchmarkTable({
         <strong>Papeles a considerar:</strong>
         <div><strong>BTP:</strong> {benchmarkInstruments.BTP.join(", ")}</div>
         <div><strong>BTU:</strong> {benchmarkInstruments.BTU.join(", ")}</div>
-        <div>Plazo residual: días hasta el día 1 del mes de vencimiento / 365. Fuera del rango seleccionado se mantiene la TIR del bono del extremo más cercano.</div>
       </div>
     </section>
   );
