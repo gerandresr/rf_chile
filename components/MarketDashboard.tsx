@@ -297,9 +297,9 @@ function swapRowsFromHistory(histories: SwapHistorySeries[]): SwapRow[] {
   });
 }
 
-function SwapCLPTable({ rows }: { rows: SwapRow[] }) {
-  return <section className="panel market-table-panel"><div className="panel-head"><div><div className="eyebrow">Curva swap CLP</div><h2>Swap Promedio Cámara CLP</h2></div><span className="pill">{rows.length} plazos</span></div>
-    <div className="table-wrap" role="region" aria-label="Tabla Swap Promedio Cámara CLP" tabIndex={0}><table className="market-table"><thead><tr><th>Instrumento</th><th>Duración app</th><th>Yield</th><th>Δ 1M</th><th>MTD</th><th>YTD</th></tr></thead><tbody>
+function SwapTable({ rows, currency }: { rows: SwapRow[]; currency: "CLP" | "UF" }) {
+  return <section className="panel market-table-panel"><div className="panel-head"><div><div className="eyebrow">Curva swap {currency}</div><h2>Swap Promedio Cámara {currency}</h2></div><span className="pill">{rows.length} plazos</span></div>
+    <div className="table-wrap" role="region" aria-label={`Tabla Swap Promedio Cámara ${currency}`} tabIndex={0}><table className="market-table"><thead><tr><th>Instrumento</th><th>Duración app</th><th>Yield</th><th>Δ 1M</th><th>MTD</th><th>YTD</th></tr></thead><tbody>
     {rows.map(row=><tr key={row.code}><td><strong>{row.label}</strong></td><td className="num">{formatDuration(row.duration)}</td><td className="num strong">{formatPercent(row.value,2)}</td><td className="num"><MarketDelta value={row.d1m}/></td><td className="num"><MarketDelta value={row.mtd}/></td><td className="num"><MarketDelta value={row.ytd}/></td></tr>)}
     </tbody></table></div></section>;
 }
@@ -339,7 +339,6 @@ const macroKpis = [
   dailyTpmKpi(dailyMacroData),
   monthlyMacroKpi(monthlyMacroData, "ipc_yoy", "Inflación Anual"),
   monthlyMacroKpi(monthlyMacroData, "ipc_mom", "IPC MoM"),
-  monthlyMacroKpi(monthlyMacroData, "ipcsae_mom", "IPC SAE MoM"),
   monthlyMacroKpi(monthlyMacroData, "imacec", "IMACEC"),
   monthlyMacroKpi(monthlyMacroData, "desempleo", "Desempleo"),
 ];
@@ -630,6 +629,7 @@ export function MarketDashboard() {
   const [swapCLPHistory, setSwapCLPHistory] = useState<SwapHistorySeries[]>([]);
   const [swapUFHistory, setSwapUFHistory] = useState<SwapHistorySeries[]>([]);
   const swapCLP = useMemo(() => swapRowsFromHistory(swapCLPHistory), [swapCLPHistory]);
+  const swapUF = useMemo(() => swapRowsFromHistory(swapUFHistory), [swapUFHistory]);
   const [curveType, setCurveType] = useState<CurveType>("BTP");
   const [dpfRateView, setDpfRateView] = useState<DPFRateView>("monthly");
   const [showNelsonSiegel, setShowNelsonSiegel] = useState(false);
@@ -732,7 +732,7 @@ export function MarketDashboard() {
   return (
     <AppShell>
       <header className="page-head">
-        <div><div className="eyebrow">Trading Propietario</div><h1>Mercado de Renta Fija Chilena</h1></div>
+        <div><div className="eyebrow">Trading Propietario</div><h1>Mercado de Renta Fija Chile y Derivados</h1></div>
         <div className="asof"><span>Último cierre</span><strong>{data.lastMarketDate}</strong></div>
       </header>
 
@@ -796,7 +796,8 @@ export function MarketDashboard() {
         <div style={{ display: "grid", gap: 14 }}><MarketTable title="Bonos de Gobierno en UF" instruments={btu} data={data} tpm={latestTpm} /><DPFTable data={dpfData} /></div>
       </div>
 
-      <SwapCLPTable rows={swapCLP} />
+      <SwapTable rows={swapCLP} currency="CLP" />
+      <SwapTable rows={swapUF} currency="UF" />
 
       <div className="note">Regla de vigencia: el instrumento se mantiene visible durante su mes de vencimiento y el mes siguiente. Luego se oculta automáticamente.</div>
     </AppShell>
