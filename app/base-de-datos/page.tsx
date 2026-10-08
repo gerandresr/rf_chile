@@ -5,6 +5,37 @@ import { AppShell } from "@/components/AppShell";
 
 type Item = { code: string; source: string };
 
+const ADDITIONAL_GROUPS = [
+  { name: "Monedas", codes: ["usdclp", "eurusd", "usdbrl", "usdmxn", "dxy"] },
+  { name: "Treasuries EE. UU.", codes: ["treasury_1y", "treasury_5y", "treasury_10y"] },
+  { name: "Índices accionarios", codes: ["ipsa", "spx"] },
+  { name: "Volatilidad", codes: ["vix", "move"] },
+  { name: "Tasas de política monetaria", codes: ["tpm", "fedfund"] },
+  { name: "Criptomonedas", codes: ["bitcoin"] },
+];
+
+const additionalGroupByCode = new Map(
+  ADDITIONAL_GROUPS.flatMap(({ name, codes }) => codes.map((code) => [code, name] as const)),
+);
+
+const INSTRUMENT_LABELS: Record<string, string> = {
+  spx: "S&P 500",
+  ipsa: "IPSA",
+  fedfund: "Fed Funds",
+  tpm: "TPM Chile",
+  bitcoin: "Bitcoin",
+};
+
+function instrumentLabel(code: string) {
+  const normalized = code.toLowerCase();
+  if (normalized.startsWith("clpcam_") || normalized.startsWith("ufcam_")) {
+    return normalized.split("_")[1].toUpperCase();
+  }
+  if (normalized.startsWith("treasury_")) return normalized.split("_")[1].toUpperCase();
+  return INSTRUMENT_LABELS[normalized] ??
+    (additionalGroupByCode.has(normalized) ? code.toUpperCase() : code.replace("BTP", "BTP ").replace("BTU", "BTU "));
+}
+
 function tenorInMonths(code: string) {
   const match = code.match(/_(\d+)(m|y)$/i);
   return match ? Number(match[1]) * (match[2].toLowerCase() === "y" ? 12 : 1) : Number.MAX_SAFE_INTEGER;
@@ -26,28 +57,33 @@ export default function DatabasePage() {
       "Bonos en UF": [],
       "Swap Promedio Cámara CLP": [],
       "Swap Promedio Cámara UF": [],
+      ...Object.fromEntries(ADDITIONAL_GROUPS.map(({ name }) => [name, [] as Item[]])),
       DPF: [],
       Otros: [],
     };
 
     items.forEach((item) => {
       const code = item.code.toLowerCase();
-      const group = code.startsWith("btp")
-        ? "Bonos en Pesos"
-        : code.startsWith("btu")
-          ? "Bonos en UF"
-          : code.startsWith("clpcam_")
-            ? "Swap Promedio Cámara CLP"
-            : code.startsWith("ufcam_")
-              ? "Swap Promedio Cámara UF"
-              : code.startsWith("dpf")
-                ? "DPF"
-                : "Otros";
+      const group = additionalGroupByCode.get(code) ??
+        (code.startsWith("btp")
+          ? "Bonos en Pesos"
+          : code.startsWith("btu")
+            ? "Bonos en UF"
+            : code.startsWith("clpcam_")
+              ? "Swap Promedio Cámara CLP"
+              : code.startsWith("ufcam_")
+                ? "Swap Promedio Cámara UF"
+                : code.startsWith("dpf")
+                  ? "DPF"
+                  : "Otros");
       grouped[group].push(item);
     });
 
     grouped["Swap Promedio Cámara CLP"].sort((a, b) => tenorInMonths(a.code) - tenorInMonths(b.code));
     grouped["Swap Promedio Cámara UF"].sort((a, b) => tenorInMonths(a.code) - tenorInMonths(b.code));
+    for (const { name, codes } of ADDITIONAL_GROUPS) {
+      grouped[name].sort((a, b) => codes.indexOf(a.code.toLowerCase()) - codes.indexOf(b.code.toLowerCase()));
+    }
     return Object.entries(grouped).filter(([, instruments]) => instruments.length);
   }, [items]);
 
@@ -105,9 +141,7 @@ export default function DatabasePage() {
                       aria-pressed={isSelected}
                       onClick={() => toggle(item.code)}
                     >
-                      {item.code.startsWith("clpcam_") || item.code.startsWith("ufcam_")
-                        ? item.code.split("_")[1].toUpperCase()
-                        : item.code.replace("BTP", "BTP ").replace("BTU", "BTU ")}
+                      {instrumentLabel(item.code)}
                     </button>
                   );
                 })}
