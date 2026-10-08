@@ -574,8 +574,8 @@ function BenchmarkTable({
               return (
                 <tr key={row.benchmark}>
                   <td><strong>{row.benchmark}</strong></td>
-                  <td className="num strong">{formatPercent(row.yield, 3)}</td>
-                  <td className="num">{estimatedYield != null ? <strong>{formatPercent(estimatedYield, 3)}</strong> : <span className="muted">—</span>}</td>
+                  <td className="num strong">{formatPercent(row.yield, 2)}</td>
+                  <td className="num">{estimatedYield != null ? <strong>{formatPercent(estimatedYield, 2)}</strong> : <span className="muted">—</span>}</td>
                   <td className="num"><BenchmarkChange value={dayChange} digits={1} /></td>
                   <td className="num"><BenchmarkChange value={row.mtd} /></td>
                   <td className="num"><BenchmarkChange value={row.ytd} /></td>
