@@ -12,6 +12,7 @@ const ADDITIONAL_GROUPS = [
   { name: "Volatilidad", codes: ["vix", "move"] },
   { name: "Tasas de política monetaria", codes: ["tpm", "fedfund"] },
   { name: "Criptomonedas", codes: ["bitcoin"] },
+  { name: "Commodities", codes: ["cobre", "oro", "brent", "wti"] },
 ];
 
 const additionalGroupByCode = new Map(
@@ -24,6 +25,10 @@ const INSTRUMENT_LABELS: Record<string, string> = {
   fedfund: "Fed Funds",
   tpm: "TPM Chile",
   bitcoin: "Bitcoin",
+  cobre: "Cobre",
+  oro: "Oro",
+  brent: "Brent",
+  wti: "WTI",
 };
 
 function instrumentLabel(code: string) {
