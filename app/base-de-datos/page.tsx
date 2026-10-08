@@ -73,10 +73,13 @@ export default function DatabasePage() {
           </button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 28, alignItems: "start" }}>
+        <div className="database-instrument-groups">
           {groups.map(([name, instruments]) => (
-            <div key={name} role="group" aria-label={name}>
-              <h3>{name}</h3>
+            <div key={name} className="database-instrument-group" role="group" aria-label={name}>
+              <div className="database-instrument-group-head">
+                <h3>{name === "Bonos en Pesos" ? "BTP · Bonos en Pesos" : name === "Bonos en UF" ? "BTU · Bonos en UF" : name}</h3>
+                <span className="database-instrument-group-count">{instruments.length} instrumentos</span>
+              </div>
               <div className="compare-row database-instrument-list">
                 {instruments.map((item) => {
                   const isSelected = selected.has(item.code);
