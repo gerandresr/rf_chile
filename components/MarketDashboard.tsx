@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -347,7 +347,6 @@ type CurveType = "BTP" | "BTU" | "DPF" | "SPC_CLP" | "SPC_UF";
 type CurvePoint = { term: number; yield: number | null; code: string; name: string };
 type NelsonSiegelFit = { beta0: number; beta1: number; beta2: number; tau: number };
 type BenchmarkRow = { benchmark: BenchmarkCode; yield: number | null; d1: number | null; mtd: number | null; ytd: number | null };
-type BenchmarkMode = "maturity" | "duration";
 
 function yearsToMaturity(inst: Instrument, marketDate: string) {
   const d = new Date(`${marketDate}T00:00:00`);
@@ -458,19 +457,12 @@ function curveAtDate(data: RFData, curveType: "BTP" | "BTU", marketDate: string,
     .filter((p) => p.term > 0 && p.yield != null)
     .sort((a, b) => a.term - b.term);
 }
-function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null, mode: BenchmarkMode) {
+function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null) {
   if (!row) return null;
-  if (mode === "maturity") return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
-  const refDate = new Date(row.date + "T12:00:00");
-  const points: CurvePoint[] = data.instruments
-    .filter((inst) => inst.type === type && isActiveInstrument(inst, refDate) && (type !== "BTP" || (inst.coupon ?? 0) !== 0))
-    .map((inst) => ({ term: inst.duration ?? 0, yield: typeof row.values[inst.code] === "number" ? row.values[inst.code] : null, code: inst.code, name: maturityLabel(inst) }))
-    .filter((p) => p.term > 0 && p.yield != null)
-    .sort((a, b) => a.term - b.term);
-  return interpolateMarketYield(term, points);
+  return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
 }
 
-function buildBenchmarkRows(data: RFData, mode: BenchmarkMode): BenchmarkRow[] {
+function buildBenchmarkRows(data: RFData): BenchmarkRow[] {
   const current = findHistoryOnOrBefore(data, data.lastMarketDate);
   if (!current) return [];
   const d1Base = findHistoryBefore(data, current.date);
@@ -488,10 +480,10 @@ function buildBenchmarkRows(data: RFData, mode: BenchmarkMode): BenchmarkRow[] {
     { benchmark: "UF-10", type: "BTU", term: 10 },
   ];
   return specs.map(({ benchmark, type, term }) => {
-    const value = benchmarkYield(data, type, term, current, mode);
-    const d1Value = benchmarkYield(data, type, term, d1Base, mode);
-    const mtdValue = benchmarkYield(data, type, term, mtdBase, mode);
-    const ytdValue = benchmarkYield(data, type, term, ytdBase, mode);
+    const value = benchmarkYield(data, type, term, current);
+    const d1Value = benchmarkYield(data, type, term, d1Base);
+    const mtdValue = benchmarkYield(data, type, term, mtdBase);
+    const ytdValue = benchmarkYield(data, type, term, ytdBase);
     return {
       benchmark,
       yield: value,
@@ -512,15 +504,12 @@ function BenchmarkChange({ value, digits = 0 }: { value: number | null; digits?:
 }
 
 function BenchmarkTable({
-  rows, mode, onModeChange, officialDate, estimate, hasEstimateError, onRefresh,
+  rows, officialDate, estimate, hasEstimateError,
 }: {
   rows: BenchmarkRow[];
-  mode: BenchmarkMode;
-  onModeChange: (mode: BenchmarkMode) => void;
   officialDate: string;
   estimate: BenchmarkEstimate | null;
   hasEstimateError: boolean;
-  onRefresh: () => void;
 }) {
   return (
     <section className="panel market-table-panel" style={{ maxWidth: 1080, margin: "14px auto" }}>
@@ -528,18 +517,13 @@ function BenchmarkTable({
         <div>
           <div className="eyebrow">Cierre oficial y estimación intradía</div>
           <h2>Tasas Benchmark</h2>
-          <div className="segmented" style={{ marginTop: 10, width: "fit-content" }}>
-            <button className={mode === "maturity" ? "selected" : ""} onClick={() => onModeChange("maturity")}>Por vencimiento</button>
-            <button className={mode === "duration" ? "selected" : ""} onClick={() => onModeChange("duration")}>Por duración</button>
-          </div>
         </div>
-        <button type="button" className="benchmark-refresh" onClick={onRefresh} title="Volver a leer el JSON de estimaciones">Actualizar estimación</button>
       </div>
       <div className="benchmark-timestamps" aria-live="polite">
         <span>Cierre oficial: <strong>{officialDate}</strong></span>
         {estimate
           ? <span>Última estimación: <strong>{estimate.fecha} · {estimate.hora} (Chile)</strong></span>
-          : <span className="muted">{hasEstimateError ? "No se pudo leer el archivo de estimaciones." : "Sin estimación vigente para este modo."}</span>}
+          : <span className="muted">{hasEstimateError ? "No se pudo leer el archivo de estimaciones." : "Sin estimación vigente para hoy."}</span>}
       </div>
       <div className="table-wrap" role="region" aria-label="Tasas Benchmark" tabIndex={0}>
         <table className="benchmark-table">
@@ -608,39 +592,29 @@ export function MarketDashboard() {
   const [dpfRateView, setDpfRateView] = useState<DPFRateView>("monthly");
   const [showNelsonSiegel, setShowNelsonSiegel] = useState(false);
   const [compareDate, setCompareDate] = useState("");
-  const [benchmarkMode, setBenchmarkMode] = useState<BenchmarkMode>("maturity");
   const [estimateFile, setEstimateFile] = useState<unknown>(null);
   const [estimateDate, setEstimateDate] = useState("");
   const [hasEstimateError, setHasEstimateError] = useState(false);
-
-  const refreshBenchmarkEstimate = useCallback(async () => {
-    setEstimateDate(chileToday());
-    try {
-      const response = await fetch("/data/cierre-estimado-rf.json", { cache: "no-store" });
-      if (!response.ok) throw new Error("No se pudo obtener el archivo");
-      setEstimateFile(await response.json());
-      setHasEstimateError(false);
-    } catch {
-      setEstimateFile(null);
-      setHasEstimateError(true);
-    }
-  }, []);
 
   useEffect(() => {
     fetch("/data/rf.json").then((r) => r.json()).then(setData);
     loadDPFData().then(setDpfData);
     loadSwapHistory(CLPCAM_TENORS).then(setSwapCLPHistory);
     loadSwapHistory(UFCAM_TENORS).then(setSwapUFHistory);
-    void refreshBenchmarkEstimate();
-  }, [refreshBenchmarkEstimate]);
+    setEstimateDate(chileToday());
+    fetch("/data/cierre-estimado-rf.json", { cache: "no-store" })
+      .then(response => { if (!response.ok) throw new Error("No se pudo obtener el archivo"); return response.json(); })
+      .then(json => { setEstimateFile(json); setHasEstimateError(false); })
+      .catch(() => { setEstimateFile(null); setHasEstimateError(true); });
+  }, []);
 
   const active = useMemo(() => data ? data.instruments.filter((i) => isActiveInstrument(i)).sort((a, b) => a.maturityYear * 12 + a.maturityMonth - (b.maturityYear * 12 + b.maturityMonth)) : [], [data]);
   const btp = active.filter((i) => i.type === "BTP");
   const btu = active.filter((i) => i.type === "BTU");
-  const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data, benchmarkMode) : [], [data, benchmarkMode]);
+  const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data) : [], [data]);
   const benchmarkEstimate = useMemo(
-    () => data && estimateDate ? latestBenchmarkEstimate(estimateFile, benchmarkMode, data.lastMarketDate, estimateDate) : null,
-    [data, estimateDate, estimateFile, benchmarkMode],
+    () => data && estimateDate ? latestBenchmarkEstimate(estimateFile, data.lastMarketDate, estimateDate) : null,
+    [data, estimateDate, estimateFile],
   );
   const selectedSwapHistory = curveType === "SPC_CLP" ? swapCLPHistory : curveType === "SPC_UF" ? swapUFHistory : null;
   const swapCurrentDate = useMemo(() => selectedSwapHistory ? latestSwapDate(selectedSwapHistory) : null, [selectedSwapHistory]);
@@ -773,7 +747,7 @@ export function MarketDashboard() {
         </div>
       </section>
 
-      <BenchmarkTable rows={benchmarkRows} mode={benchmarkMode} onModeChange={setBenchmarkMode} officialDate={data.lastMarketDate} estimate={benchmarkEstimate} hasEstimateError={hasEstimateError} onRefresh={() => { void refreshBenchmarkEstimate(); }} />
+      <BenchmarkTable rows={benchmarkRows} officialDate={data.lastMarketDate} estimate={benchmarkEstimate} hasEstimateError={hasEstimateError} />
 
       <div className="two-col">
         <MarketTable title="Bonos de Gobierno en Pesos" instruments={btp} data={data} tpm={latestTpm} swaps={swapCLP} />
