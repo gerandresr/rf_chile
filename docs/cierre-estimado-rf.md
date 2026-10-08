@@ -4,7 +4,7 @@ La pestaña **Mercados** calcula el **cierre oficial** directamente desde los hi
 
 ## Dónde editar
 
-Editar `public/data/cierre-estimado-rf.json`, guardar el cambio en GitHub y esperar a que Vercel publique la nueva versión. Si la página ya estaba abierta, presionar **Actualizar** en la tabla Benchmark.
+Editar `public/data/cierre-estimado-rf.json`, guardar el cambio en GitHub y esperar a que Vercel publique la nueva versión. Si la página ya estaba abierta, recargar la pestaña para leer la estimación publicada.
 
 ## Ejemplo de contenido (tasas ilustrativas, NO son datos reales)
 
@@ -14,7 +14,6 @@ Editar `public/data/cierre-estimado-rf.json`, guardar el cambio en GitHub y espe
   "actualizaciones": [
     {
       "hora": "11:00",
-      "modo": "maturity",
       "benchmark": {
         "PESOS-02": 4.85,
         "PESOS-05": 5.12,
@@ -26,7 +25,6 @@ Editar `public/data/cierre-estimado-rf.json`, guardar el cambio en GitHub y espe
     },
     {
       "hora": "14:30",
-      "modo": "maturity",
       "benchmark": {
         "PESOS-02": 4.89,
         "PESOS-05": 5.19,
@@ -42,7 +40,7 @@ Editar `public/data/cierre-estimado-rf.json`, guardar el cambio en GitHub y espe
 
 - `fecha`: día de la estimación en Chile, formato `AAAA-MM-DD`. Cada mañana actualizarla y empezar las actualizaciones de ese día; las estimaciones de otra fecha no se muestran.
 - `hora`: hora local de Chile `HH:MM` (24 horas). La página elige la actualización **más reciente por hora**.
-- `modo`: `"maturity"` corresponde al selector **Por vencimiento** y `"duration"` a **Por duración**. Se mantienen separadas porque no representan el mismo benchmark; si quieres estimaciones en ambos modos, agrega entradas independientes para cada uno.
+- El cálculo de Benchmark se realiza **solo por vencimiento**. El campo `modo` ya no es necesario; si conservas datos de la versión anterior, únicamente se aceptan entradas con `"modo": "maturity"` (no `"duration"`).
 - `benchmark`: tasas expresadas **en porcentaje**, por ejemplo `5.19` para `5,19%`; no ingresar valores en puntos básicos.
 - Cada actualización es una foto completa de los seis benchmarks. Es posible dejar campos sin informar: se mostrarán como `—`, sin arrastrar estimaciones antiguas.
 - Puedes agregar varias actualizaciones intradía (11:00, 12:00, 14:30). No es necesario conservar el cierre oficial en este JSON.
