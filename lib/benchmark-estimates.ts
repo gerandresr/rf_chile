@@ -3,12 +3,13 @@ export const BENCHMARK_CODES = [
   "UF-02", "UF-05", "UF-10",
 ] as const;
 
+export type BenchmarkCode = (typeof BENCHMARK_CODES)[number];
 export type BenchmarkEstimateMode = "maturity" | "duration";
 export type BenchmarkEstimate = {
   fecha: string;
   hora: string;
   modo: BenchmarkEstimateMode;
-  benchmark: Partial<Record<(typeof BENCHMARK_CODES)[number], number>>;
+  benchmark: Partial<Record<BenchmarkCode, number>>;
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
