@@ -16,9 +16,6 @@
   border-top:3px solid #38bdf8;
   box-shadow:0 3px 10px rgba(15,23,42,.09);
 }
-.macro-kpi-grid .kpi:nth-child(2),
-.macro-kpi-grid .kpi:nth-child(5){border-top-color:#f59e0b}
-.macro-kpi-grid .kpi:nth-child(4){border-top-color:#34d399}
 .macro-kpi-grid .kpi-label{display:flex;align-items:center;justify-content:center;min-height:2.8em;color:#a7b8cf;font-size:11px;font-weight:700;line-height:1.4;text-align:center}
 .macro-kpi-grid .kpi-value{color:#fff;font-size:clamp(27px,2.3vw,34px);font-variant-numeric:tabular-nums;line-height:1.2;margin:12px 0 14px;text-align:center}
 .macro-kpi-grid .kpi-foot{width:100%;margin-top:auto;min-width:0;justify-content:center;text-align:center;border-top:1px solid #354154;color:#a7b8cf;line-height:1.4}
@@ -28,6 +25,24 @@
 @media(max-width:1200px){.macro-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.macro-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:390px){.macro-kpi-grid{grid-template-columns:1fr}}
+
+/* Precios de mercado: ocho tarjetas compactas en monitores amplios. */
+.market-quotes{width:100%;min-width:0;margin:2px 0 18px}
+.market-quotes-heading{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;margin:0 0 9px}
+.market-quotes-heading h2{margin:0;font-size:14px;font-weight:750;color:var(--text)}
+.market-quotes-heading span{color:var(--muted);font-size:10px}
+.market-quotes-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.market-quote-card{min-width:0;min-height:79px;padding:11px 9px 12px;background:#dceaf4;border:1px solid #cadce9;border-radius:10px;display:flex;flex-direction:column;justify-content:space-between;gap:9px}
+.market-quote-name{color:#48647e;font-size:11px;line-height:1.2;font-weight:700;white-space:nowrap}
+.market-quote-metrics{display:flex;align-items:baseline;justify-content:space-between;gap:3px;min-width:0}
+.market-quote-value{color:#142d46;font-size:clamp(15px,1.05vw,19px);font-weight:780;line-height:1.2;font-variant-numeric:tabular-nums;letter-spacing:-.04em;white-space:nowrap}
+.market-quote-change{font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.2}
+.market-quote-change.up{color:#16835c}
+.market-quote-change.down{color:#c44949}
+.market-quote-change.flat{color:#64748b}
+@media(max-width:1599px){.market-quotes-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.market-quote-card{padding:12px}.market-quote-value{font-size:20px}.market-quote-change{font-size:11px}}
+@media(max-width:850px){.market-quotes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){.market-quotes-grid{grid-template-columns:1fr}}
 
 /* Expandable model catalogue. */
 .model-disclosure{padding:0;overflow:hidden}
