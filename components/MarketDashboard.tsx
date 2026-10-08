@@ -337,8 +337,8 @@ const latestTpm = [...dailyMacroData].reverse().find((row) => typeof row.tpm ===
 
 const macroKpis = [
   dailyTpmKpi(dailyMacroData),
-  monthlyMacroKpi(monthlyMacroData, "ipc_yoy", "Inflación Anual"),
-  monthlyMacroKpi(monthlyMacroData, "ipc_mom", "IPC MoM"),
+  monthlyMacroKpi(monthlyMacroData, "ipc_yoy", "Inflación Anual Conocida"),
+  monthlyMacroKpi(monthlyMacroData, "ipc_mom", "IPC Mensual Conocido"),
   monthlyMacroKpi(monthlyMacroData, "imacec", "IMACEC"),
   monthlyMacroKpi(monthlyMacroData, "desempleo", "Desempleo"),
 ];
