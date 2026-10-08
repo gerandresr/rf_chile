@@ -4,11 +4,9 @@ export const BENCHMARK_CODES = [
 ] as const;
 
 export type BenchmarkCode = (typeof BENCHMARK_CODES)[number];
-export type BenchmarkEstimateMode = "maturity" | "duration";
 export type BenchmarkEstimate = {
   fecha: string;
   hora: string;
-  modo: BenchmarkEstimateMode;
   benchmark: Partial<Record<BenchmarkCode, number>>;
 };
 
@@ -27,11 +25,10 @@ export function chileToday(now: Date = new Date()): string {
 
 /**
  * Solo muestra estimaciones del día de Chile y posteriores al cierre oficial
- * cargado. Separa las estimaciones por vencimiento y por duración.
+ * cargado. Solo utiliza estimaciones por vencimiento.
  */
 export function latestBenchmarkEstimate(
   input: unknown,
-  mode: BenchmarkEstimateMode,
   officialDate: string,
   today: string,
 ): BenchmarkEstimate | null {
@@ -41,7 +38,7 @@ export function latestBenchmarkEstimate(
 
   let latest: BenchmarkEstimate | null = null;
   for (const item of input.actualizaciones) {
-    if (!isObject(item) || item.modo !== mode || !isObject(item.benchmark)) continue;
+    if (!isObject(item) || (item.modo != null && item.modo !== "maturity") || !isObject(item.benchmark)) continue;
     if (typeof item.hora !== "string" || !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(item.hora)) continue;
 
     const benchmark: BenchmarkEstimate["benchmark"] = {};
@@ -53,7 +50,7 @@ export function latestBenchmarkEstimate(
 
     // A igualdad de hora, prevalece la última actualización del archivo.
     if (!latest || item.hora >= latest.hora) {
-      latest = { fecha: today, hora: item.hora, modo: mode, benchmark };
+      latest = { fecha: today, hora: item.hora, benchmark };
     }
   }
   return latest;
