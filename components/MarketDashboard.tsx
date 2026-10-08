@@ -192,8 +192,10 @@ async function loadDPFData(): Promise<DPFData> {
   return { lastMarketDate, rateConvention: "monthly", annualization: "monthly_rate_x12", instruments, history: valid };
 }
 type SwapRow = { code: string; label: string; tenorYears: number; duration: number; value: number; d1m: number | null; mtd: number | null; ytd: number | null };
+type SwapHistorySeries = { code: string; label: string; years: number; rows: { date: string; value: number }[] };
+type SwapTenor = { code: string; label: string; years: number };
 
-const CLPCAM_TENORS = [
+const CLPCAM_TENORS: SwapTenor[] = [
   { code: "clpcam_1m", label: "1mo", years: 1 / 12 },
   { code: "clpcam_3m", label: "3mo", years: 3 / 12 },
   { code: "clpcam_6m", label: "6mo", years: 6 / 12 },
@@ -205,6 +207,19 @@ const CLPCAM_TENORS = [
   { code: "clpcam_10y", label: "10yr", years: 10 },
   { code: "clpcam_15y", label: "15yr", years: 15 },
   { code: "clpcam_20y", label: "20yr", years: 20 },
+];
+
+const UFCAM_TENORS: SwapTenor[] = [
+  { code: "ufcam_3m", label: "3mo", years: 3 / 12 },
+  { code: "ufcam_6m", label: "6mo", years: 6 / 12 },
+  { code: "ufcam_9m", label: "9mo", years: 9 / 12 },
+  { code: "ufcam_1y", label: "1yr", years: 1 },
+  { code: "ufcam_2y", label: "2yr", years: 2 },
+  { code: "ufcam_5y", label: "5yr", years: 5 },
+  { code: "ufcam_7y", label: "7yr", years: 7 },
+  { code: "ufcam_10y", label: "10yr", years: 10 },
+  { code: "ufcam_15y", label: "15yr", years: 15 },
+  { code: "ufcam_20y", label: "20yr", years: 20 },
 ];
 
 function approxSwapDuration(years: number, yieldPct: number) {
@@ -224,25 +239,60 @@ function approxSwapDuration(years: number, yieldPct: number) {
   return macaulay / (1 + periodYield);
 }
 
-async function loadCLPCamData(): Promise<SwapRow[]> {
-  const series = await Promise.all(CLPCAM_TENORS.map(async (tenor) => {
+async function loadSwapHistory(tenors: SwapTenor[]): Promise<SwapHistorySeries[]> {
+  const results = await Promise.all(tenors.map(async (tenor) => {
     const response = await fetch(`/data/historico_bloomberg/${tenor.code}.json`);
     if (!response.ok) return null;
     const json = await response.json();
     const item = json[tenor.code] as { fecha?: string[]; valor?: number[] } | undefined;
     if (!item?.fecha?.length || !item.valor?.length) return null;
-    const rows = item.fecha.map((date, index) => ({ date, value: item.valor?.[index] })).filter((row): row is { date: string; value: number } => typeof row.value === "number" && Number.isFinite(row.value)).sort((a,b)=>a.date.localeCompare(b.date));
-    const current = rows.at(-1); if (!current) return null;
+    const rows = item.fecha
+      .map((date, index) => ({ date, value: item.valor![index] }))
+      .filter((row): row is { date: string; value: number } =>
+        /^\d{4}-\d{2}-\d{2}$/.test(row.date) && typeof row.value === "number" && Number.isFinite(row.value))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    return rows.length ? { code: tenor.code, label: tenor.label, years: tenor.years, rows } : null;
+  }));
+  return results.filter((item): item is SwapHistorySeries => item != null);
+}
+
+function lastSwapObservation(series: SwapHistorySeries, date: string) {
+  for (let index = series.rows.length - 1; index >= 0; index--) {
+    if (series.rows[index].date <= date) return series.rows[index];
+  }
+  return null;
+}
+
+function latestSwapDate(histories: SwapHistorySeries[], cutoff?: string): string | null {
+  const dates = histories
+    .map((series) => cutoff ? lastSwapObservation(series, cutoff)?.date : series.rows.at(-1)?.date)
+    .filter((date): date is string => date != null);
+  return dates.length ? dates.sort().at(-1)! : null;
+}
+
+function swapCurveAtDate(histories: SwapHistorySeries[], date: string): CurvePoint[] {
+  return histories.flatMap((series) => {
+    const row = lastSwapObservation(series, date);
+    return row ? [{ term: series.years, yield: row.value, code: series.code, name: series.label }] : [];
+  }).sort((a, b) => a.term - b.term);
+}
+
+function swapRowsFromHistory(histories: SwapHistorySeries[]): SwapRow[] {
+  return histories.flatMap((series) => {
+    const rows = series.rows;
+    const current = rows.at(-1);
+    if (!current) return [];
     const d = new Date(current.date + "T00:00:00");
     const monthStart = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`;
     const yearStart = `${d.getFullYear()}-01-01`;
     const oneMonthAgo = new Date(d); oneMonthAgo.setMonth(oneMonthAgo.getMonth()-1);
     const oneMonthKey = oneMonthAgo.toISOString().slice(0,10);
-    const base = (date:string) => [...rows].reverse().find(r=>r.date<=date) ?? rows.find(r=>r.date>=date) ?? null;
+    const base = (date:string) => lastSwapObservation(series, date) ?? rows.find(r=>r.date>=date) ?? null;
     const change = (b:{value:number}|null) => b ? (current.value-b.value)*100 : null;
-    return { code: tenor.code, label: tenor.label, tenorYears: tenor.years, duration: approxSwapDuration(tenor.years,current.value), value: current.value, d1m: change(base(oneMonthKey)), mtd: change(base(monthStart)), ytd: change(base(yearStart)) };
-  }));
-  return series.filter((row): row is SwapRow => row != null);
+    return [{ code: series.code, label: series.label, tenorYears: series.years,
+      duration: approxSwapDuration(series.years,current.value), value: current.value,
+      d1m: change(base(oneMonthKey)), mtd: change(base(monthStart)), ytd: change(base(yearStart)) }];
+  });
 }
 
 function SwapCLPTable({ rows }: { rows: SwapRow[] }) {
@@ -292,7 +342,7 @@ const macroKpis = [
   monthlyMacroKpi(monthlyMacroData, "desempleo", "Desempleo"),
 ];
 
-type CurveType = "BTP" | "BTU" | "DPF";
+type CurveType = "BTP" | "BTU" | "DPF" | "SPC_CLP" | "SPC_UF";
 type CurvePoint = { term: number; yield: number | null; code: string; name: string };
 type NelsonSiegelFit = { beta0: number; beta1: number; beta2: number; tau: number };
 type BenchmarkRow = { benchmark: string; yield: number | null; d1: number | null; mtd: number | null; ytd: number | null };
@@ -499,7 +549,8 @@ function CurveTooltip({ active, label, currentCurve, comparisonCurve, comparison
   const comparison = comparisonDate ? interpolateMarketYield(term, comparisonCurve) : null;
   const ns = showNelsonSiegel && nsFit ? nelsonSiegelYield(term, nsFit) : null;
   const move = current != null && comparison != null ? (current - comparison) * 100 : null;
-  const fallbackTitle = curveType === "DPF" ? `DPF · ${Math.round(term * 365.25)} días` : `${curveType} · ${term.toFixed(2)} años`;
+  const curveLabel = curveType === "SPC_CLP" ? "SPC CLP" : curveType === "SPC_UF" ? "SPC UF" : curveType;
+  const fallbackTitle = curveType === "DPF" ? `DPF · ${Math.round(term * 365.25)} días` : `${curveLabel} · ${term.toFixed(2)} años`;
   const currentLabel = curveType === "DPF" ? dpfRateView === "monthly" ? "Tasa mensual" : "Tasa anual" : "Actual";
   return (
     <div className="curve-tooltip">
@@ -516,7 +567,9 @@ function CurveTooltip({ active, label, currentCurve, comparisonCurve, comparison
 export function MarketDashboard() {
   const [data, setData] = useState<RFData | null>(null);
   const [dpfData, setDpfData] = useState<DPFData | null>(null);
-  const [swapCLP, setSwapCLP] = useState<SwapRow[]>([]);
+  const [swapCLPHistory, setSwapCLPHistory] = useState<SwapHistorySeries[]>([]);
+  const [swapUFHistory, setSwapUFHistory] = useState<SwapHistorySeries[]>([]);
+  const swapCLP = useMemo(() => swapRowsFromHistory(swapCLPHistory), [swapCLPHistory]);
   const [curveType, setCurveType] = useState<CurveType>("BTP");
   const [dpfRateView, setDpfRateView] = useState<DPFRateView>("monthly");
   const [showNelsonSiegel, setShowNelsonSiegel] = useState(false);
@@ -526,15 +579,21 @@ export function MarketDashboard() {
   useEffect(() => {
     fetch("/data/rf.json").then((r) => r.json()).then(setData);
     loadDPFData().then(setDpfData);
-    loadCLPCamData().then(setSwapCLP);
+    loadSwapHistory(CLPCAM_TENORS).then(setSwapCLPHistory);
+    loadSwapHistory(UFCAM_TENORS).then(setSwapUFHistory);
   }, []);
 
   const active = useMemo(() => data ? data.instruments.filter((i) => isActiveInstrument(i)).sort((a, b) => a.maturityYear * 12 + a.maturityMonth - (b.maturityYear * 12 + b.maturityMonth)) : [], [data]);
   const btp = active.filter((i) => i.type === "BTP");
   const btu = active.filter((i) => i.type === "BTU");
   const benchmarkRows = useMemo(() => data ? buildBenchmarkRows(data, benchmarkMode) : [], [data, benchmarkMode]);
+  const selectedSwapHistory = curveType === "SPC_CLP" ? swapCLPHistory : curveType === "SPC_UF" ? swapUFHistory : null;
+  const swapCurrentDate = useMemo(() => selectedSwapHistory ? latestSwapDate(selectedSwapHistory) : null, [selectedSwapHistory]);
+  const swapComparisonDate = useMemo(() => selectedSwapHistory && compareDate ? latestSwapDate(selectedSwapHistory, compareDate) : null, [selectedSwapHistory, compareDate]);
+  const swapFirstDate = useMemo(() => selectedSwapHistory ? selectedSwapHistory.map(series => series.rows[0]?.date).filter((date): date is string => !!date).sort().at(0) ?? null : null, [selectedSwapHistory]);
 
   const currentCurve = useMemo<CurvePoint[]>(() => {
+    if (selectedSwapHistory) return swapCurrentDate ? swapCurveAtDate(selectedSwapHistory, swapCurrentDate) : [];
     if (curveType === "DPF") {
       if (!dpfData) return [];
       const factor = dpfRateView === "annual" ? 12 : 1;
@@ -542,16 +601,17 @@ export function MarketDashboard() {
     }
     if (!data) return [];
     const currentRow = findHistoryOnOrBefore(data, data.lastMarketDate);
-    return currentRow ? curveAtDate(data, curveType, currentRow.date, currentRow.values) : [];
-  }, [data, dpfData, curveType, dpfRateView]);
+    return currentRow ? curveAtDate(data, curveType as "BTP" | "BTU", currentRow.date, currentRow.values) : [];
+  }, [data, dpfData, curveType, dpfRateView, selectedSwapHistory, swapCurrentDate]);
 
-  const comparisonRow = useMemo(() => data && compareDate && curveType !== "DPF" ? findHistoryOnOrBefore(data, compareDate) : null, [data, compareDate, curveType]);
+  const comparisonRow = useMemo(() => data && compareDate && (curveType === "BTP" || curveType === "BTU") ? findHistoryOnOrBefore(data, compareDate) : null, [data, compareDate, curveType]);
   const dpfComparisonDate = useMemo(() => {
     if (!dpfData || !compareDate || curveType !== "DPF") return null;
     const dates = dpfData.history.flatMap((series) => series.rows.map((row) => row.date)).filter((date) => date <= compareDate).sort();
     return dates.at(-1) ?? null;
   }, [dpfData, compareDate, curveType]);
   const comparisonCurve = useMemo<CurvePoint[]>(() => {
+    if (selectedSwapHistory) return swapComparisonDate ? swapCurveAtDate(selectedSwapHistory, swapComparisonDate) : [];
     if (curveType === "DPF") {
       if (!dpfData || !dpfComparisonDate) return [];
       const factor = dpfRateView === "annual" ? 12 : 1;
@@ -560,18 +620,18 @@ export function MarketDashboard() {
         return { term: series.days / 365.25, yield: row ? row.value * factor : null, code: series.code, name: `${series.days} días` };
       }).filter((point) => point.yield != null).sort((a, b) => a.term - b.term);
     }
-    return !data || !comparisonRow ? [] : curveAtDate(data, curveType, comparisonRow.date, comparisonRow.values);
-  }, [data, dpfData, comparisonRow, dpfComparisonDate, curveType, dpfRateView]);
-  const effectiveComparisonDate = curveType === "DPF" ? dpfComparisonDate : comparisonRow?.date ?? null;
+    return !data || !comparisonRow ? [] : curveAtDate(data, curveType as "BTP" | "BTU", comparisonRow.date, comparisonRow.values);
+  }, [data, dpfData, comparisonRow, dpfComparisonDate, curveType, dpfRateView, selectedSwapHistory, swapComparisonDate]);
+  const effectiveComparisonDate = selectedSwapHistory ? swapComparisonDate : curveType === "DPF" ? dpfComparisonDate : comparisonRow?.date ?? null;
   const nsFit = useMemo(() => curveType === "DPF" ? null : fitNelsonSiegel(currentCurve), [currentCurve, curveType]);
   const curveAxis = useMemo(() => {
     if (curveType === "DPF") return { ticks: (dpfData?.instruments ?? []).map((item) => item.days / 365.25), max: 430 / 365.25 };
     const allTerms = [...currentCurve, ...comparisonCurve].map((p) => p.term);
     const maxTerm = allTerms.length ? Math.max(...allTerms) : 20;
-    const ticks = [1, 2, 5, 10, 15, 20];
+    const ticks = selectedSwapHistory ? [0.25, 0.5, 1, 2, 5, 10, 15, 20] : [1, 2, 5, 10, 15, 20];
     if (maxTerm > 20) ticks.push(30);
     return { ticks, max: maxTerm > 20 ? Math.max(30, Math.ceil(maxTerm / 10) * 10) : 20 };
-  }, [currentCurve, comparisonCurve, curveType, dpfData]);
+  }, [currentCurve, comparisonCurve, curveType, dpfData, selectedSwapHistory]);
 
   const chartData = useMemo(() => {
     if (!currentCurve.length) return [];
@@ -593,8 +653,10 @@ export function MarketDashboard() {
 
   const minHistoryDate = data.history[0]?.date;
   const maxHistoryDate = data.lastMarketDate;
-  const currentDate = curveType === "DPF" ? dpfData.lastMarketDate : data.lastMarketDate;
+  const currentDate = selectedSwapHistory ? swapCurrentDate ?? "—" : curveType === "DPF" ? dpfData.lastMarketDate : data.lastMarketDate;
   const currentSeriesName = curveType === "DPF" ? `${dpfRateView === "monthly" ? "Tasa mensual" : "Tasa anual"} · ${currentDate}` : `Actual · ${currentDate}`;
+  const earliestCurveDate = selectedSwapHistory ? swapFirstDate ?? undefined : curveType === "DPF" ? dpfData.history.flatMap(series => series.rows.map(row => row.date)).sort()[0] : minHistoryDate;
+  const latestCurveDate = selectedSwapHistory ? swapCurrentDate ?? undefined : curveType === "DPF" ? dpfData.lastMarketDate : maxHistoryDate;
 
   return (
     <AppShell>
@@ -618,10 +680,12 @@ export function MarketDashboard() {
       <section className="panel curve-panel">
         <div className="panel-head">
           <div><div className="eyebrow">Estructura temporal</div><h2>Curvas de Rendimiento</h2></div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div className="segmented">
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div className="segmented" style={{ flexWrap: "wrap" }}>
               <button className={curveType === "BTP" ? "selected" : ""} onClick={() => setCurveType("BTP")}>BTP</button>
               <button className={curveType === "BTU" ? "selected" : ""} onClick={() => setCurveType("BTU")}>BTU</button>
+              <button className={curveType === "SPC_CLP" ? "selected" : ""} onClick={() => setCurveType("SPC_CLP")}>SPC CLP</button>
+              <button className={curveType === "SPC_UF" ? "selected" : ""} onClick={() => setCurveType("SPC_UF")}>SPC UF</button>
               <button className={curveType === "DPF" ? "selected" : ""} onClick={() => { setCurveType("DPF"); setDpfRateView("monthly"); setShowNelsonSiegel(false); setCompareDate(""); }}>DPF</button>
             </div>
             {curveType !== "DPF" ? (
@@ -635,14 +699,14 @@ export function MarketDashboard() {
           </div>
         </div>
 
-        <div className="curve-controls"><div className="curve-date-control"><span>Comparar con</span><input type="date" value={compareDate} min={curveType === "DPF" ? dpfData.history.flatMap((series) => series.rows.map((row) => row.date)).sort()[0] : minHistoryDate} max={curveType === "DPF" ? dpfData.lastMarketDate : maxHistoryDate} onChange={(e) => setCompareDate(e.target.value)} />{compareDate && <button type="button" onClick={() => setCompareDate("")}>Quitar</button>}</div></div>
+        <div className="curve-controls"><div className="curve-date-control"><span>Comparar con</span><input type="date" value={compareDate} min={earliestCurveDate} max={latestCurveDate} onChange={(e) => setCompareDate(e.target.value)} />{compareDate && <button type="button" onClick={() => setCompareDate("")}>Quitar</button>}</div></div>
         {compareDate && effectiveComparisonDate && <div className="comparison-note"><strong>{effectiveComparisonDate}</strong></div>}
 
         <div className="chart-box">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ left: 8, right: 20, top: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="term" type="number" domain={[0, curveAxis.max]} ticks={curveAxis.ticks} tickFormatter={(v) => curveType === "DPF" ? `${Math.round(Number(v) * 365.25)}d` : `${Number(v).toFixed(0)}a`} />
+              <XAxis dataKey="term" type="number" domain={[0, curveAxis.max]} ticks={curveAxis.ticks} tickFormatter={(v) => curveType === "DPF" ? `${Math.round(Number(v) * 365.25)}d` : selectedSwapHistory && Number(v) < 1 ? `${Math.round(Number(v) * 12)}m` : `${Number(v).toFixed(0)}a`} />
               <YAxis domain={["auto", "auto"]} tickFormatter={(v) => `${Number(v).toFixed(curveType === "DPF" && dpfRateView === "monthly" ? 3 : 1)}%`} />
               <Tooltip content={<CurveTooltip currentCurve={currentCurve} comparisonCurve={comparisonCurve} comparisonDate={effectiveComparisonDate} nsFit={nsFit} showNelsonSiegel={showNelsonSiegel} curveType={curveType} currentDate={currentDate} dpfRateView={dpfRateView} />} />
               <Legend />
