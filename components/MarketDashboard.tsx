@@ -360,6 +360,19 @@ function yearsToMaturity(inst: Instrument, marketDate: string) {
   return Math.max((maturity.getTime() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000), 0.01);
 }
 
+/**
+ * Convención utilizada solo por Tasas Benchmark:
+ * vencimiento el día 1 del mes del código del bono; años = días / 365.
+ * UTC evita desajustes por cambios de horario de verano.
+ * No mantiene bonos vencidos: los plazos <= 0 se excluyen.
+ */
+function benchmarkYearsToMaturity(inst: Instrument, marketDate: string) {
+  const reference = new Date(`${marketDate}T00:00:00Z`);
+  if (Number.isNaN(reference.getTime())) return null;
+  const maturity = Date.UTC(inst.maturityYear, inst.maturityMonth - 1, 1);
+  return (maturity - reference.getTime()) / (365 * 24 * 60 * 60 * 1000);
+}
+
 function nsFactors(term: number, tau: number) {
   const x = term / tau;
   const exp = Math.exp(-x);
@@ -449,12 +462,12 @@ function firstHistoryOnOrAfter(data: RFData, date: string) {
   return data.history.find((row) => row.date >= date) ?? null;
 }
 
-function curveAtDate(data: RFData, curveType: "BTP" | "BTU", marketDate: string, values: Record<string, number>, liquidOnly = false) {
+function curveAtDate(data: RFData, curveType: "BTP" | "BTU", marketDate: string, values: Record<string, number>, liquidOnly = false, benchmarkConvention = false) {
   const refDate = new Date(`${marketDate}T12:00:00`);
   return data.instruments
     .filter((inst) => inst.type === curveType && isActiveInstrument(inst, refDate) && (!liquidOnly || (inst.coupon ?? 0) !== 0))
     .map((inst) => ({
-      term: yearsToMaturity(inst, marketDate) ?? 0,
+      term: (benchmarkConvention ? benchmarkYearsToMaturity(inst, marketDate) : yearsToMaturity(inst, marketDate)) ?? 0,
       yield: typeof values[inst.code] === "number" ? values[inst.code] : null,
       code: inst.code,
       name: maturityLabel(inst),
@@ -481,7 +494,7 @@ function interpolateBenchmarkYield(term: number, points: CurvePoint[]) {
 
 function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null) {
   if (!row) return null;
-  const selectedPoints = curveAtDate(data, type, row.date, row.values, type === "BTP")
+  const selectedPoints = curveAtDate(data, type, row.date, row.values, type === "BTP", true)
     .filter((point) => BENCHMARK_PAPERS[type].has(point.code));
   return interpolateBenchmarkYield(term, selectedPoints);
 }
@@ -579,7 +592,7 @@ function BenchmarkTable({
         <strong>Papeles a considerar:</strong>
         <div><strong>BTP:</strong> {benchmarkInstruments.BTP.join(", ")}</div>
         <div><strong>BTU:</strong> {benchmarkInstruments.BTU.join(", ")}</div>
-        <div>Fuera del rango de vencimientos seleccionados se utiliza la TIR del bono del extremo más cercano.</div>
+        <div>Plazo residual: días hasta el día 1 del mes de vencimiento / 365. Fuera del rango seleccionado se mantiene la TIR del bono del extremo más cercano.</div>
       </div>
     </section>
   );
