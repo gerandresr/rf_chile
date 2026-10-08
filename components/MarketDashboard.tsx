@@ -592,7 +592,6 @@ function BenchmarkTable({
         <strong>Papeles a considerar:</strong>
         <div><strong>BTP:</strong> {benchmarkInstruments.BTP.join(", ")}</div>
         <div><strong>BTU:</strong> {benchmarkInstruments.BTU.join(", ")}</div>
-        <div>Plazo residual: días hasta el día 1 del mes de vencimiento / 365. Fuera del rango seleccionado se mantiene la TIR del bono del extremo más cercano.</div>
       </div>
     </section>
   );
