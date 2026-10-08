@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { AppShell } from "./AppShell";
 import { chileToday, latestBenchmarkEstimate, type BenchmarkCode, type BenchmarkEstimate } from "@/lib/benchmark-estimates";
+import benchmarkInstruments from "@/public/data/instrumentos-benchmark.json";
 import { TPMMeetings } from "./TPMMeetings";
 import monthlyMacroData from "@/public/data/datos-mensuales.json";
 import dailyMacroData from "@/public/data/datos-diarios.json";
@@ -347,6 +348,10 @@ type CurveType = "BTP" | "BTU" | "DPF" | "SPC_CLP" | "SPC_UF";
 type CurvePoint = { term: number; yield: number | null; code: string; name: string };
 type NelsonSiegelFit = { beta0: number; beta1: number; beta2: number; tau: number };
 type BenchmarkRow = { benchmark: BenchmarkCode; yield: number | null; d1: number | null; mtd: number | null; ytd: number | null };
+const BENCHMARK_PAPERS = {
+  BTP: new Set<string>(benchmarkInstruments.BTP),
+  BTU: new Set<string>(benchmarkInstruments.BTU),
+};
 
 function yearsToMaturity(inst: Instrument, marketDate: string) {
   const d = new Date(`${marketDate}T00:00:00`);
@@ -459,7 +464,9 @@ function curveAtDate(data: RFData, curveType: "BTP" | "BTU", marketDate: string,
 }
 function benchmarkYield(data: RFData, type: "BTP" | "BTU", term: number, row: RFData["history"][number] | null) {
   if (!row) return null;
-  return interpolateMarketYield(term, curveAtDate(data, type, row.date, row.values, type === "BTP"));
+  const selectedPoints = curveAtDate(data, type, row.date, row.values, type === "BTP")
+    .filter((point) => BENCHMARK_PAPERS[type].has(point.code));
+  return interpolateMarketYield(term, selectedPoints);
 }
 
 function buildBenchmarkRows(data: RFData): BenchmarkRow[] {
@@ -549,7 +556,12 @@ function BenchmarkTable({
         </table>
       </div>
       <div className="muted" style={{ marginTop: 10, fontSize: 12 }}>
-        Δ hoy = Est. hoy − cierre oficial (bp). MTD y YTD corresponden al cierre oficial. El benchmark en pesos no incluye letras en su composición.
+        Δ hoy = Est. hoy − cierre oficial (bp). MTD y YTD corresponden al cierre oficial.
+      </div>
+      <div className="muted" style={{ marginTop: 10, fontSize: 11, lineHeight: 1.7 }}>
+        <strong>Papeles a considerar:</strong>
+        <div><strong>BTP:</strong> {benchmarkInstruments.BTP.join(", ")}</div>
+        <div><strong>BTU:</strong> {benchmarkInstruments.BTU.join(", ")}</div>
       </div>
     </section>
   );
