@@ -5,6 +5,11 @@ import { AppShell } from "@/components/AppShell";
 
 type Item = { code: string; source: string };
 
+function tenorInMonths(code: string) {
+  const match = code.match(/_(\d+)(m|y)$/i);
+  return match ? Number(match[1]) * (match[2].toLowerCase() === "y" ? 12 : 1) : Number.MAX_SAFE_INTEGER;
+}
+
 export default function DatabasePage() {
   const [items, setItems] = useState<Item[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -19,21 +24,30 @@ export default function DatabasePage() {
     const grouped: Record<string, Item[]> = {
       "Bonos en Pesos": [],
       "Bonos en UF": [],
+      "Swap Promedio Cámara CLP": [],
+      "Swap Promedio Cámara UF": [],
       DPF: [],
       Otros: [],
     };
 
     items.forEach((item) => {
-      const group = item.code.startsWith("BTP")
+      const code = item.code.toLowerCase();
+      const group = code.startsWith("btp")
         ? "Bonos en Pesos"
-        : item.code.startsWith("BTU")
+        : code.startsWith("btu")
           ? "Bonos en UF"
-          : item.code.startsWith("DPF")
-            ? "DPF"
-            : "Otros";
+          : code.startsWith("clpcam_")
+            ? "Swap Promedio Cámara CLP"
+            : code.startsWith("ufcam_")
+              ? "Swap Promedio Cámara UF"
+              : code.startsWith("dpf")
+                ? "DPF"
+                : "Otros";
       grouped[group].push(item);
     });
 
+    grouped["Swap Promedio Cámara CLP"].sort((a, b) => tenorInMonths(a.code) - tenorInMonths(b.code));
+    grouped["Swap Promedio Cámara UF"].sort((a, b) => tenorInMonths(a.code) - tenorInMonths(b.code));
     return Object.entries(grouped).filter(([, instruments]) => instruments.length);
   }, [items]);
 
@@ -91,7 +105,9 @@ export default function DatabasePage() {
                       aria-pressed={isSelected}
                       onClick={() => toggle(item.code)}
                     >
-                      {item.code.replace("BTP", "BTP ").replace("BTU", "BTU ")}
+                      {item.code.startsWith("clpcam_") || item.code.startsWith("ufcam_")
+                        ? item.code.split("_")[1].toUpperCase()
+                        : item.code.replace("BTP", "BTP ").replace("BTU", "BTU ")}
                     </button>
                   );
                 })}
