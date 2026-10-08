@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 
-type Item = { code: string; source: string };
+type Item = { code: string; source: string; dataPath?: string; dateField?: string; valueField?: string };
 
 const ADDITIONAL_GROUPS = [
   { name: "Monedas", codes: ["usdclp", "eurusd", "usdbrl", "usdmxn", "dxy"] },
@@ -139,6 +139,7 @@ export default function DatabasePage() {
                       key={item.code}
                       className={`chip database-instrument-chip ${isSelected ? "on" : ""}`}
                       aria-pressed={isSelected}
+                      title={item.dataPath ? `Fuente: ${item.source} · ${item.dataPath}` : undefined}
                       onClick={() => toggle(item.code)}
                     >
                       {instrumentLabel(item.code)}
