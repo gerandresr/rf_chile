@@ -49,3 +49,8 @@
 .benchmark-table th:not(:first-child),.benchmark-table td:not(:first-child){text-align:right}
 .benchmark-timestamps{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;margin:0 0 12px;font-size:12px;color:var(--muted)}
 .benchmark-timestamps strong{color:var(--text);font-weight:650}
+
+/* Base de Datos: selección múltiple tipo Históricos, con resaltado verde. */
+.database-instrument-list{gap:7px}
+.database-instrument-chip.on{background:#e5f6ed;border-color:#86cba7;color:#176b44;font-weight:700}
+.database-instrument-chip:focus-visible{outline:2px solid var(--green);outline-offset:2px}
