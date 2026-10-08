@@ -203,6 +203,8 @@ const CLPCAM_TENORS = [
   { code: "clpcam_5y", label: "5yr", years: 5 },
   { code: "clpcam_7y", label: "7yr", years: 7 },
   { code: "clpcam_10y", label: "10yr", years: 10 },
+  { code: "clpcam_15y", label: "15yr", years: 15 },
+  { code: "clpcam_20y", label: "20yr", years: 20 },
 ];
 
 function approxSwapDuration(years: number, yieldPct: number) {
