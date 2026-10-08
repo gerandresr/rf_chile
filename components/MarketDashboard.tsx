@@ -249,7 +249,7 @@ async function loadSwapHistory(tenors: SwapTenor[]): Promise<SwapHistorySeries[]
     const rows = item.fecha
       .map((date, index) => ({ date, value: item.valor![index] }))
       .filter((row): row is { date: string; value: number } =>
-        /^\\d{4}-\\d{2}-\\d{2}$/.test(row.date) && typeof row.value === "number" && Number.isFinite(row.value))
+        /^\d{4}-\d{2}-\d{2}$/.test(row.date) && typeof row.value === "number" && Number.isFinite(row.value))
       .sort((a, b) => a.date.localeCompare(b.date));
     return rows.length ? { code: tenor.code, label: tenor.label, years: tenor.years, rows } : null;
   }));
