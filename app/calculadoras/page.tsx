@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/AppShell";
+import { BondSpreadCalculators } from "@/components/BondSpreadCalculators";
 
 export default function CalculadorasPage() {
   return (
@@ -9,11 +10,7 @@ export default function CalculadorasPage() {
           <h1>Calculadoras</h1>
         </div>
       </header>
-      <section className="panel">
-        <p className="muted" style={{ margin: 0 }}>
-          Espacio para incorporar calculadoras financieras.
-        </p>
-      </section>
+      <BondSpreadCalculators />
     </AppShell>
   );
 }

@@ -88,3 +88,42 @@
 .database-instrument-group-head h3{font-size:14px;font-weight:700;margin:0;color:var(--text)}
 .database-instrument-group-count{color:var(--muted);font-size:11px;white-space:nowrap}
 .database-instrument-group .database-instrument-list{margin-bottom:0}
+
+
+/* Calculadoras: spread bonos CLP/UF y comparativa DPF */
+.calculator-group{max-width:1000px;margin:0 auto 22px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 10px rgba(20,32,55,.04);overflow:hidden}
+.calculator-group-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 22px;cursor:pointer;list-style:none;font-size:18px;font-weight:750}
+.calculator-group-summary::-webkit-details-marker,.bond-calculator-summary::-webkit-details-marker{display:none}
+.calculator-group-summary>span{display:inline-flex;align-items:center;gap:10px}
+.calculator-group-chevron,.bond-calculator-chevron{transition:transform .18s ease;flex-shrink:0}
+.calculator-group[open]>.calculator-group-summary .calculator-group-chevron,.bond-calculator[open]>.bond-calculator-summary .bond-calculator-chevron{transform:rotate(180deg)}
+.calculator-group-summary:focus-visible,.bond-calculator-summary:focus-visible{outline:2px solid #2f6fed;outline-offset:-4px}
+.calculator-group[open]>.calculator-group-summary{border-bottom:1px solid var(--line)}
+.calculator-group-content{padding:20px 22px 24px}
+.calculator-group-intro{margin:0 0 10px;font-size:13px;line-height:1.5;color:#5e6b80}
+.calculator-data-date{font-size:11px;color:#748096;margin-bottom:16px}
+.calculator-data-date strong{color:#364965}
+.bond-calculator-list{display:grid;gap:14px}
+.bond-calculator{border:1px solid #dce4ef;border-radius:11px;overflow:hidden;background:#fff}
+.bond-calculator-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;cursor:pointer;list-style:none;font-size:15px;font-weight:700;background:#f7f9fd}
+.bond-calculator-summary-title{display:flex;align-items:center;gap:9px;color:#273850}
+.bond-calculator[open]>.bond-calculator-summary{border-bottom:1px solid #e3e9f2}
+.bond-calculator-body{padding:20px}
+.bond-calculator-inputs,.bond-calculator-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.bond-calculator-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.bond-calculator-field label{font-size:12px;color:#53657d;font-weight:700}
+.bond-calculator-field input{width:100%;min-width:0;padding:12px 13px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#16263b;font:inherit;font-size:16px;font-variant-numeric:tabular-nums}
+.bond-calculator-field input:focus{outline:2px solid #84b4ff;outline-offset:1px;border-color:#3974d9}
+.bond-calculator-results{margin-top:18px}
+.bond-calculator-result{min-width:0;display:flex;flex-direction:column;gap:7px;padding:15px 16px;border-radius:10px;background:#edf2fa}
+.bond-calculator-result>span{font-size:12px;color:#5b6d87;font-weight:700}
+.bond-calculator-result strong{font-size:clamp(24px,2.5vw,32px);line-height:1.2;font-weight:770;color:#162e4e;font-variant-numeric:tabular-nums}
+.bond-calculator-result-primary{background:#e8f0fe;border:1px solid #cfdef7}
+.bond-calculator-result-primary strong{color:#194fa0}
+.bond-calculator-source{font-size:11px;color:#75839a;margin:10px 0 0}
+.bond-calculator-dpf{margin-top:23px;padding-top:20px;border-top:1px solid #e3e9f2}
+.bond-calculator-dpf h3{margin:0 0 5px;font-size:15px;color:#273850}
+.bond-calculator-dpf>p{margin:0 0 15px;color:#71809a;font-size:12px;line-height:1.5}
+.bond-calculator-dpf-result{grid-template-columns:minmax(0,1fr)}
+.bond-calculator-dpf-result .bond-calculator-result{max-width:470px}
+@media(max-width:600px){.calculator-group-summary{padding:16px;font-size:16px}.calculator-group-content{padding:14px}.bond-calculator-summary{padding:14px}.bond-calculator-body{padding:14px}.bond-calculator-inputs,.bond-calculator-results{grid-template-columns:1fr}.bond-calculator-dpf-result .bond-calculator-result{max-width:none}}
