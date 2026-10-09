@@ -105,9 +105,9 @@
 .calculator-data-date strong{color:#364965}
 .bond-calculator-list{display:grid;gap:14px}
 .bond-calculator{border:1px solid #dce4ef;border-radius:11px;overflow:hidden;background:#fff}
-.bond-calculator-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;cursor:pointer;list-style:none;font-size:15px;font-weight:700;background:#f7f9fd}
-.bond-calculator-summary-title{display:flex;align-items:center;gap:9px;color:#273850}
-.bond-calculator[open]>.bond-calculator-summary{border-bottom:1px solid #e3e9f2}
+.bond-calculator-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;cursor:pointer;list-style:none;font-size:15px;font-weight:700;background:var(--nav);color:#fff}
+.bond-calculator-summary-title{display:flex;align-items:center;gap:9px;color:inherit}
+.bond-calculator[open]>.bond-calculator-summary{border-bottom:1px solid #263449}
 .bond-calculator-body{padding:20px}
 .bond-calculator-inputs,.bond-calculator-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .bond-calculator-field{display:flex;flex-direction:column;gap:7px;min-width:0}
