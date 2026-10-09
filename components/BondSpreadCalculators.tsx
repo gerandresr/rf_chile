@@ -128,7 +128,7 @@ function SpreadCalculator({
   const prefix = isCLP ? "clp" : "uf";
 
   return (
-    <details className="bond-calculator" open={isCLP}>
+    <details className="bond-calculator">
       <summary className="bond-calculator-summary">
         <span className="bond-calculator-summary-title">
           <Landmark size={19} aria-hidden="true" />
@@ -225,7 +225,7 @@ export function BondSpreadCalculators() {
   const dataStatus = error ? "error" : data ? "ready" : "loading";
 
   return (
-    <details className="calculator-group" open>
+    <details className="calculator-group">
       <summary className="calculator-group-summary">
         <span><Calculator size={20} aria-hidden="true" /> Spread Bonos</span>
         <ChevronDown size={21} className="calculator-group-chevron" aria-hidden="true" />
