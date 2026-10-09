@@ -12,6 +12,10 @@ const numberFormat = new Intl.NumberFormat("es-CL", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
+const dpfNumberFormat = new Intl.NumberFormat("es-CL", {
+  minimumFractionDigits: 3,
+  maximumFractionDigits: 3,
+});
 
 function parsePercentInput(value: string): number | null {
   const text = value.trim().replace(",", ".");
@@ -22,6 +26,10 @@ function parsePercentInput(value: string): number | null {
 
 function formatPercent(value: number | null): string {
   return value === null || !Number.isFinite(value) ? "—" : numberFormat.format(value) + "%";
+}
+
+function formatDpfPercent(value: number | null): string {
+  return value === null || !Number.isFinite(value) ? "—" : dpfNumberFormat.format(value) + "%";
 }
 
 function formatSpread(value: number | null): string {
@@ -182,7 +190,7 @@ function SpreadCalculator({
             <div className="bond-calculator-results bond-calculator-dpf-result" aria-live="polite">
               <div className="bond-calculator-result bond-calculator-result-primary">
                 <span>Comparativa DPF</span>
-                <strong>{formatPercent(dpfRate)}</strong>
+                <strong>{formatDpfPercent(dpfRate)}</strong>
               </div>
             </div>
           </div>
