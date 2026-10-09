@@ -1398,5 +1398,15 @@
     "ipcsae_mom": 0.4,
     "ipc_yoy": 4.1,
     "tc_real": 104.22417439864
+  },
+  {
+    "fecha": "2026-09-01",
+    "imacec": null,
+    "imacec_ind_des": null,
+    "desempleo": null,
+    "ipc_mom": 0.4,
+    "ipcsae_mom": 0.1,
+    "ipc_yoy": 4.1,
+    "tc_real": null
   }
 ]
