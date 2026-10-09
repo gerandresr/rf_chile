@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, ComposedChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from "recharts";
 import { AppShell } from "./AppShell";
 import { spreadPair, yieldSpread } from "@/lib/yield-spreads";
@@ -80,7 +80,7 @@ export function HistoricalDashboard() {
     const pair = spreadPair(primary, comparison);
     return [{ ...pair, ...yieldSpread(chart, pair.left, pair.right) }];
   }) : [];
-  const changeSummary = metric === "change" ? [code].map(instrument => {
+  const changeSummary = metric === "change" ? lines.map(instrument => {
     const changes = chart.map(row => row[instrument]).filter((value): value is number => typeof value === "number" && Number.isFinite(value));
     const rises = changes.filter(value => value > 0);
     const falls = changes.filter(value => value < 0);
@@ -139,17 +139,17 @@ export function HistoricalDashboard() {
           <p className="technical-description">Promedio del período: <span style={{ color: "var(--red)" }}>{spread.average.toFixed(2)} pb</span> · línea roja punteada.</p>
         </>}
       </div>)}
-      {metric === "change" && <div className="technical-panel">
-        <h3 className="history-compare-title">Resumen de cambios diarios · {period === "MAX" ? "Todo el historial" : period}</h3>
+      {metric === "change" && changeSummary.map(row => <div className="technical-panel" key={row.instrument}>
+        <h3 className="history-compare-title">Resumen de cambios diarios · {period === "MAX" ? "Todo el historial" : period} para {row.instrument}</h3>
         <div className="table-wrap"><table className="daily-change-summary">
           <thead><tr><th></th><th>Número</th><th>Promedio</th></tr></thead>
-          <tbody>{changeSummary.map(row => <Fragment key={row.instrument}>
+          <tbody>
             <tr style={{ color: "var(--red)" }}><td>Subidas</td><td>{row.rises} veces</td><td>{formatAverage(row.averageRise)}</td></tr>
             <tr style={{ color: "var(--green)" }}><td>Caídas</td><td>{row.falls} veces</td><td>{formatAverage(row.averageFall)}</td></tr>
-          </Fragment>)}</tbody>
+          </tbody>
         </table></div>
-        <p className="technical-description">Calculado sobre el instrumento principal y el período seleccionado. Los cambios de cero se excluyen de ambos grupos.</p>
-      </div>}
+        <p className="technical-description">Calculado solo para {row.instrument} en el período seleccionado. Los cambios de cero se excluyen de ambos grupos.</p>
+      </div>)}
       {metric === "change" && <ChangeDistributionChart chart={chart} instruments={lines} colors={colors}/>}
       {selectedTechnical && !overlay && <div className="technical-panel"><h3 className="history-compare-title">{option?.label} · {code}{unit ? ` (${unit.trim()})` : ""}</h3><div className="technical-chart"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={chart} syncId="historical-technicals" margin={{ left: 8, right: 18, top: 10, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="date" minTickGap={35}/><YAxis domain={selectedTechnical === "rsi" || selectedTechnical === "percentile" ? [0, 100] : ["auto", "auto"]} tickFormatter={v => `${Number(v).toFixed(1)}${selectedTechnical === "percentile" ? "%" : ""}`}/><Tooltip formatter={(v, name) => [`${Number(v).toFixed(2)}${unit}`, String(name)]}/><Legend/>
