@@ -1,0 +1,1412 @@
+[
+  {
+    "fecha": "2015-01-01",
+    "imacec": 2.6555748088223,
+    "imacec_ind_des": 92.6753022557038,
+    "desempleo": 6.2266912629249,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.5,
+    "tc_real": 97.9755221112076
+  },
+  {
+    "fecha": "2015-02-01",
+    "imacec": 2.6349448959354,
+    "imacec_ind_des": 92.5636586625159,
+    "desempleo": 6.2152623703,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.4,
+    "tc_real": 97.1244194609596
+  },
+  {
+    "fecha": "2015-03-01",
+    "imacec": 2.2322467421103,
+    "imacec_ind_des": 92.1242230785569,
+    "desempleo": 6.2288644027975,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.2,
+    "tc_real": 95.6911110018926
+  },
+  {
+    "fecha": "2015-04-01",
+    "imacec": 2.432174636733,
+    "imacec_ind_des": 93.3856298226942,
+    "desempleo": 6.3558414864696,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.1,
+    "tc_real": 93.4790825864388
+  },
+  {
+    "fecha": "2015-05-01",
+    "imacec": 1.2578819829956,
+    "imacec_ind_des": 93.1962557162832,
+    "desempleo": 6.7515088944151,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.0,
+    "tc_real": 92.9608820473869
+  },
+  {
+    "fecha": "2015-06-01",
+    "imacec": 2.455025248945,
+    "imacec_ind_des": 93.3921970013346,
+    "desempleo": 6.6702240657655,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.4,
+    "tc_real": 95.6112315279845
+  },
+  {
+    "fecha": "2015-07-01",
+    "imacec": 2.4913017897689,
+    "imacec_ind_des": 92.9724933619373,
+    "desempleo": 6.6916061135188,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.6,
+    "tc_real": 97.3346710017302
+  },
+  {
+    "fecha": "2015-08-01",
+    "imacec": 1.3625367973658,
+    "imacec_ind_des": 92.2780808995462,
+    "desempleo": 6.5585027061965,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 5.0,
+    "tc_real": 100.3374396594
+  },
+  {
+    "fecha": "2015-09-01",
+    "imacec": 2.9719312106018,
+    "imacec_ind_des": 93.4849465316742,
+    "desempleo": 6.5439997153519,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.6,
+    "tc_real": 99.2994179996729
+  },
+  {
+    "fecha": "2015-10-01",
+    "imacec": 1.1763912267819,
+    "imacec_ind_des": 93.8126941960693,
+    "desempleo": 6.4452389584113,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.0,
+    "tc_real": 98.2958423499059
+  },
+  {
+    "fecha": "2015-11-01",
+    "imacec": 2.1957035322752,
+    "imacec_ind_des": 93.3671067196649,
+    "desempleo": 6.1748227596574,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.9,
+    "tc_real": 99.8778967742343
+  },
+  {
+    "fecha": "2015-12-01",
+    "imacec": 2.0909091740545,
+    "imacec_ind_des": 93.729556981291,
+    "desempleo": 5.8704192154739,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.4,
+    "tc_real": 98.435907669001
+  },
+  {
+    "fecha": "2016-01-01",
+    "imacec": 1.8415931479693,
+    "imacec_ind_des": 94.4872640792988,
+    "desempleo": 5.9174359863914,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.8,
+    "tc_real": 98.5264381254244
+  },
+  {
+    "fecha": "2016-02-01",
+    "imacec": 4.3068110336607,
+    "imacec_ind_des": 94.6301697916917,
+    "desempleo": 6.0461631026577,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.7,
+    "tc_real": 96.5235809734704
+  },
+  {
+    "fecha": "2016-03-01",
+    "imacec": 2.8638685549712,
+    "imacec_ind_des": 94.5257412086805,
+    "desempleo": 6.49049906407,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.5,
+    "tc_real": 94.5801032262657
+  },
+  {
+    "fecha": "2016-04-01",
+    "imacec": 0.6085235884055,
+    "imacec_ind_des": 94.0814457303239,
+    "desempleo": 6.6052157884769,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.2,
+    "tc_real": 94.3962197641026
+  },
+  {
+    "fecha": "2016-05-01",
+    "imacec": 2.0539405141837,
+    "imacec_ind_des": 94.0189480659774,
+    "desempleo": 7.027192121286,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.2,
+    "tc_real": 96.1278757811475
+  },
+  {
+    "fecha": "2016-06-01",
+    "imacec": 1.1379131949984,
+    "imacec_ind_des": 94.5559040921508,
+    "desempleo": 7.0180202335965,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.2,
+    "tc_real": 96.2054703107396
+  },
+  {
+    "fecha": "2016-07-01",
+    "imacec": 1.052418726191,
+    "imacec_ind_des": 94.6626581459707,
+    "desempleo": 7.2671162502907,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.0,
+    "tc_real": 92.3833940625039
+  },
+  {
+    "fecha": "2016-08-01",
+    "imacec": 3.1919390953527,
+    "imacec_ind_des": 94.7075162184929,
+    "desempleo": 7.0704324272928,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.4,
+    "tc_real": 93.2145310686594
+  },
+  {
+    "fecha": "2016-09-01",
+    "imacec": 1.6958255671758,
+    "imacec_ind_des": 95.0530925276484,
+    "desempleo": 7.0307198781385,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.1,
+    "tc_real": 94.2942415909616
+  },
+  {
+    "fecha": "2016-10-01",
+    "imacec": -0.394031690643,
+    "imacec_ind_des": 94.5716089254781,
+    "desempleo": 6.6808261954863,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.8,
+    "tc_real": 93.1096655706621
+  },
+  {
+    "fecha": "2016-11-01",
+    "imacec": 1.3119116690561,
+    "imacec_ind_des": 94.7563671580722,
+    "desempleo": 6.4033831152142,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.9,
+    "tc_real": 91.6403611888281
+  },
+  {
+    "fecha": "2016-12-01",
+    "imacec": 1.5768384358265,
+    "imacec_ind_des": 94.9071280634142,
+    "desempleo": 6.2004127300428,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.7,
+    "tc_real": 91.4166384440751
+  },
+  {
+    "fecha": "2017-01-01",
+    "imacec": 0.4504966944654,
+    "imacec_ind_des": 94.488072847144,
+    "desempleo": 6.3693701245487,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.8,
+    "tc_real": 91.6527751083888
+  },
+  {
+    "fecha": "2017-02-01",
+    "imacec": -1.844899778243,
+    "imacec_ind_des": 94.1519106490479,
+    "desempleo": 6.7713485956733,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.7,
+    "tc_real": 90.1295039411471
+  },
+  {
+    "fecha": "2017-03-01",
+    "imacec": 0.2754910854129,
+    "imacec_ind_des": 93.7509042955667,
+    "desempleo": 7.0402289496768,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.7,
+    "tc_real": 92.385312577194
+  },
+  {
+    "fecha": "2017-04-01",
+    "imacec": -0.330189889285,
+    "imacec_ind_des": 94.8471005601781,
+    "desempleo": 7.0779779734202,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.7,
+    "tc_real": 91.9592676892774
+  },
+  {
+    "fecha": "2017-05-01",
+    "imacec": 1.3717169932687,
+    "imacec_ind_des": 95.4117084906247,
+    "desempleo": 7.326344790601,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.6,
+    "tc_real": 94.1006707030951
+  },
+  {
+    "fecha": "2017-06-01",
+    "imacec": 1.1088808072936,
+    "imacec_ind_des": 95.9026763531766,
+    "desempleo": 7.3125193579654,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 1.7,
+    "tc_real": 93.9218034908745
+  },
+  {
+    "fecha": "2017-07-01",
+    "imacec": 1.9470095111346,
+    "imacec_ind_des": 96.7618175917928,
+    "desempleo": 7.2167784939905,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 1.7,
+    "tc_real": 93.1238606314105
+  },
+  {
+    "fecha": "2017-08-01",
+    "imacec": 2.2326561705439,
+    "imacec_ind_des": 97.1899337753337,
+    "desempleo": 6.9075946714037,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 1.9,
+    "tc_real": 92.247285036589
+  },
+  {
+    "fecha": "2017-09-01",
+    "imacec": 1.4790529292921,
+    "imacec_ind_des": 97.6104052510628,
+    "desempleo": 6.9952969791219,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 1.5,
+    "tc_real": 90.8313192043758
+  },
+  {
+    "fecha": "2017-10-01",
+    "imacec": 3.2725036254895,
+    "imacec_ind_des": 97.4038571048672,
+    "desempleo": 6.984697394799,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 1.9,
+    "tc_real": 90.1696529297066
+  },
+  {
+    "fecha": "2017-11-01",
+    "imacec": 3.4507383820112,
+    "imacec_ind_des": 98.0947634369672,
+    "desempleo": 6.7039187219485,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 1.9,
+    "tc_real": 90.8622268277884
+  },
+  {
+    "fecha": "2017-12-01",
+    "imacec": 2.6435405156068,
+    "imacec_ind_des": 98.0814463464412,
+    "desempleo": 6.5126532130199,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.3,
+    "tc_real": 91.7817790677913
+  },
+  {
+    "fecha": "2018-01-01",
+    "imacec": 4.7621824698215,
+    "imacec_ind_des": 98.8020212764583,
+    "desempleo": 6.8254374445719,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.2,
+    "tc_real": 88.4728667218395
+  },
+  {
+    "fecha": "2018-02-01",
+    "imacec": 4.1715151281542,
+    "imacec_ind_des": 98.9601638688776,
+    "desempleo": 7.0100532120791,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.0,
+    "tc_real": 88.2434642010124
+  },
+  {
+    "fecha": "2018-03-01",
+    "imacec": 4.7951550832468,
+    "imacec_ind_des": 99.3366274603907,
+    "desempleo": 7.3760875809755,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 1.8,
+    "tc_real": 88.8603267336441
+  },
+  {
+    "fecha": "2018-04-01",
+    "imacec": 6.9809134581025,
+    "imacec_ind_des": 99.9692329895241,
+    "desempleo": 6.9937939491544,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 1.9,
+    "tc_real": 88.4249077325582
+  },
+  {
+    "fecha": "2018-05-01",
+    "imacec": 4.7175382619711,
+    "imacec_ind_des": 100.304492445661,
+    "desempleo": 7.3814464950714,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.0,
+    "tc_real": 90.244734556363
+  },
+  {
+    "fecha": "2018-06-01",
+    "imacec": 4.3344292780464,
+    "imacec_ind_des": 100.072597627544,
+    "desempleo": 7.5137144929646,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.5,
+    "tc_real": 90.4743018386987
+  },
+  {
+    "fecha": "2018-07-01",
+    "imacec": 3.0855508129468,
+    "imacec_ind_des": 100.076336516457,
+    "desempleo": 7.8534584611052,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.7,
+    "tc_real": 91.4631382054588
+  },
+  {
+    "fecha": "2018-08-01",
+    "imacec": 2.4190192678749,
+    "imacec_ind_des": 99.5326502566551,
+    "desempleo": 7.7190711079047,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.6,
+    "tc_real": 91.1086300641489
+  },
+  {
+    "fecha": "2018-09-01",
+    "imacec": 1.6870503233514,
+    "imacec_ind_des": 99.823822272384,
+    "desempleo": 7.4702905165262,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.1,
+    "tc_real": 93.4935707737664
+  },
+  {
+    "fecha": "2018-10-01",
+    "imacec": 4.456466347082,
+    "imacec_ind_des": 100.958524770074,
+    "desempleo": 7.4119068299065,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.9,
+    "tc_real": 93.1236635865099
+  },
+  {
+    "fecha": "2018-11-01",
+    "imacec": 3.3849552357028,
+    "imacec_ind_des": 101.791263597126,
+    "desempleo": 7.3111275021128,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.8,
+    "tc_real": 92.3764320856405
+  },
+  {
+    "fecha": "2018-12-01",
+    "imacec": 3.1025496802771,
+    "imacec_ind_des": 100.372266918848,
+    "desempleo": 7.1464633153887,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.6,
+    "tc_real": 92.732400884683
+  },
+  {
+    "fecha": "2019-01-01",
+    "imacec": 1.9659919484974,
+    "imacec_ind_des": 100.92282021385,
+    "desempleo": 7.1295721723762,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.2,
+    "tc_real": 93.125813953785
+  },
+  {
+    "fecha": "2019-02-01",
+    "imacec": 0.4024410183014,
+    "imacec_ind_des": 99.9114391358934,
+    "desempleo": 7.0342779076251,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.2,
+    "tc_real": 90.9890915434464
+  },
+  {
+    "fecha": "2019-03-01",
+    "imacec": 1.3470424730211,
+    "imacec_ind_des": 101.032415201254,
+    "desempleo": 7.23627924029,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.5,
+    "tc_real": 92.0730459951337
+  },
+  {
+    "fecha": "2019-04-01",
+    "imacec": 1.7820940124983,
+    "imacec_ind_des": 102.163563984391,
+    "desempleo": 7.0963377412054,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.4,
+    "tc_real": 91.8490912381729
+  },
+  {
+    "fecha": "2019-05-01",
+    "imacec": 1.8589031828075,
+    "imacec_ind_des": 102.417369280212,
+    "desempleo": 7.2322801999576,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.8,
+    "tc_real": 93.6537591263062
+  },
+  {
+    "fecha": "2019-06-01",
+    "imacec": 0.8803138091672,
+    "imacec_ind_des": 101.37993171652,
+    "desempleo": 7.2538126303226,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.7,
+    "tc_real": 94.0261798010548
+  },
+  {
+    "fecha": "2019-07-01",
+    "imacec": 2.7653306127998,
+    "imacec_ind_des": 101.499678527176,
+    "desempleo": 7.5486410796646,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.6,
+    "tc_real": 93.7082943243845
+  },
+  {
+    "fecha": "2019-08-01",
+    "imacec": 3.190942756168,
+    "imacec_ind_des": 102.608136740744,
+    "desempleo": 7.5718079861493,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.6,
+    "tc_real": 94.8707851439826
+  },
+  {
+    "fecha": "2019-09-01",
+    "imacec": 2.784290163594,
+    "imacec_ind_des": 101.331581709262,
+    "desempleo": 7.3372973397862,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.2,
+    "tc_real": 95.0877058797319
+  },
+  {
+    "fecha": "2019-10-01",
+    "imacec": -4.534436503105,
+    "imacec_ind_des": 96.8833218617042,
+    "desempleo": 7.1410798092785,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.7,
+    "tc_real": 95.2987933734727
+  },
+  {
+    "fecha": "2019-11-01",
+    "imacec": -4.988669054671,
+    "imacec_ind_des": 96.9530263894061,
+    "desempleo": 6.9603082938941,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.8,
+    "tc_real": 102.994971481357
+  },
+  {
+    "fecha": "2019-12-01",
+    "imacec": 0.9258849701166,
+    "imacec_ind_des": 99.5002773389027,
+    "desempleo": 7.0631690877494,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.0,
+    "tc_real": 102.689465693722
+  },
+  {
+    "fecha": "2020-01-01",
+    "imacec": 0.9300521010906,
+    "imacec_ind_des": 101.801784878231,
+    "desempleo": 7.4430743295789,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.5,
+    "tc_real": 103.543002537853
+  },
+  {
+    "fecha": "2020-02-01",
+    "imacec": 2.7210597729154,
+    "imacec_ind_des": 101.534271207296,
+    "desempleo": 7.8105192968302,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.9,
+    "tc_real": 105.090445901853
+  },
+  {
+    "fecha": "2020-03-01",
+    "imacec": -4.349724855182,
+    "imacec_ind_des": 96.0505602805287,
+    "desempleo": 8.2285090973616,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.7,
+    "tc_real": 107.768048514733
+  },
+  {
+    "fecha": "2020-04-01",
+    "imacec": -15.08830157067,
+    "imacec_ind_des": 88.3594273840095,
+    "desempleo": 9.0018555844912,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.4,
+    "tc_real": 107.082927515004
+  },
+  {
+    "fecha": "2020-05-01",
+    "imacec": -15.97711767892,
+    "imacec_ind_des": 86.8302380315198,
+    "desempleo": 11.206932833479,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.8,
+    "tc_real": 102.598548762003
+  },
+  {
+    "fecha": "2020-06-01",
+    "imacec": -13.96235775179,
+    "imacec_ind_des": 86.6753818232701,
+    "desempleo": 12.217859680127,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.6,
+    "tc_real": 101.178242985955
+  },
+  {
+    "fecha": "2020-07-01",
+    "imacec": -11.71759160216,
+    "imacec_ind_des": 88.7665557802537,
+    "desempleo": 13.091216396143,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.5,
+    "tc_real": 100.727365661484
+  },
+  {
+    "fecha": "2020-08-01",
+    "imacec": -11.01133784115,
+    "imacec_ind_des": 91.3974784127005,
+    "desempleo": 12.907461467072,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.4,
+    "tc_real": 102.011403114003
+  },
+  {
+    "fecha": "2020-09-01",
+    "imacec": -4.950657605456,
+    "imacec_ind_des": 94.7623400964198,
+    "desempleo": 12.34829068332,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.1,
+    "tc_real": 101.150130066628
+  },
+  {
+    "fecha": "2020-10-01",
+    "imacec": -1.358529087264,
+    "imacec_ind_des": 96.0232304104636,
+    "desempleo": 11.577038760121,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.0,
+    "tc_real": 102.994574869891
+  },
+  {
+    "fecha": "2020-11-01",
+    "imacec": 1.0127329908486,
+    "imacec_ind_des": 97.2818057209039,
+    "desempleo": 10.758022977255,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.7,
+    "tc_real": 101.080171649168
+  },
+  {
+    "fecha": "2020-12-01",
+    "imacec": 0.5689922284611,
+    "imacec_ind_des": 99.6916530856915,
+    "desempleo": 10.286318749044,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.0,
+    "tc_real": 99.0347535047997
+  },
+  {
+    "fecha": "2021-01-01",
+    "imacec": -3.428768713298,
+    "imacec_ind_des": 100.423267354256,
+    "desempleo": 10.227160890761,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.1,
+    "tc_real": 98.0682029842506
+  },
+  {
+    "fecha": "2021-02-01",
+    "imacec": -2.166651050818,
+    "imacec_ind_des": 102.759485781735,
+    "desempleo": 10.304521336183,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.8,
+    "tc_real": 98.3719730508139
+  },
+  {
+    "fecha": "2021-03-01",
+    "imacec": 6.6327425250098,
+    "imacec_ind_des": 101.267079237269,
+    "desempleo": 10.353809664207,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 2.9,
+    "tc_real": 98.0981225620933
+  },
+  {
+    "fecha": "2021-04-01",
+    "imacec": 15.285035960994,
+    "imacec_ind_des": 99.9397609230273,
+    "desempleo": 10.244367108474,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.3,
+    "tc_real": 96.0292523122216
+  },
+  {
+    "fecha": "2021-05-01",
+    "imacec": 19.551829417297,
+    "imacec_ind_des": 103.353791497189,
+    "desempleo": 10.037301451191,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.6,
+    "tc_real": 98.0508606857577
+  },
+  {
+    "fecha": "2021-06-01",
+    "imacec": 20.382431879968,
+    "imacec_ind_des": 104.817459565837,
+    "desempleo": 9.4964882170436,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 3.8,
+    "tc_real": 100.50461288975
+  },
+  {
+    "fecha": "2021-07-01",
+    "imacec": 17.424903932092,
+    "imacec_ind_des": 106.433817579363,
+    "desempleo": 8.9332892027599,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.5,
+    "tc_real": 102.750739514609
+  },
+  {
+    "fecha": "2021-08-01",
+    "imacec": 17.966595780603,
+    "imacec_ind_des": 106.94186421737,
+    "desempleo": 8.5475660411635,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 4.8,
+    "tc_real": 106.516912336528
+  },
+  {
+    "fecha": "2021-09-01",
+    "imacec": 13.463442930236,
+    "imacec_ind_des": 107.63507014652,
+    "desempleo": 8.4056111552988,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 5.3,
+    "tc_real": 106.252121330957
+  },
+  {
+    "fecha": "2021-10-01",
+    "imacec": 13.261557495485,
+    "imacec_ind_des": 108.497421913382,
+    "desempleo": 8.0766005069859,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 6.0,
+    "tc_real": 109.624194281367
+  },
+  {
+    "fecha": "2021-11-01",
+    "imacec": 13.332037299206,
+    "imacec_ind_des": 109.492348601184,
+    "desempleo": 7.527649055274,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 6.7,
+    "tc_real": 109.24032470174
+  },
+  {
+    "fecha": "2021-12-01",
+    "imacec": 8.7511618722781,
+    "imacec_ind_des": 108.651419308875,
+    "desempleo": 7.1898934478904,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 7.2,
+    "tc_real": 113.328244178534
+  },
+  {
+    "fecha": "2022-01-01",
+    "imacec": 7.209596697615,
+    "imacec_ind_des": 106.743734758743,
+    "desempleo": 7.271464819756,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 7.7,
+    "tc_real": 110.136454537895
+  },
+  {
+    "fecha": "2022-02-01",
+    "imacec": 5.0054386870159,
+    "imacec_ind_des": 107.152246539447,
+    "desempleo": 7.4985219215408,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 7.8,
+    "tc_real": 109.74015085075
+  },
+  {
+    "fecha": "2022-03-01",
+    "imacec": 5.6696550278773,
+    "imacec_ind_des": 108.306307437918,
+    "desempleo": 7.7978651688704,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 9.4,
+    "tc_real": 107.991942781323
+  },
+  {
+    "fecha": "2022-04-01",
+    "imacec": 5.9048563004485,
+    "imacec_ind_des": 107.19569001091,
+    "desempleo": 7.7474931765825,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 10.5,
+    "tc_real": 109.151838609874
+  },
+  {
+    "fecha": "2022-05-01",
+    "imacec": 5.5885918184744,
+    "imacec_ind_des": 108.550919008352,
+    "desempleo": 7.8039797578749,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 11.5,
+    "tc_real": 110.047941961785
+  },
+  {
+    "fecha": "2022-06-01",
+    "imacec": 2.7970632563751,
+    "imacec_ind_des": 107.710522329743,
+    "desempleo": 7.8114737505625,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 12.5,
+    "tc_real": 110.691889367648
+  },
+  {
+    "fecha": "2022-07-01",
+    "imacec": -0.438084217888,
+    "imacec_ind_des": 104.912402710665,
+    "desempleo": 7.9188115449306,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 13.1,
+    "tc_real": 119.711692596569
+  },
+  {
+    "fecha": "2022-08-01",
+    "imacec": 0.6349071225317,
+    "imacec_ind_des": 107.859247034629,
+    "desempleo": 7.9293997650867,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 14.1,
+    "tc_real": 112.36303833682
+  },
+  {
+    "fecha": "2022-09-01",
+    "imacec": 0.1785637203913,
+    "imacec_ind_des": 107.991099803589,
+    "desempleo": 8.0400244066344,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 13.7,
+    "tc_real": 111.254574470978
+  },
+  {
+    "fecha": "2022-10-01",
+    "imacec": -1.879091797861,
+    "imacec_ind_des": 106.840437363259,
+    "desempleo": 7.9683805988207,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 12.8,
+    "tc_real": 113.343782967025
+  },
+  {
+    "fecha": "2022-11-01",
+    "imacec": -2.866486420366,
+    "imacec_ind_des": 106.441722250887,
+    "desempleo": 7.9488231355874,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 13.3,
+    "tc_real": 108.226194104112
+  },
+  {
+    "fecha": "2022-12-01",
+    "imacec": -1.263524683823,
+    "imacec_ind_des": 106.721204100501,
+    "desempleo": 7.8627488308129,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 12.8,
+    "tc_real": 104.763372388649
+  },
+  {
+    "fecha": "2023-01-01",
+    "imacec": 1.3591262378174,
+    "imacec_ind_des": 107.388803946105,
+    "desempleo": 8.0372443026616,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": 12.3,
+    "tc_real": 100.31089707588
+  },
+  {
+    "fecha": "2023-02-01",
+    "imacec": 0.1634243364325,
+    "imacec_ind_des": 107.002318880161,
+    "desempleo": 8.3676406179058,
+    "ipc_mom": 0.3,
+    "ipcsae_mom": 0.6,
+    "ipc_yoy": 11.9,
+    "tc_real": 96.5642928244928
+  },
+  {
+    "fecha": "2023-03-01",
+    "imacec": -1.490551415822,
+    "imacec_ind_des": 106.779797929016,
+    "desempleo": 8.808478760936,
+    "ipc_mom": 0.7,
+    "ipcsae_mom": 0.9,
+    "ipc_yoy": 11.1,
+    "tc_real": 96.4527958655783
+  },
+  {
+    "fecha": "2023-04-01",
+    "imacec": -0.497119351656,
+    "imacec_ind_des": 107.134061469303,
+    "desempleo": 8.6597088797411,
+    "ipc_mom": 0.3,
+    "ipcsae_mom": 0.4,
+    "ipc_yoy": 9.9,
+    "tc_real": 96.206408325714
+  },
+  {
+    "fecha": "2023-05-01",
+    "imacec": -0.59935949482,
+    "imacec_ind_des": 107.806292428198,
+    "desempleo": 8.5247377029714,
+    "ipc_mom": 0.3,
+    "ipcsae_mom": 0.5,
+    "ipc_yoy": 8.7,
+    "tc_real": 94.5674453584248
+  },
+  {
+    "fecha": "2023-06-01",
+    "imacec": 0.0274610430581,
+    "imacec_ind_des": 107.813875455576,
+    "desempleo": 8.5275846527762,
+    "ipc_mom": -0.4,
+    "ipcsae_mom": -0.5,
+    "ipc_yoy": 7.6,
+    "tc_real": 94.1476462096886
+  },
+  {
+    "fecha": "2023-07-01",
+    "imacec": 2.9153413219811,
+    "imacec_ind_des": 108.105954105059,
+    "desempleo": 8.7722140467169,
+    "ipc_mom": 0.1,
+    "ipcsae_mom": 0.1,
+    "ipc_yoy": 6.5,
+    "tc_real": 95.795646881008
+  },
+  {
+    "fecha": "2023-08-01",
+    "imacec": 0.4183363369312,
+    "imacec_ind_des": 108.507107925108,
+    "desempleo": 8.9956512830772,
+    "ipc_mom": 0.1,
+    "ipcsae_mom": -0.1,
+    "ipc_yoy": 5.3,
+    "tc_real": 99.8585794919079
+  },
+  {
+    "fecha": "2023-09-01",
+    "imacec": 0.9023618496374,
+    "imacec_ind_des": 109.444916152944,
+    "desempleo": 8.913008571937,
+    "ipc_mom": 0.6,
+    "ipcsae_mom": 0.3,
+    "ipc_yoy": 5.1,
+    "tc_real": 102.011661673527
+  },
+  {
+    "fecha": "2023-10-01",
+    "imacec": 2.3886867770405,
+    "imacec_ind_des": 109.049993488184,
+    "desempleo": 8.8864690786627,
+    "ipc_mom": 0.3,
+    "ipcsae_mom": -0.2,
+    "ipc_yoy": 5.0,
+    "tc_real": 105.805938922861
+  },
+  {
+    "fecha": "2023-11-01",
+    "imacec": 2.2813485961918,
+    "imacec_ind_des": 109.043658140161,
+    "desempleo": 8.732412133756,
+    "ipc_mom": 0.7,
+    "ipcsae_mom": 0.7,
+    "ipc_yoy": 4.8,
+    "tc_real": 102.150814018433
+  },
+  {
+    "fecha": "2023-12-01",
+    "imacec": 0.5421059317012,
+    "imacec_ind_des": 108.396962856744,
+    "desempleo": 8.4756393474728,
+    "ipc_mom": -0.5,
+    "ipcsae_mom": -0.4,
+    "ipc_yoy": 3.9,
+    "tc_real": 100.709451475655
+  },
+  {
+    "fecha": "2024-01-01",
+    "imacec": 3.7449616098781,
+    "imacec_ind_des": 110.193734939158,
+    "desempleo": 8.4356310785176,
+    "ipc_mom": 0.7,
+    "ipcsae_mom": 0.7,
+    "ipc_yoy": 3.8,
+    "tc_real": 103.281435841068
+  },
+  {
+    "fecha": "2024-02-01",
+    "imacec": 5.8365278260983,
+    "imacec_ind_des": 110.777294554291,
+    "desempleo": 8.5042567185626,
+    "ipc_mom": 0.6,
+    "ipcsae_mom": 0.6,
+    "ipc_yoy": 4.5,
+    "tc_real": 109.368213904362
+  },
+  {
+    "fecha": "2024-03-01",
+    "imacec": 1.1846599657753,
+    "imacec_ind_des": 109.194963128119,
+    "desempleo": 8.6777779966085,
+    "ipc_mom": 0.4,
+    "ipcsae_mom": 0.5,
+    "ipc_yoy": 3.7,
+    "tc_real": 109.8811483931
+  },
+  {
+    "fecha": "2024-04-01",
+    "imacec": 3.8954766293202,
+    "imacec_ind_des": 109.798579477214,
+    "desempleo": 8.5237837145473,
+    "ipc_mom": 0.5,
+    "ipcsae_mom": 0.3,
+    "ipc_yoy": 4.0,
+    "tc_real": 108.138945495347
+  },
+  {
+    "fecha": "2024-05-01",
+    "imacec": 0.3278935451244,
+    "imacec_ind_des": 109.275384792114,
+    "desempleo": 8.3128804231685,
+    "ipc_mom": 0.3,
+    "ipcsae_mom": 0.3,
+    "ipc_yoy": 4.1,
+    "tc_real": 103.31514396465
+  },
+  {
+    "fecha": "2024-06-01",
+    "imacec": -0.712954041261,
+    "imacec_ind_des": 109.341882756377,
+    "desempleo": 8.3481780359655,
+    "ipc_mom": -0.1,
+    "ipcsae_mom": -0.6,
+    "ipc_yoy": 4.2,
+    "tc_real": 103.638554542729
+  },
+  {
+    "fecha": "2024-07-01",
+    "imacec": 4.4914944309512,
+    "imacec_ind_des": 111.658263472798,
+    "desempleo": 8.6841757807491,
+    "ipc_mom": 0.7,
+    "ipcsae_mom": 0.7,
+    "ipc_yoy": 4.6,
+    "tc_real": 104.388522341527
+  },
+  {
+    "fecha": "2024-08-01",
+    "imacec": 2.2341186703803,
+    "imacec_ind_des": 111.879185306418,
+    "desempleo": 8.9013222957233,
+    "ipc_mom": 0.3,
+    "ipcsae_mom": 0.2,
+    "ipc_yoy": 4.7,
+    "tc_real": 104.621687461073
+  },
+  {
+    "fecha": "2024-09-01",
+    "imacec": 0.5088925620545,
+    "imacec_ind_des": 110.957881613593,
+    "desempleo": 8.7423149114593,
+    "ipc_mom": 0.1,
+    "ipcsae_mom": 0.5,
+    "ipc_yoy": 4.1,
+    "tc_real": 104.588835219296
+  },
+  {
+    "fecha": "2024-10-01",
+    "imacec": 2.893919855319,
+    "imacec_ind_des": 111.52187193559,
+    "desempleo": 8.5800798734878,
+    "ipc_mom": 1.0,
+    "ipcsae_mom": 0.2,
+    "ipc_yoy": 4.7,
+    "tc_real": 104.010745120625
+  },
+  {
+    "fecha": "2024-11-01",
+    "imacec": 2.43124085635,
+    "imacec_ind_des": 112.281182363238,
+    "desempleo": 8.2176493561929,
+    "ipc_mom": 0.2,
+    "ipcsae_mom": 0.5,
+    "ipc_yoy": 4.2,
+    "tc_real": 106.422048226031
+  },
+  {
+    "fecha": "2024-12-01",
+    "imacec": 6.7900414272398,
+    "imacec_ind_des": 113.183363776258,
+    "desempleo": 8.079730080387,
+    "ipc_mom": -0.2,
+    "ipcsae_mom": -0.1,
+    "ipc_yoy": 4.5,
+    "tc_real": 107.129140110238
+  },
+  {
+    "fecha": "2025-01-01",
+    "imacec": 3.3277451570955,
+    "imacec_ind_des": 113.638797597357,
+    "desempleo": 8.0230055082,
+    "ipc_mom": 1.1,
+    "ipcsae_mom": 0.8,
+    "ipc_yoy": 4.9,
+    "tc_real": 108.132822683139
+  },
+  {
+    "fecha": "2025-02-01",
+    "imacec": 0.3119537169168,
+    "imacec_ind_des": 112.67424928497,
+    "desempleo": 8.3822153939868,
+    "ipc_mom": 0.4,
+    "ipcsae_mom": 0.3,
+    "ipc_yoy": 4.7,
+    "tc_real": 104.096816855412
+  },
+  {
+    "fecha": "2025-03-01",
+    "imacec": 4.927883606219,
+    "imacec_ind_des": 113.333695047933,
+    "desempleo": 8.7089485873871,
+    "ipc_mom": 0.5,
+    "ipcsae_mom": 0.4,
+    "ipc_yoy": 4.9,
+    "tc_real": 101.612069546301
+  },
+  {
+    "fecha": "2025-04-01",
+    "imacec": 3.8776905480207,
+    "imacec_ind_des": 114.684288015548,
+    "desempleo": 8.8410980092718,
+    "ipc_mom": 0.2,
+    "ipcsae_mom": 0.4,
+    "ipc_yoy": 4.5,
+    "tc_real": 104.762052539498
+  },
+  {
+    "fecha": "2025-05-01",
+    "imacec": 3.9330468127213,
+    "imacec_ind_des": 114.420206052207,
+    "desempleo": 8.9430136868653,
+    "ipc_mom": 0.2,
+    "ipcsae_mom": 0.3,
+    "ipc_yoy": 4.4,
+    "tc_real": 103.16960449905
+  },
+  {
+    "fecha": "2025-06-01",
+    "imacec": 3.3756014789805,
+    "imacec_ind_des": 112.571983354766,
+    "desempleo": 8.892660584844,
+    "ipc_mom": -0.4,
+    "ipcsae_mom": -0.3,
+    "ipc_yoy": 4.1,
+    "tc_real": 103.932258990068
+  },
+  {
+    "fecha": "2025-07-01",
+    "imacec": 1.5968501075405,
+    "imacec_ind_des": 113.961635206298,
+    "desempleo": 8.6989792816425,
+    "ipc_mom": 0.9,
+    "ipcsae_mom": 0.6,
+    "ipc_yoy": 4.3,
+    "tc_real": 104.97141755756
+  },
+  {
+    "fecha": "2025-08-01",
+    "imacec": 0.2696093831845,
+    "imacec_ind_des": 113.218789372224,
+    "desempleo": 8.5611287247469,
+    "ipc_mom": 0.0,
+    "ipcsae_mom": -0.2,
+    "ipc_yoy": 4.0,
+    "tc_real": 106.329726601106
+  },
+  {
+    "fecha": "2025-09-01",
+    "imacec": 3.2961209339875,
+    "imacec_ind_des": 114.033384367434,
+    "desempleo": 8.5289492688114,
+    "ipc_mom": 0.4,
+    "ipcsae_mom": 0.4,
+    "ipc_yoy": 4.4,
+    "tc_real": 105.970701666069
+  },
+  {
+    "fecha": "2025-10-01",
+    "imacec": 2.0572659006857,
+    "imacec_ind_des": 114.446804336343,
+    "desempleo": 8.4476619428872,
+    "ipc_mom": 0.0,
+    "ipcsae_mom": -0.1,
+    "ipc_yoy": 3.4,
+    "tc_real": 105.284032894791
+  },
+  {
+    "fecha": "2025-11-01",
+    "imacec": 1.3711953860996,
+    "imacec_ind_des": 113.711566605336,
+    "desempleo": 8.4243435086445,
+    "ipc_mom": 0.3,
+    "ipcsae_mom": 0.4,
+    "ipc_yoy": 3.4,
+    "tc_real": 103.048395282488
+  },
+  {
+    "fecha": "2025-12-01",
+    "imacec": 1.2666989233433,
+    "imacec_ind_des": 113.956040317815,
+    "desempleo": 8.049513652087,
+    "ipc_mom": -0.2,
+    "ipcsae_mom": -0.1,
+    "ipc_yoy": 3.5,
+    "tc_real": 101.622903230779
+  },
+  {
+    "fecha": "2026-01-01",
+    "imacec": -0.865874274318,
+    "imacec_ind_des": 113.517864049544,
+    "desempleo": 8.2849096372874,
+    "ipc_mom": 0.4,
+    "ipcsae_mom": 0.7,
+    "ipc_yoy": 2.8,
+    "tc_real": 98.781933008925
+  },
+  {
+    "fecha": "2026-02-01",
+    "imacec": -0.220585400385,
+    "imacec_ind_des": 113.453742743689,
+    "desempleo": 8.3301283894454,
+    "ipc_mom": 0.0,
+    "ipcsae_mom": 0.1,
+    "ipc_yoy": 2.4,
+    "tc_real": 97.7986200571265
+  },
+  {
+    "fecha": "2026-03-01",
+    "imacec": 0.0916241646555,
+    "imacec_ind_des": 113.866448623764,
+    "desempleo": 8.9302411087251,
+    "ipc_mom": 1.0,
+    "ipcsae_mom": 0.8,
+    "ipc_yoy": 2.8,
+    "tc_real": 102.406004842024
+  },
+  {
+    "fecha": "2026-04-01",
+    "imacec": -1.07015590789,
+    "imacec_ind_des": 113.690080318008,
+    "desempleo": 9.10872889999497,
+    "ipc_mom": 1.3,
+    "ipcsae_mom": 0.3,
+    "ipc_yoy": 4.0,
+    "tc_real": 101.767334256064
+  },
+  {
+    "fecha": "2026-05-01",
+    "imacec": -1.387178647816,
+    "imacec_ind_des": 113.072096803392,
+    "desempleo": 9.43782135358754,
+    "ipc_mom": 0.2,
+    "ipcsae_mom": 0.4,
+    "ipc_yoy": 3.9,
+    "tc_real": 102.250862048708
+  },
+  {
+    "fecha": "2026-06-01",
+    "imacec": 2.0152804883593,
+    "imacec_ind_des": 113.697404229966,
+    "desempleo": 9.44058479817351,
+    "ipc_mom": 0.0,
+    "ipcsae_mom": -0.1,
+    "ipc_yoy": 4.3,
+    "tc_real": 102.232305339588
+  },
+  {
+    "fecha": "2026-07-01",
+    "imacec": -1.48711715004306,
+    "imacec_ind_des": 111.60880613572,
+    "desempleo": 9.52926654500883,
+    "ipc_mom": 0.1,
+    "ipcsae_mom": 0.4,
+    "ipc_yoy": 3.5,
+    "tc_real": 105.156388500948
+  },
+  {
+    "fecha": "2026-08-01",
+    "imacec": -1.01362031678331,
+    "imacec_ind_des": 110.859725718787,
+    "desempleo": 9.64031909353693,
+    "ipc_mom": 0.6,
+    "ipcsae_mom": 0.4,
+    "ipc_yoy": 4.1,
+    "tc_real": 104.22417439864
+  },
+  {
+    "fecha": "2026-09-01",
+    "imacec": null,
+    "imacec_ind_des": null,
+    "desempleo": null,
+    "ipc_mom": 0.4,
+    "ipcsae_mom": 0.1,
+    "ipc_yoy": 4.1,
+    "tc_real": null
+  }
+]
