@@ -37,7 +37,7 @@ export function InflationMonthlyChart({ data }: { data: Point[] }) {
               <Tooltip formatter={(value) => [fmt(Number(value)), "IPC mensual"]} />
               <ReferenceLine y={0} stroke="#94a3b8" strokeOpacity={0.7} />
               <Bar dataKey="ipc" fill="#38bdf8" maxBarSize={100} radius={[5, 5, 0, 0]}>
-                <LabelList dataKey="ipc" position="top" formatter={(value) => fmt(Number(value))} fill="#38bdf8" fontWeight={600} fontSize={14} />
+                <LabelList dataKey="ipc" position="top" formatter={(value: number | string) => fmt(Number(value))} fill="#38bdf8" fontWeight={600} fontSize={14} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
