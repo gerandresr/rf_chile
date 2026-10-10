@@ -44,7 +44,7 @@ export function InflationMonthlyChart({
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div>
           <h2 style={{ margin: "0 0 5px", fontSize: "1.2rem" }}>IPC mensual · observado y esperado</h2>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>Variación mensual (%) · ICAP cierre {icapClosingDate}</p>
+          <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>Variación mensual (%) · Mercado · cierre {icapClosingDate}</p>
         </div>
         <div role="group" aria-label="Período del gráfico" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}
@@ -59,17 +59,17 @@ export function InflationMonthlyChart({
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginBottom: 18, fontSize: 13 }}>
         <span><span aria-hidden="true" style={{ display: "inline-block", height: 10, width: 10, borderRadius: 2, background: OBSERVED, marginRight: 7 }} />IPC observado ({selectedObserved.length})</span>
-        <span><span aria-hidden="true" style={{ display: "inline-block", height: 10, width: 10, borderRadius: 2, background: EXPECTED, marginRight: 7 }} />Expectativas ICAP ({selectedExpected.length})</span>
+        <span><span aria-hidden="true" style={{ display: "inline-block", height: 10, width: 10, borderRadius: 2, background: EXPECTED, marginRight: 7 }} />Expectativas de mercado ({selectedExpected.length})</span>
       </div>
       {chartData.length === 0 ? <p>No hay datos de IPC disponibles.</p> : (
         <div style={{ width: "100%", overflowX: "auto" }}>
-          <div role="img" aria-label="Gráfico de barras del IPC observado y expectativas ICAP" style={{ height: 360, minWidth: showAll ? Math.max(780, chartData.length * 24) : 600 }}>
+          <div role="img" aria-label="Gráfico de barras del IPC observado y expectativas de mercado" style={{ height: 360, minWidth: showAll ? Math.max(780, chartData.length * 24) : 600 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 18, left: 0, bottom: 28 }}>
                 <CartesianGrid strokeDasharray="3 4" vertical={false} stroke="#64748b" strokeOpacity={0.25} />
                 <XAxis dataKey="mes" angle={-40} textAnchor="end" height={62} interval={showAll ? Math.max(0, Math.ceil(chartData.length / 24) - 1) : 0} tickLine={false} axisLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
                 <YAxis domain={domain} tickFormatter={fmt} tickLine={false} axisLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} width={58} />
-                <Tooltip formatter={(value, _name, item) => [fmt(Number(value)), item.payload.tipo === "observado" ? "IPC observado" : "Expectativa ICAP"]} labelFormatter={(value) => String(value)} />
+                <Tooltip formatter={(value, _name, item) => [fmt(Number(value)), item.payload.tipo === "observado" ? "IPC observado" : "Expectativa de mercado"]} labelFormatter={(value) => String(value)} />
                 <ReferenceLine y={0} stroke="#94a3b8" strokeOpacity={0.7} />
                 <Bar dataKey="ipc" maxBarSize={52} radius={[4, 4, 0, 0]}>
                   {chartData.map((point) => <Cell key={point.fecha} fill={point.tipo === "observado" ? OBSERVED : EXPECTED} />)}
@@ -80,8 +80,8 @@ export function InflationMonthlyChart({
         </div>
       )}
       <p style={{ fontSize: 12, opacity: 0.7, margin: "16px 0 0" }}>
-        Observado: datos-mensuales.json · Esperado: Closing_Icap/inflacion.json.
-        Los contratos ICAP se asignan al mes de IPC dos meses anterior al tenor. Las expectativas comienzan después del último dato observado.
+        El IPC observado corresponde a datos publicados; las expectativas reflejan precios de mercado.
+        Cada contrato se asigna al mes de IPC dos meses anterior a su vencimiento. Las expectativas comienzan después del último dato observado.
       </p>
     </article>
   );

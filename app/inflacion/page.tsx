@@ -1,3 +1,4 @@
+import { AppShell } from "@/components/AppShell";
 import monthlyData from "@/public/data/datos-mensuales.json";
 import icapData from "@/public/data/Closing_Icap/inflacion.json";
 import { InflationMonthlyChart, type InflationPoint } from "@/components/InflationMonthlyChart";
@@ -29,16 +30,18 @@ export default function InflationPage() {
   const expected = [...expectedByMonth.values()].sort((a, b) => a.fecha.localeCompare(b.fecha));
 
   return (
+    <AppShell>
     <section style={{ padding: "28px 24px", maxWidth: 1100, margin: "0 auto" }}>
       <header style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 700, marginBottom: 8 }}>
           Inflación y expectativas
         </h1>
         <p style={{ opacity: 0.75, margin: 0 }}>
-          IPC mensual observado y expectativas de mercado ICAP
+          IPC mensual observado y expectativas de mercado
         </p>
       </header>
       <InflationMonthlyChart observed={observed} expected={expected} icapClosingDate={icapData.fecha} />
     </section>
+    </AppShell>
   );
 }
