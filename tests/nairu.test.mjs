@@ -4,12 +4,16 @@ import { readFileSync } from "node:fs";
 import { estimateNairu } from "../lib/nairu.ts";
 
 const rows = JSON.parse(readFileSync(new URL("../public/data/historico_bcentral/datos-mensuales.json", import.meta.url), "utf8"));
+// Último mes con desempleo e inflación disponibles: el archivo puede traer meses recientes incompletos.
+const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
+const jointRows = rows.filter((r) => isNumber(r.desempleo) && isNumber(r.ipc_yoy)).sort((a, b) => a.fecha.localeCompare(b.fecha));
+const latestJoint = jointRows.at(-1);
 const close = (actual, expected, tolerance) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
 
 test("Kalman likelihood and RTS smoother match an independent matrix/scipy calculation", () => {
   // Reference: independent matrix Kalman implementation fitted with scipy L-BFGS-B.
-  // Run only when the supplied August 2026 data fixture is unchanged.
-  if (rows.length !== 140 || rows.at(-1).fecha !== "2026-08-01") return;
+  // Run only while the ten-year window ends in August 2026 (the reference data).
+  if (latestJoint.fecha !== "2026-08-01") return;
   const result = estimateNairu(rows);
   close(result.likelihood, -83.0395513679672, 0.00001);
   close(result.parameters.kappa, 0.00218088, 0.000001);
@@ -20,7 +24,7 @@ test("Kalman likelihood and RTS smoother match an independent matrix/scipy calcu
 });
 
 test("only the latest 120 calendar months influence initialization and estimates", () => {
-  const end = [...rows].sort((a, b) => a.fecha.localeCompare(b.fecha)).at(-1).fecha;
+  const end = latestJoint.fecha;
   const monthIndex = (date) => Number(date.slice(0, 4)) * 12 + Number(date.slice(5, 7)) - 1;
   const cutoff = monthIndex(end) - 119;
   const recent = rows.filter((r) => monthIndex(r.fecha) >= cutoff);
@@ -34,13 +38,14 @@ test("only the latest 120 calendar months influence initialization and estimates
 });
 
 test("the ten-year window advances when a new month is appended", () => {
-  const latest = [...rows].sort((a, b) => a.fecha.localeCompare(b.fecha)).at(-1);
-  const next = new Date(`${latest.fecha}T00:00:00Z`);
+  const next = new Date(`${latestJoint.fecha}T00:00:00Z`);
   next.setUTCMonth(next.getUTCMonth() + 1);
-  const sample = [...rows, { ...latest, fecha: next.toISOString().slice(0, 10) }];
+  const nextDate = next.toISOString().slice(0, 10);
+  const appended = { ...latestJoint, fecha: nextDate };
+  const sample = [...rows.filter((r) => r.fecha !== nextDate), appended];
   const result = estimateNairu(sample);
   assert.equal(result.observations, 120);
-  assert.equal(result.points.at(-1).date, next.toISOString().slice(0, 10));
+  assert.equal(result.points.at(-1).date, nextDate);
   assert.ok(result.points[0].date > estimateNairu(rows).points[0].date);
 });
 
