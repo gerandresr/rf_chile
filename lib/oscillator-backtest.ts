@@ -71,7 +71,10 @@ export function backtestOscillator(input: { date: string; value: number }[], p: 
     equity.push({ date: o.date, netBp });
   }
   const winners = trades.filter(t => t.netBp > 0).length;
-  return { trades, equity, netBp: realized, grossBp: trades.reduce((s, t) => s + t.grossBp, 0), drawdown,
+  // Referencia: comprar el primer día del período y mantener hasta el final, con el mismo castigo por spread.
+  const buyAndHoldBp = eligible.length > 1 ? (eligible[0].value - eligible[eligible.length - 1].value) * 100 - 2 * p.spreadBp : null;
+  const daysInMarket = trades.reduce((s, t) => s + eligible.filter(o => o.date >= t.entryDate && o.date < t.exitDate).length, 0);
+  return { trades, equity, netBp: realized, buyAndHoldBp, exposure: eligible.length ? 100 * daysInMarket / eligible.length : 0, grossBp: trades.reduce((s, t) => s + t.grossBp, 0), drawdown,
     winRate: trades.length ? winners / trades.length * 100 : null,
     averageBp: trades.length ? realized / trades.length : null,
     indicatorObservations: eligible.filter(o => typeof values[o.i] === "number").length };

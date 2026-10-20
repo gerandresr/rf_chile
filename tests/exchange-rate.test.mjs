@@ -57,11 +57,3 @@ test("cumulative baseline expands after 36 previous observations, without future
   assert.ok(Math.abs(rows[37].cumulativeReference - (3600 + 110) / 37) < 1e-10);
   assert.notEqual(rows[37].cumulativeReference, rows[37].reference);
 });
-test("HP log trend preserves exponential paths and does not cross missing months", () => {
-  const path = Array.from({ length: 48 }, (_, i) => ({ fecha: month(i), tc_real: 100 * Math.exp(.002 * i) }));
-  const rows = exchangeRateSeries(path, []);
-  assert.ok(rows.every(r => Math.abs(r.hpGap) < 1e-5));
-  assert.ok(rows[0].hpReference > 0);
-  const incomplete = exchangeRateSeries(path.filter((_, i) => i !== 24), []);
-  assert.ok(incomplete.every(r => r.hpReference === null));
-});

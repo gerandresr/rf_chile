@@ -1,6 +1,7 @@
 export type MonthlyMacroRow = {
   fecha: string;
   imacec: number | null;
+  imacec_ind_des?: number | null;
   desempleo: number | null;
   ipc_mom: number | null;
   ipcsae_mom: number | null;

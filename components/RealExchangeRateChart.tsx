@@ -9,9 +9,9 @@ const number = (value: number) => value.toLocaleString("es-CL", { minimumFractio
 function month(date: string) {
   return new Date(`${date}T12:00:00Z`).toLocaleDateString("es-CL", { month: "short", year: "numeric", timeZone: "UTC" });
 }
-type GapKey = "cumulativeGap" | "gap" | "hpGap";
+type GapKey = "cumulativeGap" | "gap";
 function DeviationChart({ rows, gapKey, referenceKey, title, badge, caption, domain }: {
-  rows: ExchangeRatePoint[]; gapKey: GapKey; referenceKey: "cumulativeReference" | "reference" | "hpReference";
+  rows: ExchangeRatePoint[]; gapKey: GapKey; referenceKey: "cumulativeReference" | "reference";
   title: string; badge: string; caption: string; domain: [number, number];
 }) {
   const points = rows.map(row => ({ ...row, deviation: row[gapKey], baseline: row[referenceKey],
@@ -51,13 +51,22 @@ function RealExchangeRateContent() {
   if (!rows.length) return <div className="model-content">No hay datos disponibles.</div>;
   const lastReal = rows.filter(r => r.tc_real !== null).at(-1);
   const lastDollar = rows.filter(r => r.usdclp !== null).at(-1);
-  const deviations = visible.flatMap(r => [r.cumulativeGap, r.gap, r.hpGap]).filter((v): v is number => v !== null);
+  const history = rows.filter(r => r.tc_real !== null).map(r => r.tc_real!);
+  const percentile = lastReal ? 100 * history.filter(v => v <= lastReal.tc_real!).length / history.length : null;
+  const signed = (v: number) => `${v > 0 ? "+" : ""}${number(v)}%`;
+  const deviations = visible.flatMap(r => [r.cumulativeGap, r.gap]).filter((v): v is number => v !== null);
   const extent = Math.max(1, Math.ceil(Math.max(0, ...deviations.map(Math.abs))));
   const domain: [number, number] = [-extent, extent];
   return <div className="model-content">
     <div className="model-intro"><p>Comparación mensual · {month(visible[0].fecha)} a {month(visible[visible.length - 1].fecha)}</p>
       <div className="segmented" role="group" aria-label="Período del tipo de cambio">{["1", "3", "5", "MAX"].map(p => <button key={p} className={period === p ? "selected" : ""} aria-pressed={period === p} onClick={() => setPeriod(p)}>{p === "MAX" ? "Todo" : `${p}A`}</button>)}</div>
     </div>
+    {lastReal && <div className="kpi-grid">
+      <div className="kpi"><div className="kpi-label">TCR (índice)</div><div className="kpi-value">{number(lastReal.tc_real!)}</div><div className="kpi-foot kpi-foot-static">{month(lastReal.fecha)}</div></div>
+      <div className="kpi"><div className="kpi-label">vs. promedio histórico</div><div className="kpi-value">{lastReal.cumulativeGap === null ? "—" : signed(lastReal.cumulativeGap)}</div><div className="kpi-foot kpi-foot-static">Positivo: peso real más depreciado</div></div>
+      <div className="kpi"><div className="kpi-label">vs. promedio 36 meses</div><div className="kpi-value">{lastReal.gap === null ? "—" : signed(lastReal.gap)}</div><div className="kpi-foot kpi-foot-static">Tendencia reciente</div></div>
+      <div className="kpi"><div className="kpi-label">Percentil histórico</div><div className="kpi-value">{percentile === null ? "—" : Math.round(percentile)}</div><div className="kpi-foot kpi-foot-static">Desde {month(rows.find(r => r.tc_real !== null)!.fecha)}</div></div>
+    </div>}
     <div className="panel-head"><h2>Dólar observado y tipo de cambio real</h2></div>
     <div className="model-chart" role="img" aria-label="Último dólar observado de cada mes y TCR en ejes separados">
       <ResponsiveContainer width="100%" height="100%"><LineChart data={visible} syncId="exchange-rate" margin={{ left: 4, right: 4, top: 10, bottom: 4 }}>
@@ -76,10 +85,7 @@ function RealExchangeRateContent() {
     <DeviationChart rows={visible} gapKey="gap" referenceKey="reference" domain={domain}
       title="Desviación del TCR respecto a su promedio de 36 meses rolling" badge="36 meses anteriores · %"
       caption="Referencia: promedio móvil de los 36 meses calendario anteriores, excluyendo el mes actual. Se requieren 36 meses consecutivos con datos." />
-    <DeviationChart rows={visible} gapKey="hpGap" referenceKey="hpReference" domain={domain}
-      title="Desviación del TCR respecto a su tendencia Hodrick-Prescott" badge="HP mensual · λ = 129.600 · %"
-      caption="Referencia: tendencia HP del logaritmo del TCR, convertida a índice. Usa toda la muestra de cada tramo mensual continuo (mínimo 36 meses); puede revisar las desviaciones históricas al llegar nuevos datos, especialmente en los extremos." />
-    <p className="model-caption">Las tres desviaciones usan (TCR / referencia − 1) × 100, se calculan antes de recortar el período visible y comparten la misma escala vertical. Verde indica TCR sobre la referencia y rojo bajo ella; no son estimaciones del tipo de cambio de equilibrio.</p>
+    <p className="model-caption">Las dos desviaciones usan (TCR / referencia − 1) × 100, se calculan antes de recortar el período visible y comparten la misma escala vertical. Verde indica TCR sobre la referencia y rojo bajo ella; no son estimaciones del tipo de cambio de equilibrio.</p>
   </div>;
 }
 export function RealExchangeRateChart() {

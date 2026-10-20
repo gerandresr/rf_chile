@@ -1,47 +1,40 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { estimateTaylor, hpTrend, realTaylorParameters, DEFAULT_TAYLOR_NOMINAL_PARAMETERS, DEFAULT_TAYLOR_PARAMETERS } from "../lib/taylor.ts";
+import { estimateTaylor, taylorRate, DEFAULT_TAYLOR_PARAMETERS } from "../lib/taylor.ts";
 
-const close = (actual, expected, tolerance = 1e-7) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
-const monthly = Array.from({ length: 48 }, (_, i) => ({ fecha: `${2020 + Math.floor(i / 12)}-${String(i % 12 + 1).padStart(2, "0")}-01`, imacec_ind_des: 100 * Math.exp(i * .002), ipc_yoy: 3 }));
-const daily = monthly.map(row => ({ fecha: row.fecha.slice(0, 7) + "-28", tpm: 4.25 }));
+const close = (actual, expected, tolerance = 1e-9) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
+const months = Array.from({ length: 24 }, (_, i) => `${2024 + Math.floor(i / 12)}-${String(i % 12 + 1).padStart(2, "0")}-01`);
+const monthly = months.map(fecha => ({ fecha, ipc_yoy: 3 }));
+const daily = months.map(fecha => ({ fecha: fecha.slice(0, 7) + "-28", tpm: 4.25 }));
+const zeroGaps = Object.fromEntries(months.map(m => [m, 0]));
 
-test("nominal neutral rate implies real neutral rate and preserves the original default", () => {
-  assert.equal(DEFAULT_TAYLOR_NOMINAL_PARAMETERS.neutralNominal, 4.25);
-  assert.deepEqual(realTaylorParameters(DEFAULT_TAYLOR_NOMINAL_PARAMETERS), DEFAULT_TAYLOR_PARAMETERS);
-  const changed = { ...DEFAULT_TAYLOR_NOMINAL_PARAMETERS, inflationTarget: 2 };
-  assert.equal(realTaylorParameters(changed).neutralReal, 2.25);
-  estimateTaylor(monthly.map(row => ({ ...row, ipc_yoy: 2 })), daily, realTaylorParameters(changed)).points.forEach(point => close(point.taylor, 4.25));
-  const higher = { ...DEFAULT_TAYLOR_NOMINAL_PARAMETERS, neutralNominal: 4.5 };
-  estimateTaylor(monthly, daily, realTaylorParameters(higher)).points.forEach(point => close(point.taylor, 4.5));
+test("con inflación en la meta y brecha cero la regla es la TPM neutral", () => {
+  const { points } = estimateTaylor(monthly, daily, zeroGaps);
+  assert.equal(points.length, 24);
+  points.forEach(p => { close(p.taylor, 4.25); close(p.taylorLow, 3.75); close(p.taylorHigh, 4.75); close(p.difference, 0); });
 });
 
-test("HP preserves affine log trends and agrees with an independent NumPy solution", () => {
-  const linear = Array.from({ length: 48 }, (_, i) => 4 + .002 * i);
-  hpTrend(linear).forEach((value, i) => close(value, linear[i]));
-  // Independent numpy.linalg.solve(I + lambda D'D, x), second differences D.
-  const trend = hpTrend(Array.from({ length: 60 }, (_, i) => 4 + i * .003 + Math.sin(i / 4) * .03));
-  close(trend[0], 4.007011643530868);
+test("pesos de Taylor (1993): 1,5 por inflación y 0,5 por brecha", () => {
+  close(taylorRate(4, 0, DEFAULT_TAYLOR_PARAMETERS), 4.25 + 1.5);
+  close(taylorRate(3, -2, DEFAULT_TAYLOR_PARAMETERS), 4.25 - 1);
 });
 
-test("at target inflation and zero activity gap Taylor equals the neutral nominal rate", () => {
-  const result = estimateTaylor(monthly, daily);
-  result.points.forEach(point => { close(point.gap, 0); close(point.taylor, 4.25); close(point.difference, 0); });
-  const changed = estimateTaylor(monthly.map(row => ({ ...row, ipc_yoy: 4 })), daily);
-  changed.points.forEach(point => close(point.taylor, 5.75));
+test("la regla con inercia combina la TPM del mes anterior y la regla del mes", () => {
+  const { points } = estimateTaylor(monthly.map(r => ({ ...r, ipc_yoy: 5 })), daily, zeroGaps);
+  assert.equal(points[0].inertial, null);
+  close(points[1].inertial, 0.85 * 4.25 + 0.15 * (4.25 + 3));
 });
 
-test("TPM uses latest valid reading of the same month, independent of input order", () => {
-  const readings = [...daily, { fecha: "2023-12-30", tpm: 5 }, { fecha: "2023-12-31", tpm: null }, { fecha: "2024-01-01", tpm: 99 }].reverse();
-  const result = estimateTaylor([...monthly].reverse(), readings);
-  assert.equal(result.points.at(-1).tpm, 5);
-  assert.equal(result.points.at(-1).tpmDate, "2023-12-30");
-  const missingMonth = estimateTaylor(monthly, readings.filter(row => !row.fecha.startsWith("2023-12")));
-  assert.equal(missingMonth.points.at(-1).date, "2023-11-01");
+test("TPM usa el último dato válido del mes, sin importar el orden", () => {
+  const readings = [...daily, { fecha: "2025-12-30", tpm: 5 }, { fecha: "2025-12-31", tpm: null }, { fecha: "2026-01-01", tpm: 99 }].reverse();
+  const { points } = estimateTaylor([...monthly].reverse(), readings, zeroGaps);
+  assert.equal(points.at(-1).tpm, 5);
+  assert.equal(points.at(-1).tpmDate, "2025-12-30");
 });
 
-test("missing activity months are never treated as consecutive and invalid data is rejected", () => {
-  assert.throws(() => estimateTaylor(monthly.filter(row => row.fecha !== "2022-01-01"), daily), /36 meses/);
-  assert.throws(() => estimateTaylor(monthly.map(row => ({ ...row, imacec_ind_des: 0 })), daily), /36 meses/);
-  assert.throws(() => estimateTaylor(monthly, []), /simultáneamente/);
+test("omite meses sin brecha, inflación o TPM, y valida parámetros", () => {
+  const gaps = { ...zeroGaps }; delete gaps["2024-05-01"];
+  assert.equal(estimateTaylor(monthly, daily, gaps).points.length, 23);
+  assert.throws(() => estimateTaylor(monthly, [], zeroGaps), /simultáneamente/);
+  assert.throws(() => estimateTaylor(monthly, daily, zeroGaps, { ...DEFAULT_TAYLOR_PARAMETERS, smoothing: 1 }), /inercia/);
 });
