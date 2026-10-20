@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, Landmark, FlaskConical, Calculator, Database, TrendingUp } from "lucide-react";
+import { Activity, BarChart3, LayoutDashboard, Landmark, FlaskConical, Calculator, Database, TrendingUp } from "lucide-react";
 import { VisitorCounter } from "./VisitorCounter";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -10,6 +10,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const nav = [
     { href: "/", label: "Mercados", icon: Landmark },
+    { href: "/dashboard-rf", label: "Dashboard RF", icon: LayoutDashboard },
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
     { href: "/inflacion", label: "Inflación y TPM", icon: TrendingUp },
     { href: "/modelos", label: "Modelos", icon: FlaskConical },
