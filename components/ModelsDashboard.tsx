@@ -9,7 +9,7 @@ import { RealExchangeRateChart } from "./RealExchangeRateChart";
 import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
 import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
-import monthlyData from "@/public/data/datos-mensuales.json";
+import monthlyData from "@/public/data/historico_bcentral/datos-mensuales.json";
 import { estimateNairu } from "@/lib/nairu";
 
 type EstimateView = "smoothed" | "filtered";

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { estimateNairu } from "../lib/nairu.ts";
 
-const rows = JSON.parse(readFileSync(new URL("../public/data/datos-mensuales.json", import.meta.url), "utf8"));
+const rows = JSON.parse(readFileSync(new URL("../public/data/historico_bcentral/datos-mensuales.json", import.meta.url), "utf8"));
 const close = (actual, expected, tolerance) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} != ${expected}`);
 
 test("Kalman likelihood and RTS smoother match an independent matrix/scipy calculation", () => {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import dailyMacroData from "@/public/data/datos-diarios.json";
+import dailyMacroData from "@/public/data/historico_bcentral/datos-diarios.json";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export async function GET() {
     ? [{
         code: "tpm",
         source: "Banco Central de Chile",
-        dataPath: "/data/datos-diarios.json",
+        dataPath: "/data/historico_bcentral/datos-diarios.json",
         dateField: "fecha",
         valueField: "tpm",
       }]

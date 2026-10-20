@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import monthlyData from "@/public/data/datos-mensuales.json";
-import dailyData from "@/public/data/datos-diarios.json";
+import monthlyData from "@/public/data/historico_bcentral/datos-mensuales.json";
+import dailyData from "@/public/data/historico_bcentral/datos-diarios.json";
 import { DEFAULT_TAYLOR_NOMINAL_PARAMETERS, estimateTaylor, realTaylorParameters, type TaylorNominalParameters } from "@/lib/taylor";
 
 const number = (value: number) => new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);

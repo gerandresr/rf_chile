@@ -32,7 +32,7 @@ function RealExchangeRateContent() {
   const [period, setPeriod] = useState("MAX");
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all(["/data/datos-mensuales.json", "/data/datos-diarios.json"].map(url => fetch(url, { signal: controller.signal })
+    Promise.all(["/data/historico_bcentral/datos-mensuales.json", "/data/historico_bcentral/datos-diarios.json"].map(url => fetch(url, { signal: controller.signal })
       .then(response => { if (!response.ok) throw new Error("No se pudieron cargar los datos"); return response.json(); })))
       .then(([monthly, daily]) => {
         if (!Array.isArray(monthly) || !Array.isArray(daily)) throw new Error("Formato inválido");

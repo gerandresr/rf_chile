@@ -15,8 +15,8 @@ import { AppShell } from "./AppShell";
 import { chileToday, latestBenchmarkEstimate, type BenchmarkCode, type BenchmarkEstimate } from "@/lib/benchmark-estimates";
 import benchmarkInstruments from "@/public/data/instrumentos-benchmark.json";
 import { TPMMeetings } from "./TPMMeetings";
-import monthlyMacroData from "@/public/data/datos-mensuales.json";
-import dailyMacroData from "@/public/data/datos-diarios.json";
+import monthlyMacroData from "@/public/data/historico_bcentral/datos-mensuales.json";
+import dailyMacroData from "@/public/data/historico_bcentral/datos-diarios.json";
 import { dailyTpmKpi, monthlyMacroKpi } from "@/lib/macro";
 import {
   RFData,

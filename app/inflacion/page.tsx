@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/AppShell";
-import monthlyData from "@/public/data/datos-mensuales.json";
+import monthlyData from "@/public/data/historico_bcentral/datos-mensuales.json";
 import icapData from "@/public/data/Closing_Icap/inflacion.json";
 import { InflationMonthlyChart, type InflationPoint } from "@/components/InflationMonthlyChart";
 

@@ -28,7 +28,7 @@ Todas las señales se ejecutan en el siguiente cierre disponible, incluidos los 
 
 Validación: `node tests/rsi-backtest.test.cjs` y `node tests/oscillators.test.cjs`.
 
-La pestaña `/modelos` muestra un catálogo de secciones desplegables. El primer modelo es una NAIRU experimental de Chile mediante una curva de Phillips, filtro de Kalman y suavizador RTS. Utiliza `fecha`, `desempleo` e `ipc_yoy` de `public/data/datos-mensuales.json`; actualizar ese archivo y desplegar vuelve a estimar el modelo, sin generar otra serie manualmente.
+La pestaña `/modelos` muestra un catálogo de secciones desplegables. El primer modelo es una NAIRU experimental de Chile mediante una curva de Phillips, filtro de Kalman y suavizador RTS. Utiliza `fecha`, `desempleo` e `ipc_yoy` de `public/data/historico_bcentral/datos-mensuales.json`; actualizar ese archivo y desplegar vuelve a estimar el modelo, sin generar otra serie manualmente.
 
 La curva usa el cambio mensual de inflación YoY y un rezago de ese cambio. No incluye una constante libre, para evitar confundirla con el nivel de NAIRU. Ajusta sensibilidad de inflación, persistencia y ruido por máxima verosimilitud; la desviación del paseo aleatorio de NAIRU se fija en 0,05 pp por mes. El modelo utiliza únicamente los últimos 120 meses calendario, anclados al último mes con desempleo e inflación disponibles; el histórico anterior no interviene en la estimación ni en el nivel inicial. La ventana avanza cuando se agregan datos nuevos. Si hay menos de diez años, utiliza los meses disponibles (mínimo 60). Los primeros dos meses de la ventana se pierden al construir los cambios y el rezago. Los meses conjuntos deben ser consecutivos y únicos.
 
