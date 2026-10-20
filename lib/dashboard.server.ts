@@ -99,7 +99,8 @@ function interpolate(term: number, points: { term: number; y: number }[], flat: 
 export type TickerItem = { label: string; value: number; unit: "%" | "pb" | ""; digits: number; change: number | null; changeUnit: "pb" | "%"; spark: number[]; asOf: string };
 export type HeatCell = { level: number | null; changes: Changes };
 export type SpreadCard = { label: string; detail: string; value: number; unit: "pb" | "%"; changes: Changes; percentile: number | null; min: number; max: number; spark: number[]; reference?: { label: string; value: number } };
-export type MonitorRow = { code: string; detail: string; duration: number | null; value: number; changes: Changes; spark: number[]; percentile: number | null };
+export type MonitorRow = { code: string; detail: string; duration: number | null; value: number; changes: Changes; spark: number[]; percentile: number | null;
+  aswDuration?: number | null; aswMaturity?: number | null; carry1d?: number | null };
 export type CurveSet = { key: string; label: string; tenors: number[]; lines: { label: string; date: string; values: (number | null)[] }[]; points: { term: number; y: number; code: string }[] };
 export type DashboardData = {
   asOf: { bonds: string; bloomberg: string };
@@ -150,15 +151,15 @@ export function dashboardData(): DashboardData {
   const tick = (label: string, s: Series, unit: TickerItem["unit"], digits: number, kind: "bp" | "pct"): TickerItem =>
     ({ label, value: last(s), unit, digits, change: changes(s, kind).d1, changeUnit: kind === "bp" ? "pb" : "%", spark: spark(s, 1), asOf: lastDate(s) });
   const ticker: TickerItem[] = [
-    tick("TPM", tpm, "%", 2, "bp"),
     tick("BTP 2", cm.BTP[2], "%", 2, "bp"), tick("BTP 5", cm.BTP[5], "%", 2, "bp"), tick("BTP 10", cm.BTP[10], "%", 2, "bp"),
     tick("BTU 5", cm.BTU[5], "%", 2, "bp"), tick("BTU 10", cm.BTU[10], "%", 2, "bp"),
     tick("SPC 2a", swapsCLP[2], "%", 2, "bp"), tick("SPC 10a", swapsCLP[10], "%", 2, "bp"),
     tick("USD/CLP", usdclp, "", 2, "pct"), tick("UST 10a", ust10, "%", 2, "bp"),
-    tick("Cobre", copper, "", 1, "pct"), tick("CDS 5a", cds, "pb", 1, "bp"),
+    tick("Cobre", copper, "", 1, "pct"), tick("CDS Chile 5a", cds, "pb", 1, "bp"), tick("IPSA", bloomberg("ipsa"), "", 0, "pct"),
   ];
   // CDS ya está en pb: el cambio en "bp" multiplicaría por 100.
-  ticker[ticker.length - 1].change = cds.values.length > 1 ? last(cds) - cds.values[cds.values.length - 2] : null;
+  const cdsTick = ticker.find(t => t.label === "CDS Chile 5a")!;
+  cdsTick.change = cds.values.length > 1 ? last(cds) - cds.values[cds.values.length - 2] : null;
 
   // Macro
   const monthly = readJson("historico_bcentral/datos-mensuales.json") as Record<string, number | null | string>[];
@@ -170,6 +171,12 @@ export function dashboardData(): DashboardData {
     ["IPC 12 meses", "ipc_yoy", (v: number) => `${fmt(v)}%`], ["IPC mensual", "ipc_mom", (v: number) => `${fmt(v)}%`],
     ["IMACEC anual", "imacec", (v: number) => `${fmt(v)}%`], ["Desempleo", "desempleo", (v: number) => `${fmt(v)}%`],
   ].flatMap(([label, key, f]) => { const r = latestOf(key as string); return r ? [{ label: label as string, value: (f as (v: number) => string)(r[key as string] as number), detail: monthName(r.fecha as string) }] : []; });
+  {
+    // TPM vigente y fecha desde la que rige (último cambio).
+    let since = tpm.dates[0];
+    for (let i = tpm.values.length - 1; i > 0; i--) if (tpm.values[i] !== tpm.values[i - 1]) { since = tpm.dates[i]; break; }
+    macro.unshift({ label: "TPM", value: `${fmt(last(tpm), 2)}%`, detail: `Vigente desde ${new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${since}T00:00:00Z`))}` });
+  }
   if (meetings[0]) macro.push({ label: "Próxima RPM", value: new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${meetings[0]}T00:00:00Z`)), detail: `${Math.round((toTime(meetings[0]) - toTime(lastBloomberg)) / DAY)} días` });
 
   // Mapa de calor
@@ -218,10 +225,57 @@ export function dashboardData(): DashboardData {
 
   // Monitor
   const active = (b: Bond) => b.year * 12 + b.month - 1 >= Number(lastBondDate.slice(0, 4)) * 12 + Number(lastBondDate.slice(5, 7)) - 1 && lastDate(b.tir) === lastBondDate;
-  const bondRows = (type: "BTP" | "BTU") => bonds.filter(b => b.type === type && active(b)).sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month)).map(b => ({
-    code: b.code, detail: `${String(b.month).padStart(2, "0")}/${b.year} · cupón ${fmt(b.coupon, 1)}%`, duration: b.duration,
-    value: last(b.tir), changes: changes(b.tir, "bp"), spark: spark(b.tir, 1), percentile: percentile(b.tir),
-  }));
+  // ASW y carry 1d: misma metodología que las tablas de bonos de Mercados.
+  // ASW = TIR − swap interpolado (por duración o por plazo al vencimiento); BTP contra Cámara CLP, BTU contra Cámara UF.
+  const swapCurveRows: [string, number][] = [["1m", 1 / 12], ["3m", 0.25], ["6m", 0.5], ["9m", 0.75], ["1y", 1], ["2y", 2], ["5y", 5], ["7y", 7], ["10y", 10], ["15y", 15], ["20y", 20]];
+  const swapDuration = (years: number, y: number) => {
+    if (years <= 1) return years / (1 + y / 100);
+    const n = Math.max(1, Math.round(years * 2)), c = y / 100 / 2;
+    let price = 0, weighted = 0;
+    for (let i = 1; i <= n; i++) { const pv = (c + (i === n ? 1 : 0)) / Math.pow(1 + c, i); price += pv; weighted += (i / 2) * pv; }
+    return (weighted / price) / (1 + c);
+  };
+  const swapCurveOn = (prefix: "clpcam" | "ufcam", date: string) => swapCurveRows.flatMap(([k, years]) => {
+    let s: Series; try { s = bloomberg(`${prefix}_${k}`); } catch { return []; }
+    const v = valueOn(s, date);
+    return v === null ? [] : [{ years, duration: swapDuration(years, v), value: v }];
+  });
+  const lin = (x: number, pts: { x: number; y: number }[]) => {
+    const p = pts.slice().sort((a, b) => a.x - b.x);
+    if (!p.length || x < p[0].x || x > p[p.length - 1].x) return null;
+    for (let i = 1; i < p.length; i++) if (x <= p[i].x) return p[i - 1].y + (x - p[i - 1].x) / (p[i].x - p[i - 1].x || 1) * (p[i].y - p[i - 1].y);
+    return p[0].y;
+  };
+  // IPC del período UF vigente (10 de un mes al 9 del siguiente) para el carry de los BTU.
+  const ipcWindow = (date: string) => {
+    const d = new Date(`${date}T00:00:00Z`);
+    const start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - (d.getUTCDate() < 10 ? 1 : 0), 10);
+    const sd = new Date(start), end = Date.UTC(sd.getUTCFullYear(), sd.getUTCMonth() + 1, 9);
+    const key = iso(Date.UTC(sd.getUTCFullYear(), sd.getUTCMonth() - 1, 1));
+    const row = monthly.find(r => r.fecha === key && typeof r.ipc_mom === "number");
+    return { value: (row?.ipc_mom as number | undefined) ?? 0, days: Math.round((end - start) / DAY) };
+  };
+  const tpmNow = last(tpm);
+  const bondRows = (type: "BTP" | "BTU") => {
+    const curve = swapCurveOn(type === "BTP" ? "clpcam" : "ufcam", lastBondDate);
+    const ipc = ipcWindow(lastBondDate);
+    return bonds.filter(b => b.type === type && active(b)).sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month)).map(b => {
+      const y = last(b.tir), dur = b.duration;
+      const swapByDur = dur == null ? null : lin(dur, curve.map(c => ({ x: c.duration, y: c.value })));
+      const years = (Date.UTC(b.year, b.month - 1, 1) - toTime(lastBondDate)) / (365.25 * DAY);
+      const swapByMat = lin(years, curve.map(c => ({ x: c.years, y: c.value })));
+      let carry1d: number | null = null;
+      if (dur != null && dur > 0) {
+        carry1d = ((y / 100 / 365 - tpmNow / 100 / 360) / dur) * 10000;
+        if (type === "BTU" && ipc.days > 0) carry1d += ((ipc.value / ipc.days) / dur) * 100;
+      }
+      return {
+        code: b.code, detail: `${String(b.month).padStart(2, "0")}/${b.year} · cupón ${fmt(b.coupon, 1)}%`, duration: dur,
+        value: y, changes: changes(b.tir, "bp"), spark: spark(b.tir, 1), percentile: percentile(b.tir),
+        aswDuration: swapByDur === null ? null : (y - swapByDur) * 100, aswMaturity: swapByMat === null ? null : (y - swapByMat) * 100, carry1d,
+      };
+    });
+  };
   const swapRows = (prefix: "clpcam" | "ufcam") => [["1m", "1 mes"], ["3m", "3 meses"], ["6m", "6 meses"], ["9m", "9 meses"], ["1y", "1 año"], ["2y", "2 años"], ["5y", "5 años"], ["7y", "7 años"], ["10y", "10 años"], ["15y", "15 años"], ["20y", "20 años"]]
     .filter(([k]) => { try { readFileSync(path.join(DATA, `historico_bloomberg/${prefix}_${k}.json`)); return true; } catch { return false; } })
     .map(([k, label]) => { const s = bloomberg(`${prefix}_${k}`); return { code: `${prefix === "clpcam" ? "SPC" : "SPC UF"} ${k}`, detail: label, duration: null, value: last(s), changes: changes(s, "bp"), spark: spark(s, 1), percentile: percentile(s) }; });
