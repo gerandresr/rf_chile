@@ -118,7 +118,7 @@ function Spread({ s }: { s: SpreadCard }) {
   </div>;
 }
 
-type SortKey = "order" | "value" | "d1" | "w1" | "m1" | "ytd" | "percentile";
+type SortKey = "order" | "value" | "d1" | "w1" | "m1" | "ytd" | "percentile" | "aswDuration" | "aswMaturity" | "carry1d";
 function Monitor({ monitor }: { monitor: DashboardData["monitor"] }) {
   const [tab, setTab] = useState(monitor[0].key);
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: "order", desc: false });
@@ -126,25 +126,35 @@ function Monitor({ monitor }: { monitor: DashboardData["monitor"] }) {
   const rows = useMemo(() => {
     const list = group.rows.map((r, i) => ({ ...r, order: i }));
     if (sort.key === "order") return list;
-    const val = (r: MonitorRow & { order: number }) => sort.key === "value" ? r.value : sort.key === "percentile" ? r.percentile ?? -Infinity : r.changes[sort.key as Period] ?? -Infinity;
+    const val = (r: MonitorRow & { order: number }) => sort.key === "value" ? r.value : sort.key === "percentile" ? r.percentile ?? -Infinity
+      : sort.key === "aswDuration" || sort.key === "aswMaturity" || sort.key === "carry1d" ? r[sort.key] ?? -Infinity : r.changes[sort.key as Period] ?? -Infinity;
     return list.sort((a, b) => (val(a) - val(b)) * (sort.desc ? -1 : 1));
   }, [group, sort]);
   const header = (key: SortKey, label: string) => <th><button className="dash-sort" onClick={() => setSort(s => ({ key, desc: s.key === key ? !s.desc : true }))}>{label}{sort.key === key ? (sort.desc ? " ▼" : " ▲") : ""}</button></th>;
-  const digits = group.key === "DPF" ? 3 : 3;
+  const digits = 3;
+  const bondTab = group.key === "BTP" || group.key === "BTU";
   return <section className="panel dash-panel">
     <div className="panel-head" style={{ flexWrap: "wrap" }}><div><div className="eyebrow">Monitor</div><h2>Instrumentos</h2></div>
       <Segmented value={tab} options={monitor.map(m => [m.key, m.label] as [string, string])} onChange={k => { setTab(k); setSort({ key: "order", desc: false }); }} label="Grupo" /></div>
     <div className="table-wrap"><table className="dash-monitor">
-      <thead><tr>{header("order", "Instrumento")}<th>Detalle</th>{group.rows.some(r => r.duration != null) && <th>Dur.</th>}{header("value", group.unit === "%" ? "Tasa" : "Tasa mensual")}{header("d1", "1D")}{header("w1", "1S")}{header("m1", "1M")}{header("ytd", "YTD")}<th>1 mes</th>{header("percentile", "Pctl 1a")}</tr></thead>
+      <thead><tr>{header("order", "Instrumento")}{bondTab && <th>Dur.</th>}{header("value", group.unit === "%" ? "Tasa" : "Tasa mensual")}
+        {bondTab && <>{header("aswDuration", "ASW dur.")}{header("aswMaturity", "ASW venc.")}{header("carry1d", "Carry 1d")}</>}
+        {header("d1", "1D")}{header("w1", "1S")}{header("m1", "1M")}{header("ytd", "YTD")}<th className="dash-spark-col">1 mes</th>{header("percentile", "Pctl 1a")}</tr></thead>
       <tbody>{rows.map(r => <tr key={r.code}>
-        <td className="strong">{r.code}</td><td className="muted">{r.detail}</td>{group.rows.some(x => x.duration != null) && <td>{r.duration == null ? "—" : fmt(r.duration, 2)}</td>}
+        <td title={r.detail}><span className="strong">{r.code}</span>{bondTab && <div className="subcell">{r.detail}</div>}</td>
+        {bondTab && <td>{r.duration == null ? "—" : fmt(r.duration, 2)}</td>}
         <td className="strong">{fmt(r.value, digits)}%</td>
+        {bondTab && <>
+          <td className={tone(r.aswDuration, false)}>{r.aswDuration == null ? "—" : sgn(r.aswDuration, 0)}</td>
+          <td className={tone(r.aswMaturity, false)}>{r.aswMaturity == null ? "—" : sgn(r.aswMaturity, 0)}</td>
+          <td className={tone(r.carry1d, false)}>{r.carry1d == null ? "—" : sgn(r.carry1d, 2)}</td>
+        </>}
         {(["d1", "w1", "m1", "ytd"] as Period[]).map(p => <td key={p} className={tone(r.changes[p])}>{r.changes[p] == null ? "—" : sgn(r.changes[p]!, p === "ytd" ? 0 : 1)}</td>)}
-        <td><Sparkline values={r.spark} /></td>
+        <td className="dash-spark-col"><Sparkline values={r.spark} width={120} height={24} /></td>
         <td><div className="dash-pctl"><div style={{ width: `${r.percentile ?? 0}%` }} /></div><span className="dash-pctl-label">{r.percentile == null ? "—" : Math.round(r.percentile)}</span></td>
       </tr>)}</tbody>
     </table></div>
-    <p className="dash-note">Cambios en pb. Percentil: posición de la tasa actual dentro del último año (100 = máximo). Haz clic en los encabezados para ordenar.</p>
+    <p className="dash-note">Cambios, ASW y carry en pb. ASW = TIR − swap Cámara interpolado por duración o por plazo al vencimiento (BTP contra CLP, BTU contra UF); positivo = bono rinde sobre el swap. Carry 1d = devengo diario de la TIR (más IPC del período UF en BTU) menos TPM, dividido por la duración, como en Mercados. Percentil: posición de la tasa dentro del último año (100 = máximo). Haz clic en los encabezados para ordenar.</p>
   </section>;
 }
 

@@ -168,7 +168,9 @@
 .dash-range-track{position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,rgba(47,111,237,.35),#e5eaf2 50%,rgba(217,75,75,.35))}
 .dash-range-marker{position:absolute;top:-3px;width:3px;height:12px;margin-left:-1.5px;background:#172033;border-radius:2px}
 .dash-range-labels{display:flex;justify-content:space-between;font-size:10px;color:#7f8b9e;margin-top:4px;font-variant-numeric:tabular-nums}
-.dash-monitor{min-width:860px}
+.dash-monitor{min-width:980px}
+.dash-monitor .dash-spark-col{width:132px;text-align:left!important}
+.dash-monitor .dash-spark-col svg{display:block}
 .dash-monitor td,.dash-monitor th{padding:7px 9px}
 .dash-monitor td{font-variant-numeric:tabular-nums}
 .dash-sort{border:0;background:transparent;padding:0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer}
