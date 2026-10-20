@@ -52,6 +52,14 @@ No se usa una curva de Phillips: con los datos desde 2015 la pendiente estimada 
 
 Sobre cambios diarios de yield en pb, con variance targeting. El pronóstico se centra en la yield actual (sin deriva). El rango de 1 día usa cuantiles empíricos de los residuos estandarizados (colas gruesas); 5 y 20 días usan cuantiles normales.
 
+### TPM descontada por el mercado (`lib/tpm-path.ts`)
+
+Trayectoria de TPM por reunión implícita en los swaps Cámara de hasta 18 meses (Bloomberg o cierre ICAP, el más reciente). En ese tramo los swaps tienen un solo pago al vencimiento, por lo que el descuento se cancela y la tasa fija entrega el ICP esperado (`1 + r·días/360`) sin doble curva. Overnight escalonado entre reuniones (`tpm-meetings.json`, efecto el día hábil siguiente), ICP = TPM + spread estimado, ajuste por mínimos cuadrados con penalización a saltos. Incluye la historia de lo descontado a 0–3, 3–6 y 6–12 meses versus la TPM efectiva.
+
+### Carry y roll-down BTP/BTU (`lib/carry.ts`)
+
+Retorno en exceso a 1, 3 y 6 meses con curva constante: devengo de la TIR (BTU: TIR real × UF esperada con IPC observado y forwards ICAP) menos financiamiento al swap Cámara del plazo, más roll-down sobre una curva Nelson-Siegel por tipo (bonos con cupón, plazo ≥ 1 año, sin extrapolar). Breakeven en pb y retorno/riesgo con la volatilidad de los últimos 3 meses. Duración de RiskAmerica: Macaulay (modificada = Macaulay / (1 + TIR)).
+
 ### Tipo de cambio real
 
 Desviaciones del TCR respecto de su promedio histórico acumulado y de su promedio móvil de 36 meses, con percentil histórico.
@@ -59,5 +67,5 @@ Desviaciones del TCR respecto de su promedio histórico acumulado y de su promed
 Pruebas de los modelos (Node 22.6 o superior):
 
 ```bash
-node --experimental-strip-types --test tests/nairu.test.mjs tests/taylor.test.mjs tests/garch.test.mjs tests/exchange-rate.test.mjs
+node --experimental-strip-types --test tests/nairu.test.mjs tests/taylor.test.mjs tests/garch.test.mjs tests/exchange-rate.test.mjs tests/tpm-path.test.mjs tests/carry.test.mjs
 ```
