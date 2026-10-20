@@ -2,6 +2,8 @@ import { AppShell } from "@/components/AppShell";
 import monthlyData from "@/public/data/historico_bcentral/datos-mensuales.json";
 import icapData from "@/public/data/Closing_Icap/inflacion.json";
 import { InflationMonthlyChart, type InflationPoint } from "@/components/InflationMonthlyChart";
+import { TpmProbabilities } from "@/components/TpmProbabilities";
+import { tpmModelData } from "@/lib/market-models.server";
 
 type MonthlyRow = { fecha: string; ipc_mom: number | null };
 type IcapRow = { Tenor: number; IPC: number | null };
@@ -34,12 +36,13 @@ export default function InflationPage() {
       <header className="page-head">
         <div>
           <div className="eyebrow">Trading Propietario</div>
-          <h1>Inflación y expectativas</h1>
-          <p>IPC mensual observado y expectativas de mercado.</p>
+          <h1>Inflación y TPM</h1>
+          <p>IPC mensual observado, expectativas de mercado y TPM descontada por los swaps.</p>
         </div>
         <div className="asof"><span>Cierre ICAP</span><strong>{icapData.fecha}</strong></div>
       </header>
       <InflationMonthlyChart observed={observed} expected={expected} />
+      <TpmProbabilities data={tpmModelData()} />
     </AppShell>
   );
 }

@@ -30,6 +30,8 @@ Cada backtest se compara con comprar y mantener el mismo bono en el período, co
 
 Validación: `node tests/rsi-backtest.test.cjs` y `node tests/oscillators.test.cjs`.
 
+La TPM descontada por swaps (distribución de probabilidad por reunión e historia) se muestra en la pestaña Inflación y TPM (`/inflacion`).
+
 La pestaña `/modelos` muestra un catálogo de secciones desplegables. Los modelos macro se estiman al construir el sitio (`app/modelos/page.tsx`): actualizar `public/data/historico_bcentral/datos-mensuales.json` y desplegar los vuelve a estimar.
 
 ### Tasa de desempleo natural (`lib/nairu.ts`)

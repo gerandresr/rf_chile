@@ -11,7 +11,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const nav = [
     { href: "/", label: "Mercados", icon: Landmark },
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
-    { href: "/inflacion", label: "Inflación y expectativas", icon: TrendingUp },
+    { href: "/inflacion", label: "Inflación y TPM", icon: TrendingUp },
     { href: "/modelos", label: "Modelos", icon: FlaskConical },
     { href: "/calculadoras", label: "Calculadoras", icon: Calculator },
     { href: "/base-de-datos", label: "Base de Datos", icon: Database },

@@ -9,17 +9,15 @@ import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
 import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import { NairuModel, type NairuEstimate } from "./NairuModel";
-import { TpmPathModel } from "./TpmPathModel";
 import { CarryModel } from "./CarryModel";
-import type { CarryModelData, TpmModelData } from "@/lib/market-models.server";
+import type { CarryModelData } from "@/lib/market-models.server";
 
 // GARCH y Técnicos para BTP/BTU están ocultos; cambiar a true para mostrarlos de nuevo.
 const SHOW_MARKET_MODELS = false;
 
-export function ModelsDashboard({ nairu, activityGaps, tpmPath, carry, taylor }: {
-  nairu: NairuEstimate; activityGaps: ActivityGaps; tpmPath: TpmModelData; carry: CarryModelData; taylor: { value: number; date: string } | null;
+export function ModelsDashboard({ nairu, activityGaps, carry }: {
+  nairu: NairuEstimate; activityGaps: ActivityGaps; carry: CarryModelData;
 }) {
-  const [tpmOpen, setTpmOpen] = useState(false);
   const [carryOpen, setCarryOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [taylorOpen, setTaylorOpen] = useState(false);
@@ -35,10 +33,6 @@ export function ModelsDashboard({ nairu, activityGaps, tpmPath, carry, taylor }:
     <details className="panel model-disclosure" onToggle={(event) => setTaylorOpen(event.currentTarget.open)}>
       <summary><span>Regla de Taylor</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {taylorOpen && <TaylorModel gaps={activityGaps} />}
-    </details>
-    <details className="panel model-disclosure" onToggle={(event) => setTpmOpen(event.currentTarget.open)}>
-      <summary><span>TPM descontada por el mercado (swaps Cámara)</span><ChevronDown size={20} aria-hidden="true" /></summary>
-      {tpmOpen && <TpmPathModel data={tpmPath} taylor={taylor} />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setCarryOpen(event.currentTarget.open)}>
       <summary><span>Carry y roll-down BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
