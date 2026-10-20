@@ -10,6 +10,9 @@ import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import { NairuModel, type NairuEstimate } from "./NairuModel";
 
+// GARCH y Técnicos para BTP/BTU están ocultos; cambiar a true para mostrarlos de nuevo.
+const SHOW_MARKET_MODELS = false;
+
 export function ModelsDashboard({ nairu, activityGaps }: { nairu: NairuEstimate; activityGaps: ActivityGaps }) {
   const [open, setOpen] = useState(false);
   const [taylorOpen, setTaylorOpen] = useState(false);
@@ -27,6 +30,7 @@ export function ModelsDashboard({ nairu, activityGaps }: { nairu: NairuEstimate;
       {taylorOpen && <TaylorModel gaps={activityGaps} />}
     </details>
     <RealExchangeRateChart />
+    {SHOW_MARKET_MODELS && <>
     <details className="panel model-disclosure" onToggle={(event) => setGarchOpen(event.currentTarget.open)}>
       <summary><span>Modelo GARCH (BTP/BTU)</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {garchOpen && <GarchYieldModel />}
@@ -38,5 +42,6 @@ export function ModelsDashboard({ nairu, activityGaps }: { nairu: NairuEstimate;
         {oscillatorOpen[option.id] && <OscillatorBacktestModel oscillator={option.id} />}
       </details>)}</div>}
     </details>
+    </>}
   </AppShell>;
 }
