@@ -38,3 +38,20 @@ test("recupera un alza de 25 pb en la próxima reunión", () => {
 test("ignora plazos sobre 18 meses (cupones semestrales)", () => {
   assert.throws(() => impliedTpmPath({ valuationDate: "2026-10-20", quotes: [{ months: 24, rate: 5 }, { months: 36, rate: 5 }], meetings, currentTpm: 4.5, spreadBp: 0 }), /18 meses/);
 });
+
+import { meetingDistributions } from "../lib/tpm-path.ts";
+test("distribución en grilla de 25 pb: reproduce la media y el árbol de la tabla tipo WIRP", () => {
+  const path = [
+    { meeting: "a", effective: "a", expectedTpm: 4.535, change: 0.035, cumulativeChange: 0.035 },
+    { meeting: "b", effective: "b", expectedTpm: 4.60, change: 0.065, cumulativeChange: 0.10 },
+    { meeting: "c", effective: "c", expectedTpm: 4.95, change: 0.35, cumulativeChange: 0.45 },
+  ];
+  const d = meetingDistributions(4.5, path);
+  close(d[0].probabilities["4.50"], 0.86, 1e-9); close(d[0].probabilities["4.75"], 0.14, 1e-9);
+  close(d[1].probabilities["4.50"], 0.86 * 0.74, 1e-9); close(d[1].probabilities["5.00"], 0.14 * 0.26, 1e-9);
+  d.forEach((col, i) => {
+    const probs = Object.entries(col.probabilities);
+    close(probs.reduce((s, [, p]) => s + p, 0), 1, 1e-12);
+    close(probs.reduce((s, [l, p]) => s + Number(l) * p, 0), path[i].expectedTpm, 1e-9);
+  });
+});
