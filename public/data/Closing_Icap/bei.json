@@ -1,14 +1,14 @@
 {
-  "fecha": "2026-10-19",
+  "fecha": "2026-10-20",
   "instrumento": "bei",
   "datos": [
     {
       "Tenor": "2y",
-      "Mid": 3.52
+      "Mid": 3.535
     },
     {
       "Tenor": "3y",
-      "Mid": 3.46
+      "Mid": 3.49
     },
     {
       "Tenor": "4y",
@@ -16,47 +16,47 @@
     },
     {
       "Tenor": "5y",
-      "Mid": 3.395
+      "Mid": 3.4
     },
     {
       "Tenor": "6y",
-      "Mid": 3.41
+      "Mid": 3.405
     },
     {
       "Tenor": "7y",
-      "Mid": 3.38
+      "Mid": 3.385
     },
     {
       "Tenor": "8y",
-      "Mid": 3.35
+      "Mid": 3.355
     },
     {
       "Tenor": "9y",
-      "Mid": 3.36
+      "Mid": 3.35
     },
     {
       "Tenor": "10y",
-      "Mid": 3.37
+      "Mid": 3.36
     },
     {
       "Tenor": "12y",
-      "Mid": 3.425
+      "Mid": 3.41
     },
     {
       "Tenor": "15y",
-      "Mid": 3.495
+      "Mid": 3.46
     },
     {
       "Tenor": "20y",
-      "Mid": 3.725
+      "Mid": 3.67
     },
     {
       "Tenor": "25y",
-      "Mid": 4.025
+      "Mid": 3.945
     },
     {
       "Tenor": "30y",
-      "Mid": 4.155
+      "Mid": 4.085
     }
   ]
 }
