@@ -26,16 +26,38 @@ Los tres simuladores usan las tasas de `rf.json`: RSI 14 de Wilder, Slow Stochas
 
 Todas las señales se ejecutan en el siguiente cierre disponible, incluidos los stops; no asume ejecuciones exactas en los umbrales ni datos intradía. El oscilador se inicializa con datos anteriores al período seleccionado, pero la estrategia comienza sin posición y no arrastra señales anteriores. No abre operaciones en el último cierre y liquida posiciones existentes al final. El spread ingresado es el castigo por cada lado: la tasa de compra es la tasa de mercado menos `spread / 100`, y la de venta es la tasa de mercado más `spread / 100`. El resultado neto es `(tasa de entrada ajustada - tasa de salida ajustada) * 100`, con tasas expresadas en porcentaje; una operación completa pierde dos veces el spread ingresado respecto del resultado bruto. Los stops y objetivos se evalúan sobre ese resultado neto. La caída máxima usa la valoración diaria neta desde máximos previos, comenzando en cero. El módulo contiene «Técnicos para BTP/BTU» y tres desplegables internos con prefijo «(Oscilador)», y muestra indicadores y tabla de operaciones, sin gráfico de resultado acumulado. Los pb acumulados no equivalen a rentabilidad o P&L monetario y excluyen cupones, carry y financiamiento.
 
+Cada backtest se compara con comprar y mantener el mismo bono en el período, con el mismo castigo por spread.
+
 Validación: `node tests/rsi-backtest.test.cjs` y `node tests/oscillators.test.cjs`.
 
-La pestaña `/modelos` muestra un catálogo de secciones desplegables. El primer modelo es una NAIRU experimental de Chile mediante una curva de Phillips, filtro de Kalman y suavizador RTS. Utiliza `fecha`, `desempleo` e `ipc_yoy` de `public/data/historico_bcentral/datos-mensuales.json`; actualizar ese archivo y desplegar vuelve a estimar el modelo, sin generar otra serie manualmente.
+La pestaña `/modelos` muestra un catálogo de secciones desplegables. Los modelos macro se estiman al construir el sitio (`app/modelos/page.tsx`): actualizar `public/data/historico_bcentral/datos-mensuales.json` y desplegar los vuelve a estimar.
 
-La curva usa el cambio mensual de inflación YoY y un rezago de ese cambio. No incluye una constante libre, para evitar confundirla con el nivel de NAIRU. Ajusta sensibilidad de inflación, persistencia y ruido por máxima verosimilitud; la desviación del paseo aleatorio de NAIRU se fija en 0,05 pp por mes. El modelo utiliza únicamente los últimos 120 meses calendario, anclados al último mes con desempleo e inflación disponibles; el histórico anterior no interviene en la estimación ni en el nivel inicial. La ventana avanza cuando se agregan datos nuevos. Si hay menos de diez años, utiliza los meses disponibles (mínimo 60). Los primeros dos meses de la ventana se pierden al construir los cambios y el rezago. Los meses conjuntos deben ser consecutivos y únicos.
+### Tasa de desempleo natural (`lib/nairu.ts`)
 
-La banda del 95% es condicional a parámetros y supuestos, y no representa toda la incertidumbre. La vista filtrada usa parámetros de muestra completa y un nivel inicial basado en la media de los primeros doce meses; no es una serie de estimaciones en tiempo real. La vista muestra tres cuadros (NAIRU, desempleo y brecha) y dos gráficos; mantiene la banda en el gráfico y evita declarar una brecha concluyente si el desempleo queda dentro de la banda de NAIRU. La metodología se conserva documentada aquí; no se presenta como una sección desplegable en la página.
+Filtro de Kalman multivariado con ley de Okun, sobre toda la muestra con desempleo e IMACEC desestacionalizado:
 
-Pruebas del modelo (Node 22.6 o superior con soporte de eliminación de tipos):
+- `u_t = n_t + c_t` (desempleo desestacionalizado = tasa natural + ciclo)
+- `100·log(IMACEC)_t = y*_t − θ·c_t` (θ = coeficiente de Okun)
+- `n_t` paseo aleatorio; `c_t` AR(2) estacionario; `y*_t` tendencia con deriva.
+
+El desempleo publicado (trimestre móvil sin ajuste) se desestaciona con factores mensuales aditivos, estimados excluyendo mar-2020 a jun-2021. Los parámetros se estiman por máxima verosimilitud (Nelder-Mead con varios puntos de partida); se muestran la estimación filtrada y la suavizada (RTS) con banda del 95% condicional a los parámetros. La prueba contra una implementación matricial independiente en numpy/scipy coincide a 1e-6.
+
+No se usa una curva de Phillips: con los datos desde 2015 la pendiente estimada es ≈ 0 en todas las especificaciones probadas (inflación en cambios o anclada a la meta, con tipo de cambio real, con y sin pandemia), y con pendiente cero el filtro queda fijo en su valor inicial.
+
+### Regla de Taylor (`lib/taylor.ts`)
+
+`i = TPM neutral + (1 + a)·(π − meta) + b·brecha`, con TPM neutral 4,25% (punto medio del rango 3,75%–4,75% del IPoM de diciembre de 2025), a = b = 0,5 y banda por ±0,5 pp de neutral. La brecha de actividad es la del modelo de tasa natural (suavizada o en tiempo real), no un filtro HP. Incluye la regla con inercia `ρ·TPM_(t−1) + (1−ρ)·Taylor_t`.
+
+### GARCH(1,1) (`lib/garch.ts`)
+
+Sobre cambios diarios de yield en pb, con variance targeting. El pronóstico se centra en la yield actual (sin deriva). El rango de 1 día usa cuantiles empíricos de los residuos estandarizados (colas gruesas); 5 y 20 días usan cuantiles normales.
+
+### Tipo de cambio real
+
+Desviaciones del TCR respecto de su promedio histórico acumulado y de su promedio móvil de 36 meses, con percentil histórico.
+
+Pruebas de los modelos (Node 22.6 o superior):
 
 ```bash
-node --experimental-strip-types --test tests/nairu.test.mjs
+node --experimental-strip-types --test tests/nairu.test.mjs tests/taylor.test.mjs tests/garch.test.mjs tests/exchange-rate.test.mjs
 ```

@@ -70,7 +70,7 @@ export function GarchYieldModel() {
 
   return <div className="model-content">
     <p className="model-caption">
-      GARCH(1,1) estimado exclusivamente sobre cambios diarios de yield, expresados en puntos base. El modelo pronostica volatilidad y rangos probables de la yield; no utiliza precio, cupón, carry ni duración. La dirección esperada proviene solo de la media histórica diaria de la muestra.
+      GARCH(1,1) sobre cambios diarios de yield (pb): la volatilidad de hoy depende del shock de ayer (α) y de la volatilidad de ayer (β). Pronostica cuánto se puede mover la tasa, no hacia dónde: la yield central es la actual.
     </p>
 
     <div className="backtest-controls">
@@ -94,7 +94,7 @@ export function GarchYieldModel() {
     {estimation.error && <div className="model-notice" role="alert">{estimation.error}</div>}
 
     {result && <>
-      <div className="kpi-grid model-kpi-grid">
+      <div className="kpi-grid">
         <div className="kpi">
           <div className="kpi-label">Yield actual</div>
           <div className="kpi-value">{number(result.latestYield, 3)}%</div>
@@ -122,13 +122,13 @@ export function GarchYieldModel() {
           <h2>Pronóstico de yield</h2>
           <span className="pill">Horizontes 1, 5 y 20 días</span>
         </div>
-        <p className="model-caption">La volatilidad acumulada corresponde al desvío estándar del movimiento total de yield hasta cada horizonte. Los rangos 68% y 95% asumen innovaciones gaussianas y no son garantías.</p>
+        <p className="model-caption">La volatilidad acumulada es el desvío estándar del movimiento total hasta cada horizonte. El rango de 1 día usa la distribución empírica de los shocks estandarizados (colas gruesas); los de 5 y 20 días, cuantiles normales.</p>
         <div className="table-wrap">
           <table className="backtest-table">
             <thead>
               <tr>
                 <th>Horizonte</th>
-                <th>Yield esperada</th>
+                <th>Yield central</th>
                 <th>Vol. acumulada</th>
                 <th>Rango 68%</th>
                 <th>Rango 95%</th>
@@ -178,9 +178,10 @@ export function GarchYieldModel() {
         </div>
       </section>
 
-      <p className="model-caption">
-        Media diaria estimada del cambio de yield: {result.meanChangeBp > 0 ? "+" : ""}{number(result.meanChangeBp, 2)} pb. GARCH modela principalmente la incertidumbre, no la dirección; por eso la yield esperada debe interpretarse con cautela y los rangos son el resultado más informativo del modelo.
-      </p>
+      <div className="model-notice">
+        <strong>Colas.</strong>
+        <p>Los shocks estandarizados tienen curtosis en exceso de {number(result.excessKurtosis, 1)} (0 en una normal): en la muestra, {number(result.gaussianMissRate, 1)}% de los días el cambio superó ±1,96σ, versus 5% esperado con colas normales. Por eso el rango de 1 día se construye con cuantiles empíricos.</p>
+      </div>
     </>}
   </div>;
 }

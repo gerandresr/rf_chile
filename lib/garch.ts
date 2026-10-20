@@ -32,7 +32,17 @@ export type GarchResult = {
   longRunVolatilityBp: number;
   halfLifeDays: number | null;
   observations: number;
+  /** Curtosis en exceso de los residuos estandarizados (0 = normal). */
+  excessKurtosis: number;
+  /** % de días cuyo cambio quedó fuera de ±1,96σ GARCH (5% si las colas fueran normales). */
+  gaussianMissRate: number;
 };
+
+/** Cuantil empírico con interpolación lineal (tipo 7). */
+function quantile(sorted: number[], p: number) {
+  const pos = (sorted.length - 1) * p, lo = Math.floor(pos), hi = Math.ceil(pos);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+}
 
 const average = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
 
@@ -100,9 +110,11 @@ export function fitGarch11Yield(observations: YieldObservation[]): GarchResult {
 
   let h = Math.max(variance, 1e-8);
   const points: GarchPoint[] = [];
+  const standardized: number[] = [];
   for (let i = 0; i < residuals.length; i++) {
     if (i > 0) h = omega + alpha * residuals[i - 1] ** 2 + beta * h;
     h = Math.max(h, 1e-8);
+    standardized.push(residuals[i] / Math.sqrt(h));
     points.push({
       date: sorted[i + 1].date,
       yield: sorted[i + 1].value,
@@ -117,6 +129,16 @@ export function fitGarch11Yield(observations: YieldObservation[]): GarchResult {
   const longRunVariance = omega / Math.max(1 - persistence, 1e-8);
   const halfLifeDays = persistence > 0 && persistence < 1 ? Math.log(0.5) / Math.log(persistence) : null;
 
+  // Colas: las tasas tienen colas más gruesas que la normal. Para 1 día se usan los cuantiles
+  // empíricos de los residuos estandarizados (simulación histórica filtrada); para 5 y 20 días
+  // la suma de shocks se acerca a la normal y se usan cuantiles gaussianos.
+  const z = standardized.slice().sort((a, b) => a - b);
+  const m2 = standardized.reduce((s, v) => s + v * v, 0) / standardized.length;
+  const m4 = standardized.reduce((s, v) => s + v ** 4, 0) / standardized.length;
+  const excessKurtosis = m4 / (m2 * m2) - 3;
+  const gaussianMissRate = 100 * standardized.filter(v => Math.abs(v) > 1.96).length / standardized.length;
+  const empirical = { l95: quantile(z, 0.025), u95: quantile(z, 0.975), l68: quantile(z, 0.16), u68: quantile(z, 0.84) };
+
   const horizons = [1, 5, 20];
   const forecasts = horizons.map(horizonDays => {
     let cumulativeVariance = 0;
@@ -127,18 +149,19 @@ export function fitGarch11Yield(observations: YieldObservation[]): GarchResult {
       endVariance = stepVariance;
     }
     const cumulativeVolatilityBp = Math.sqrt(cumulativeVariance);
-    const expectedYield = latestYield + (meanChangeBp * horizonDays) / 100;
-    const oneSigmaYield = cumulativeVolatilityBp / 100;
-    const twoSigmaYield = 1.96 * oneSigmaYield;
+    // Sin deriva: la media histórica de los cambios no tiene poder predictivo (paseo aleatorio).
+    const expectedYield = latestYield;
+    const sigma = cumulativeVolatilityBp / 100;
+    const q = horizonDays === 1 ? empirical : { l95: -1.96, u95: 1.96, l68: -1, u68: 1 };
     return {
       horizonDays,
       expectedYield,
       cumulativeVolatilityBp,
       endDayVolatilityBp: Math.sqrt(Math.max(endVariance, 0)),
-      lower68: expectedYield - oneSigmaYield,
-      upper68: expectedYield + oneSigmaYield,
-      lower95: expectedYield - twoSigmaYield,
-      upper95: expectedYield + twoSigmaYield,
+      lower68: expectedYield + q.l68 * sigma,
+      upper68: expectedYield + q.u68 * sigma,
+      lower95: expectedYield + q.l95 * sigma,
+      upper95: expectedYield + q.u95 * sigma,
     };
   });
 
@@ -156,5 +179,7 @@ export function fitGarch11Yield(observations: YieldObservation[]): GarchResult {
     longRunVolatilityBp: Math.sqrt(Math.max(longRunVariance, 0)),
     halfLifeDays,
     observations: changes.length,
+    excessKurtosis,
+    gaussianMissRate,
   };
 }

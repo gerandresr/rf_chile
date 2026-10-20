@@ -1,20 +1,28 @@
 import type { DailyMacroRow } from "./macro";
 
-export type TaylorMonthlyRow = { fecha: string; imacec_ind_des?: number | null; ipc_yoy: number | null };
-export type TaylorParameters = { neutralReal: number; inflationTarget: number; inflationWeight: number; activityWeight: number };
-export const DEFAULT_TAYLOR_PARAMETERS: TaylorParameters = { neutralReal: 1.25, inflationTarget: 3, inflationWeight: 0.5, activityWeight: 0.5 };
-export type TaylorNominalParameters = Omit<TaylorParameters, "neutralReal"> & { neutralNominal: number };
-export const DEFAULT_TAYLOR_NOMINAL_PARAMETERS: TaylorNominalParameters = {
-  neutralNominal: DEFAULT_TAYLOR_PARAMETERS.neutralReal + DEFAULT_TAYLOR_PARAMETERS.inflationTarget,
-  inflationTarget: DEFAULT_TAYLOR_PARAMETERS.inflationTarget,
-  inflationWeight: DEFAULT_TAYLOR_PARAMETERS.inflationWeight,
-  activityWeight: DEFAULT_TAYLOR_PARAMETERS.activityWeight,
+/**
+ * Regla de Taylor (1993) para Chile:
+ *   i_t = r* + π_t + a·(π_t − π*) + b·brecha_t
+ * con r* = TPM neutral nominal − meta. La brecha de actividad viene del modelo de
+ * tasa natural (filtro de Kalman con ley de Okun), en vez de un filtro HP: el HP
+ * tiene sesgo en el último dato y la caída de 2020 hunde su tendencia, lo que
+ * fabricaba brechas positivas de +2% en 2018–2019.
+ *
+ * También entrega la regla con inercia, que describe cómo ajusta un banco central
+ * gradualista: i_t = ρ·TPM_(t−1) + (1 − ρ)·Taylor_t.
+ */
+export type TaylorMonthlyRow = { fecha: string; ipc_yoy: number | null };
+export type TaylorParameters = { neutralNominal: number; inflationTarget: number; inflationWeight: number; activityWeight: number; smoothing: number };
+// TPM neutral: punto medio del rango 3,75%–4,75% del IPoM de diciembre de 2025.
+export const DEFAULT_TAYLOR_PARAMETERS: TaylorParameters = { neutralNominal: 4.25, inflationTarget: 3, inflationWeight: 0.5, activityWeight: 0.5, smoothing: 0.85 };
+export const NEUTRAL_RANGE_HALF_WIDTH = 0.5;
+
+export type TaylorPoint = {
+  date: string; inflation: number; gap: number;
+  taylor: number; taylorLow: number; taylorHigh: number;
+  inertial: number | null;
+  tpm: number; tpmDate: string; difference: number;
 };
-export function realTaylorParameters(parameters: TaylorNominalParameters): TaylorParameters {
-  const { neutralNominal, ...rest } = parameters;
-  return { ...rest, neutralReal: neutralNominal - parameters.inflationTarget };
-}
-export const HP_MONTHLY_LAMBDA = 129600;
 
 function validDate(date: string) {
   if (!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(date)) return false;
@@ -22,60 +30,41 @@ function validDate(date: string) {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date;
 }
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
-const monthIndex = (date: string) => Number(date.slice(0, 4)) * 12 + Number(date.slice(5, 7));
+const previousMonth = (date: string) => {
+  const d = new Date(`${date}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() - 1);
+  return d.toISOString().slice(0, 10);
+};
 
-// Solve (I + lambda D'D) trend = log(index), where D is the second-difference matrix.
-export function hpTrend(values: number[], lambda = HP_MONTHLY_LAMBDA): number[] {
-  if (values.length < 3 || values.some(value => !finite(value)) || !finite(lambda) || lambda < 0) throw new Error("Serie o parámetro HP inválido.");
-  const n = values.length;
-  const matrix = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => i === j ? 1 : 0));
-  const weights = [1, -2, 1];
-  for (let k = 0; k < n - 2; k++) for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) matrix[k + i][k + j] += lambda * weights[i] * weights[j];
-  const lower = Array.from({ length: n }, () => Array<number>(n).fill(0));
-  for (let i = 0; i < n; i++) for (let j = 0; j <= i; j++) {
-    let sum = matrix[i][j];
-    for (let k = 0; k < j; k++) sum -= lower[i][k] * lower[j][k];
-    lower[i][j] = i === j ? Math.sqrt(sum) : sum / lower[j][j];
-  }
-  const intermediate = Array<number>(n).fill(0), trend = Array<number>(n).fill(0);
-  for (let i = 0; i < n; i++) {
-    let sum = values[i];
-    for (let j = 0; j < i; j++) sum -= lower[i][j] * intermediate[j];
-    intermediate[i] = sum / lower[i][i];
-  }
-  for (let i = n - 1; i >= 0; i--) {
-    let sum = intermediate[i];
-    for (let j = i + 1; j < n; j++) sum -= lower[j][i] * trend[j];
-    trend[i] = sum / lower[i][i];
-  }
-  return trend;
+export function taylorRate(inflation: number, gap: number, p: TaylorParameters) {
+  return p.neutralNominal + (1 + p.inflationWeight) * (inflation - p.inflationTarget) + p.activityWeight * gap;
 }
 
-export function estimateTaylor(monthly: TaylorMonthlyRow[], daily: DailyMacroRow[], parameters = DEFAULT_TAYLOR_PARAMETERS) {
+/** `gaps`: brecha de actividad (%) por mes (fecha AAAA-MM-01). */
+export function estimateTaylor(monthly: TaylorMonthlyRow[], daily: DailyMacroRow[], gaps: Record<string, number>, parameters = DEFAULT_TAYLOR_PARAMETERS) {
   if (Object.values(parameters).some(value => !finite(value))) throw new Error("Revisa los parámetros de la regla de Taylor.");
-  // Deduplicate dates, sort chronologically and retain the latest uninterrupted activity history.
-  const activity = [...new Map(monthly.filter(row => validDate(row.fecha) && row.fecha.endsWith("-01") && finite(row.imacec_ind_des) && row.imacec_ind_des > 0).map(row => [row.fecha, row])).values()].sort((a, b) => a.fecha.localeCompare(b.fecha));
-  let start = 0;
-  for (let i = 1; i < activity.length; i++) if (monthIndex(activity[i].fecha) !== monthIndex(activity[i - 1].fecha) + 1) start = i;
-  const rows = activity.slice(start);
-  if (rows.length < 36) throw new Error("Se necesitan al menos 36 meses consecutivos de IMACEC desestacionalizado positivo.");
-  const logs = rows.map(row => Math.log(row.imacec_ind_des!));
-  const trend = hpTrend(logs);
+  if (parameters.smoothing < 0 || parameters.smoothing >= 1) throw new Error("La inercia debe estar entre 0 y 0,99.");
+  // TPM: último dato válido de cada mes (cierre mensual).
   const tpmByMonth = new Map<string, DailyMacroRow>();
   for (const row of daily) {
     if (!validDate(row.fecha) || !finite(row.tpm)) continue;
     const key = row.fecha.slice(0, 7), previous = tpmByMonth.get(key);
     if (!previous || row.fecha > previous.fecha) tpmByMonth.set(key, row);
   }
-  const points = rows.flatMap((row, i) => {
-    if (!finite(row.ipc_yoy)) return [];
-    const tpm = tpmByMonth.get(row.fecha.slice(0, 7));
-    if (!tpm) return [];
-    const gap = 100 * (logs[i] - trend[i]);
-    const inflationGap = row.ipc_yoy - parameters.inflationTarget;
-    const taylor = parameters.neutralReal + row.ipc_yoy + parameters.inflationWeight * inflationGap + parameters.activityWeight * gap;
-    return [{ date: row.fecha, inflation: row.ipc_yoy, activity: row.imacec_ind_des!, potential: Math.exp(trend[i]), gap, taylor, tpm: tpm.tpm!, tpmDate: tpm.fecha, difference: taylor - tpm.tpm! }];
+  const inflation = new Map(monthly.filter(r => validDate(r.fecha) && r.fecha.endsWith("-01") && finite(r.ipc_yoy)).map(r => [r.fecha, r.ipc_yoy!]));
+  const low = { ...parameters, neutralNominal: parameters.neutralNominal - NEUTRAL_RANGE_HALF_WIDTH };
+  const high = { ...parameters, neutralNominal: parameters.neutralNominal + NEUTRAL_RANGE_HALF_WIDTH };
+  const points: TaylorPoint[] = Object.keys(gaps).filter(validDate).sort().flatMap(date => {
+    const pi = inflation.get(date), gap = gaps[date], tpm = tpmByMonth.get(date.slice(0, 7));
+    if (!finite(pi) || !finite(gap) || !tpm) return [];
+    const taylor = taylorRate(pi, gap, parameters);
+    const lagged = tpmByMonth.get(previousMonth(date).slice(0, 7));
+    return [{
+      date, inflation: pi, gap, taylor,
+      taylorLow: taylorRate(pi, gap, low), taylorHigh: taylorRate(pi, gap, high),
+      inertial: lagged ? parameters.smoothing * lagged.tpm! + (1 - parameters.smoothing) * taylor : null,
+      tpm: tpm.tpm!, tpmDate: tpm.fecha, difference: taylor - tpm.tpm!,
+    }];
   });
-  if (!points.length) throw new Error("No hay meses con inflación, IMACEC y TPM disponibles simultáneamente.");
-  return { points, activityMonths: rows.length, startDate: rows[0].fecha, endDate: rows[rows.length - 1].fecha };
+  if (!points.length) throw new Error("No hay meses con inflación, brecha de actividad y TPM disponibles simultáneamente.");
+  return { points };
 }
