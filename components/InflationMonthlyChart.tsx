@@ -16,15 +16,14 @@ const label = (fecha: string) => {
   return `${months[Number(month) - 1]} ${year}`;
 };
 
-const OBSERVED = "#38bdf8";
+const OBSERVED = "#2f6fed";
 const EXPECTED = "#f59e0b";
 
 export function InflationMonthlyChart({
-  observed, expected, icapClosingDate
+  observed, expected
 }: {
   observed: InflationPoint[];
   expected: InflationPoint[];
-  icapClosingDate: string;
 }) {
   const [showAll, setShowAll] = useState(false);
   const selectedObserved = showAll ? observed : observed.slice(-12);
@@ -40,49 +39,49 @@ export function InflationMonthlyChart({
   const domain: [number, number] = [Math.min(0, min - pad), Math.max(0, max + pad)];
 
   return (
-    <article style={{ border: "1px solid var(--border, #334155)", borderRadius: 14, padding: "22px 20px", background: "var(--card, transparent)" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <div>
-          <h2 style={{ margin: "0 0 5px", fontSize: "1.2rem" }}>IPC mensual · observado y esperado</h2>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>Variación mensual (%) · Mercado · cierre {icapClosingDate}</p>
-        </div>
-        <div role="group" aria-label="Período del gráfico" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          <button type="button" aria-pressed={!showAll} onClick={() => setShowAll(false)}
-            style={{ padding: "9px 12px", borderRadius: 8, cursor: "pointer", border: "1px solid #64748b", color: !showAll ? "#0f172a" : "inherit", background: !showAll ? "#7dd3fc" : "transparent" }}>
-            Últimos 12 + próximos 12
-          </button>
-          <button type="button" aria-pressed={showAll} onClick={() => setShowAll(true)}
-            style={{ padding: "9px 12px", borderRadius: 8, cursor: "pointer", border: "1px solid #64748b", color: showAll ? "#0f172a" : "inherit", background: showAll ? "#7dd3fc" : "transparent" }}>
-            Mostrar toda la muestra
-          </button>
-        </div>
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginBottom: 18, fontSize: 13 }}>
-        <span><span aria-hidden="true" style={{ display: "inline-block", height: 10, width: 10, borderRadius: 2, background: OBSERVED, marginRight: 7 }} />IPC observado ({selectedObserved.length})</span>
-        <span><span aria-hidden="true" style={{ display: "inline-block", height: 10, width: 10, borderRadius: 2, background: EXPECTED, marginRight: 7 }} />Expectativas de mercado ({selectedExpected.length})</span>
-      </div>
-      {chartData.length === 0 ? <p>No hay datos de IPC disponibles.</p> : (
-        <div style={{ width: "100%", overflowX: "auto" }}>
-          <div role="img" aria-label="Gráfico de barras del IPC observado y expectativas de mercado" style={{ height: 360, minWidth: showAll ? Math.max(780, chartData.length * 24) : 600 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 18, left: 0, bottom: 28 }}>
-                <CartesianGrid strokeDasharray="3 4" vertical={false} stroke="#64748b" strokeOpacity={0.25} />
-                <XAxis dataKey="mes" angle={-40} textAnchor="end" height={62} interval={showAll ? Math.max(0, Math.ceil(chartData.length / 24) - 1) : 0} tickLine={false} axisLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                <YAxis domain={domain} tickFormatter={fmt} tickLine={false} axisLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} width={58} />
-                <Tooltip formatter={(value, _name, item) => [fmt(Number(value)), item.payload.tipo === "observado" ? "IPC observado" : "Expectativa de mercado"]} labelFormatter={(value) => String(value)} />
-                <ReferenceLine y={0} stroke="#94a3b8" strokeOpacity={0.7} />
-                <Bar dataKey="ipc" maxBarSize={52} radius={[4, 4, 0, 0]}>
-                  {chartData.map((point) => <Cell key={point.fecha} fill={point.tipo === "observado" ? OBSERVED : EXPECTED} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+    <>
+      <section className="panel">
+        <div className="panel-head" style={{ flexWrap: "wrap" }}>
+          <div>
+            <div className="eyebrow">Variación mensual (%)</div>
+            <h2>IPC mensual · observado y esperado</h2>
+          </div>
+          <div className="segmented" role="group" aria-label="Período del gráfico">
+            <button type="button" aria-pressed={!showAll} className={!showAll ? "selected" : ""} onClick={() => setShowAll(false)}>
+              Últimos 12 + próximos 12
+            </button>
+            <button type="button" aria-pressed={showAll} className={showAll ? "selected" : ""} onClick={() => setShowAll(true)}>
+              Toda la muestra
+            </button>
           </div>
         </div>
-      )}
-      <p style={{ fontSize: 12, opacity: 0.7, margin: "16px 0 0" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+          <span className="pill"><span aria-hidden="true" style={{ display: "inline-block", height: 8, width: 8, borderRadius: 2, background: OBSERVED, marginRight: 6 }} />IPC observado ({selectedObserved.length})</span>
+          <span className="pill"><span aria-hidden="true" style={{ display: "inline-block", height: 8, width: 8, borderRadius: 2, background: EXPECTED, marginRight: 6 }} />Expectativas de mercado ({selectedExpected.length})</span>
+        </div>
+        {chartData.length === 0 ? <div className="loading">No hay datos de IPC disponibles.</div> : (
+          <div className="table-wrap">
+            <div role="img" aria-label="Gráfico de barras del IPC observado y expectativas de mercado" style={{ height: 380, minWidth: showAll ? Math.max(780, chartData.length * 24) : 600 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 18, left: 8, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="mes" angle={-40} textAnchor="end" height={62} interval={showAll ? Math.max(0, Math.ceil(chartData.length / 24) - 1) : 0} tick={{ fontSize: 11 }} />
+                  <YAxis domain={domain} tickFormatter={fmt} tick={{ fontSize: 12 }} width={58} />
+                  <Tooltip formatter={(value, _name, item) => [fmt(Number(value)), item.payload.tipo === "observado" ? "IPC observado" : "Expectativa de mercado"]} labelFormatter={(value) => String(value)} />
+                  <ReferenceLine y={0} stroke="#94a3b8" />
+                  <Bar dataKey="ipc" maxBarSize={52} radius={[4, 4, 0, 0]}>
+                    {chartData.map((point) => <Cell key={point.fecha} fill={point.tipo === "observado" ? OBSERVED : EXPECTED} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </section>
+      <div className="note">
         El IPC observado corresponde a datos publicados; las expectativas reflejan precios de mercado.
         Cada contrato se asigna al mes de IPC dos meses anterior a su vencimiento. Las expectativas comienzan después del último dato observado.
-      </p>
-    </article>
+      </div>
+    </>
   );
 }

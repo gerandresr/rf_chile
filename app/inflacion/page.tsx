@@ -31,17 +31,15 @@ export default function InflationPage() {
 
   return (
     <AppShell>
-    <section style={{ padding: "28px 24px", maxWidth: 1100, margin: "0 auto" }}>
-      <header style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 700, marginBottom: 8 }}>
-          Inflación y expectativas
-        </h1>
-        <p style={{ opacity: 0.75, margin: 0 }}>
-          IPC mensual observado y expectativas de mercado
-        </p>
+      <header className="page-head">
+        <div>
+          <div className="eyebrow">Trading Propietario</div>
+          <h1>Inflación y expectativas</h1>
+          <p>IPC mensual observado y expectativas de mercado.</p>
+        </div>
+        <div className="asof"><span>Cierre ICAP</span><strong>{icapData.fecha}</strong></div>
       </header>
-      <InflationMonthlyChart observed={observed} expected={expected} icapClosingDate={icapData.fecha} />
-    </section>
+      <InflationMonthlyChart observed={observed} expected={expected} />
     </AppShell>
   );
 }
