@@ -127,3 +127,7 @@
 .bond-calculator-dpf-result{grid-template-columns:minmax(0,1fr)}
 .bond-calculator-dpf-result .bond-calculator-result{max-width:470px}
 @media(max-width:600px){.calculator-group-summary{padding:16px;font-size:16px}.calculator-group-content{padding:14px}.bond-calculator-summary{padding:14px}.bond-calculator-body{padding:14px}.bond-calculator-inputs,.bond-calculator-results{grid-template-columns:1fr}.bond-calculator-dpf-result .bond-calculator-result{max-width:none}}
+
+/* Modelos: matriz de probabilidad de TPM */
+.tpm-probability-table{min-width:640px}
+.tpm-probability-table th:not(:first-child),.tpm-probability-table td:not(:first-child){text-align:center}

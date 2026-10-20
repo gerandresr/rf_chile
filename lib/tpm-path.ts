@@ -23,6 +23,7 @@ export type TpmPathResult = {
   /** Probabilidad implícita de un movimiento de 25 pb en la próxima reunión (signo = dirección). */
   nextMeetingProbability: number | null;
   path: MeetingPath[];
+  distributions: LevelDistribution[];
   fit: { months: number; quoted: number; fitted: number; errorBp: number }[];
   horizonEnd: string;
 };
@@ -128,6 +129,7 @@ export function impliedTpmPath(options: {
   const nextMeeting = path[0] ?? null;
   return {
     valuationDate, currentTpm, spreadBp, path, fit, horizonEnd, nextMeeting,
+    distributions: meetingDistributions(currentTpm, path),
     nextMeetingProbability: nextMeeting ? nextMeeting.change / 0.25 : null,
   };
 }
@@ -203,4 +205,33 @@ export function forwardHistory(options: {
     biasBp: errors.length ? errors.reduce((a, b) => a + b, 0) / errors.length : null,
     maeBp: errors.length ? errors.reduce((a, b) => a + Math.abs(b), 0) / errors.length : null,
   };
+}
+
+export type LevelDistribution = { meeting: string; probabilities: Record<string, number> };
+
+/**
+ * Distribución de probabilidad de la TPM por reunión en una grilla de 25 pb (como WIRP).
+ * En cada reunión el cambio esperado Δ se reparte entre los dos movimientos de 25 pb
+ * adyacentes: si Δ = 9 pb, 36% de alza de 25 pb y 64% de mantención; si Δ = 30 pb,
+ * 80% de 25 pb y 20% de 50 pb. Las reuniones se encadenan (árbol), así que la media de
+ * cada columna reproduce la trayectoria descontada.
+ */
+export function meetingDistributions(currentTpm: number, path: MeetingPath[], step = 0.25): LevelDistribution[] {
+  const key = (steps: number) => (currentTpm + steps * step).toFixed(2);
+  let dist = new Map<number, number>([[0, 1]]);   // pasos de 25 pb desde la TPM actual → probabilidad
+  let previous = currentTpm;
+  return path.map(p => {
+    const moves = (p.expectedTpm - previous) / step;
+    previous = p.expectedTpm;
+    const lower = Math.floor(moves + 1e-9), weight = moves - lower;
+    const next = new Map<number, number>();
+    for (const [s, prob] of dist) {
+      for (const [m, w] of [[lower, 1 - weight], [lower + 1, weight]] as const) {
+        if (w <= 1e-12) continue;
+        next.set(s + m, (next.get(s + m) ?? 0) + prob * w);
+      }
+    }
+    dist = next;
+    return { meeting: p.meeting, probabilities: Object.fromEntries([...dist].sort((a, b) => a[0] - b[0]).map(([s, prob]) => [key(s), prob])) };
+  });
 }

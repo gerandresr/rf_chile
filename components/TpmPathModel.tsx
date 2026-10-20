@@ -18,6 +18,11 @@ export function TpmPathModel({ data, taylor }: { data: TpmModelData; taylor: { v
   const lastInYear = [...path.path].reverse().find(p => p.effective <= new Date(new Date(`${path.valuationDate}T00:00:00Z`).getTime() + 366 * 86400000).toISOString().slice(0, 10)) ?? path.path.at(-1);
   const chart = [{ label: "Hoy", tpm: path.currentTpm }, ...path.path.map(p => ({ label: month(p.meeting), tpm: p.expectedTpm, meeting: p.meeting, change: p.change }))];
   const maxError = Math.max(...path.fit.map(f => Math.abs(f.errorBp)));
+  // Matriz de probabilidades (grilla de 25 pb): filas = niveles de TPM, columnas = reuniones.
+  const levels = [...new Set(path.distributions.flatMap(d => Object.entries(d.probabilities).filter(([, p]) => p >= 0.005).map(([l]) => l)))]
+    .sort((a, b) => Number(b) - Number(a));
+  const modes = path.distributions.map(d => Object.entries(d.probabilities).sort((a, b) => b[1] - a[1])[0]?.[0]);
+  const shortMonth = (date: string) => new Intl.DateTimeFormat("es-CL", { month: "short", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`)).replace(".", "").toUpperCase() + "'" + date.slice(2, 4);
   const selected = history[windowIndex];
   const historyRows = selected.points.map(p => ({ date: p.date, implied: p.implied, realized: p.realized }));
   const moveText = (p: number) => {
@@ -51,8 +56,24 @@ export function TpmPathModel({ data, taylor }: { data: TpmModelData; taylor: { v
         <Line type="stepAfter" dataKey="tpm" name="TPM descontada por el mercado" stroke="#2f6fed" strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={false} />
       </LineChart></ResponsiveContainer></div>
       <div className="table-wrap"><table>
-        <thead><tr><th>Reunión</th><th>Rige desde</th><th>TPM esperada</th><th>Cambio</th><th>Acumulado</th></tr></thead>
-        <tbody>{path.path.map(p => <tr key={p.meeting}><td>{day(p.meeting)}</td><td>{day(p.effective)}</td><td>{number(p.expectedTpm, 3)}%</td><td>{signed(p.change * 100, 1)} pb</td><td>{signed(p.cumulativeChange * 100, 0)} pb</td></tr>)}</tbody>
+        <thead><tr><th>Reunión</th><th>Rige desde</th><th>TPM esperada</th><th>Cambio esperado</th><th>Acumulado</th><th>Escenario más probable</th></tr></thead>
+        <tbody>{path.path.map((p, i) => <tr key={p.meeting}><td>{day(p.meeting)}</td><td>{day(p.effective)}</td><td>{number(p.expectedTpm, 3)}%</td><td>{signed(p.change * 100, 1)} pb</td><td>{signed(p.cumulativeChange * 100, 0)} pb</td><td className="strong">{modes[i] ? `${number(Number(modes[i]))}% (${Math.round(path.distributions[i].probabilities[modes[i]] * 100)}%)` : "—"}</td></tr>)}</tbody>
+      </table></div>
+    </section>
+
+    <section className="model-chart-section" aria-label="Distribución de probabilidad de la TPM">
+      <div className="panel-head"><h2>Distribución de probabilidad TPM</h2><span className="pill">Movimientos de 25 pb</span></div>
+      <p className="model-caption">Probabilidad de que la TPM quede en cada nivel después de cada reunión. En cada reunión el cambio descontado se reparte entre los dos movimientos de 25 pb más cercanos (por ejemplo, +9 pb = 36% de alza y 64% de mantención) y las reuniones se encadenan. En rosado, el nivel más probable de cada reunión.</p>
+      <div className="table-wrap"><table className="tpm-probability-table">
+        <thead><tr><th>TPM</th>{path.distributions.map(d => <th key={d.meeting}>{shortMonth(d.meeting)}</th>)}</tr></thead>
+        <tbody>{levels.map(level => <tr key={level}>
+          <td className="strong">{number(Number(level))}</td>
+          {path.distributions.map((d, i) => {
+            const prob = d.probabilities[level] ?? 0;
+            const background = modes[i] === level ? "#f5b5cf" : prob >= 0.005 ? "#a7e3ef" : undefined;
+            return <td key={d.meeting} style={{ background, textAlign: "center" }}>{number(prob, 2)}</td>;
+          })}
+        </tr>)}</tbody>
       </table></div>
     </section>
 
