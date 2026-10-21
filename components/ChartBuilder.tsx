@@ -28,6 +28,8 @@ type Period = "1m" | "3m" | "1y" | "5y" | "all" | "custom";
 type Config = {
   v: 1; series: PlotSeries[]; annotations: Annotation[]; period: Period; from: string; to: string;
   title: string; subtitle: string; source: string; legend: "top" | "bottom" | "none"; grid: boolean; height: number;
+  /** Etiqueta con el último dato al final de cada línea. */
+  lastValue?: boolean;
   left: { min: string; max: string }; right: { min: string; max: string };
 };
 
@@ -460,6 +462,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
             <label>Eje der. mín<input value={config.right.min} placeholder="auto" onChange={e => set({ right: { ...config.right, min: e.target.value } })} /></label>
             <label>Eje der. máx<input value={config.right.max} placeholder="auto" onChange={e => set({ right: { ...config.right, max: e.target.value } })} /></label>
             <label className="cb-check"><input type="checkbox" checked={config.grid} onChange={e => set({ grid: e.target.checked })} />Grilla</label>
+            <label className="cb-check"><input type="checkbox" checked={!!config.lastValue} onChange={e => set({ lastValue: e.target.checked })} />Último dato al final</label>
           </div>
         </section>
       </aside>
@@ -490,7 +493,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
           <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
           <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }}>
             {!config.series.length ? <div className="loading">Agrega una serie para empezar.</div> : !ready ? <div className="loading">Cargando datos…</div> :
-              <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: 12, bottom: 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
+              <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
                 {config.grid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5eaf2" />}
                 <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 11 }} />
                 <YAxis yAxisId="left" domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
@@ -499,9 +502,18 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
                 {config.legend !== "none" && <Legend verticalAlign={config.legend} wrapperStyle={{ fontSize: 12 }} />}
                 {visible.map(s => {
                   const name = `${s.label}${units[s.uid] ? ` (${units[s.uid]})` : ""}`;
+                  // Último punto con dato de la serie: ahí va la etiqueta con el valor.
+                  let lastIdx = -1;
+                  if (config.lastValue) for (let i = rows.length - 1; i >= 0; i--) { const v = (rows[i] as Record<string, unknown>)[s.uid]; if (typeof v === "number" && Number.isFinite(v)) { lastIdx = i; break; } }
+                  const u = units[s.uid] ?? "";
+                  const lastLabel = config.lastValue && lastIdx >= 0 ? (p: { x?: number | string; y?: number | string; index?: number; value?: unknown }) => {
+                    if (p.index !== lastIdx || typeof p.value !== "number") return <g />;
+                    const text = `${fmt(p.value, u === "pb" ? 1 : 2)}${u === "%" ? "%" : ""}`, w = text.length * 6.6 + 10, x = Number(p.x) + 6, y = Number(p.y);
+                    return <g className="cb-last"><rect x={x} y={y - 9} width={w} height={18} rx={3} fill={s.color} /><text x={x + w / 2} y={y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{text}</text></g>;
+                  } : undefined;
                   if (s.type === "bar") return <Bar key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} fill={s.color} isAnimationActive={false} />;
-                  if (s.type === "area") return <Area key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} fill={s.color} fillOpacity={0.15} strokeWidth={s.width} strokeDasharray={DASH[s.dash]} connectNulls isAnimationActive={false} />;
-                  return <Line key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} strokeWidth={s.type === "dots" ? 0 : s.width} strokeDasharray={DASH[s.dash]} dot={s.type === "dots" ? { r: 2.2, fill: s.color, stroke: s.color } : false} connectNulls isAnimationActive={false} legendType={s.type === "dots" ? "circle" : "line"} />;
+                  if (s.type === "area") return <Area key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} fill={s.color} fillOpacity={0.15} strokeWidth={s.width} strokeDasharray={DASH[s.dash]} connectNulls isAnimationActive={false} label={lastLabel} />;
+                  return <Line key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} strokeWidth={s.type === "dots" ? 0 : s.width} strokeDasharray={DASH[s.dash]} dot={s.type === "dots" ? { r: 2.2, fill: s.color, stroke: s.color } : false} connectNulls isAnimationActive={false} legendType={s.type === "dots" ? "circle" : "line"} label={lastLabel} />;
                 })}
                 {config.annotations.map(a => a.kind === "hline"
                   ? <ReferenceLine key={a.id} yAxisId={a.axis === "right" && hasRight ? "right" : "left"} y={a.value} stroke={a.color} strokeDasharray="6 4" strokeWidth={1.5} label={a.label ? { value: a.label, position: "insideTopLeft", fill: a.color, fontSize: 12, fontWeight: 700 } : undefined} />
