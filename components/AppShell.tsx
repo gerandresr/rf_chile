@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, LayoutDashboard, Landmark, FlaskConical, Calculator, Database, DatabaseZap, TrendingUp } from "lucide-react";
+import { Activity, BarChart3, LayoutDashboard, Landmark, FlaskConical, Calculator, Database, DatabaseZap, Lightbulb, TrendingUp } from "lucide-react";
 import { VisitorCounter } from "./VisitorCounter";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -14,6 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
     { href: "/inflacion", label: "Inflación y TPM", icon: TrendingUp },
     { href: "/modelos", label: "Modelos", icon: FlaskConical },
+    { href: "/recomendaciones", label: "Recomendaciones", icon: Lightbulb },
     { href: "/calculadoras", label: "Calculadoras", icon: Calculator },
     { href: "/base-de-datos", label: "Base de Datos", icon: Database },
     { href: "/nueva-base-de-datos", label: "Nueva base de datos", icon: DatabaseZap },
