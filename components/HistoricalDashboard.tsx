@@ -14,6 +14,12 @@ type Metric = "yield" | "change" | "aswDur" | "aswVenc" | "vol10" | "vol30" | "v
 type SwapHistory = { code: string; years: number; rows: { date: string; value: number }[] };
 const swapTenors = [["clpcam_1m",1/12],["clpcam_3m",3/12],["clpcam_6m",6/12],["clpcam_9m",9/12],["clpcam_1y",1],["clpcam_2y",2],["clpcam_5y",5],["clpcam_7y",7],["clpcam_10y",10],["clpcam_15y",15],["clpcam_20y",20]] as const;
 function approxSwapDuration(years:number,yieldPct:number){if(years<=1)return years/(1+yieldPct/100);const n=Math.max(1,Math.round(years*2)),coupon=yieldPct/200,y=yieldPct/200;let price=0,weighted=0;for(let i=1;i<=n;i++){const cf=coupon+(i===n?1:0),pv=cf/Math.pow(1+y,i);price+=pv;weighted+=(i/2)*pv;}return (weighted/price)/(1+y);}
+const ufSwapTenors = [["ufcam_3m",3/12],["ufcam_6m",6/12],["ufcam_9m",9/12],["ufcam_1y",1],["ufcam_2y",2],["ufcam_5y",5],["ufcam_7y",7],["ufcam_10y",10],["ufcam_15y",15],["ufcam_20y",20]] as const;
+// Swaps para comparar en Yield: id "swap:<código>"; BTP se compara con Cámara CLP y BTU con Cámara UF.
+const isSwap = (id: string) => id.startsWith("swap:");
+const swapType = (id: string) => id.startsWith("swap:ufcam") ? "BTU" : "BTP";
+const swapLabel = (id: string) => { const m = id.match(/^swap:(clpcam|ufcam)_(\d+)([my])$/); return m ? `${m[1] === "clpcam" ? "SPC" : "SPC UF"} ${m[2]}${m[3] === "y" ? "a" : "m"}` : id; };
+const seriesLabel = (id: string) => isSwap(id) ? swapLabel(id) : id;
 function swapValueOnOrBefore(series:SwapHistory,date:string){return [...series.rows].reverse().find(r=>r.date<=date)?.value??null;}
 function interpolateSwapAtDuration(swaps:SwapHistory[],date:string,duration:number){const curve=swaps.map(s=>{const value=swapValueOnOrBefore(s,date);return value==null?null:{duration:approxSwapDuration(s.years,value),value};}).filter((x):x is {duration:number;value:number}=>x!=null).sort((a,b)=>a.duration-b.duration);if(!curve.length||duration<curve[0].duration||duration>curve[curve.length-1].duration)return null;for(let i=0;i<curve.length;i++){if(Math.abs(curve[i].duration-duration)<1e-9)return curve[i].value;if(i&&duration<curve[i].duration){const l=curve[i-1],r=curve[i],w=(duration-l.duration)/(r.duration-l.duration);return l.value+w*(r.value-l.value);}}return null;}
 function interpolateSwapAtMaturity(swaps:SwapHistory[],date:string,maturityYear:number,maturityMonth:number){const market=new Date(date+"T00:00:00"),maturity=new Date(maturityYear,maturityMonth-1,1);const targetYears=(maturity.getTime()-market.getTime())/(365.25*86400000);if(targetYears<0)return null;const curve=swaps.map(s=>{const value=swapValueOnOrBefore(s,date);return value==null?null:{years:s.years,value};}).filter((x):x is {years:number;value:number}=>x!=null).sort((a,b)=>a.years-b.years);if(!curve.length||targetYears<curve[0].years||targetYears>curve[curve.length-1].years)return null;for(let i=0;i<curve.length;i++){if(Math.abs(curve[i].years-targetYears)<1e-9)return curve[i].value;if(i&&targetYears<curve[i].years){const l=curve[i-1],r=curve[i],w=(targetYears-l.years)/(r.years-l.years);return l.value+w*(r.value-l.value);}}return null;}
@@ -40,6 +46,7 @@ const indicatorSeries: Partial<Record<Technical, { key: string; name: string }[]
 export function HistoricalDashboard() {
   const [data, setData] = useState<RFData | null>(null);
   const [swapHistory, setSwapHistory] = useState<SwapHistory[]>([]);
+  const [ufSwapHistory, setUfSwapHistory] = useState<SwapHistory[]>([]);
   const [code, setCode] = useState("BTP0581029");
   const [period, setPeriod] = useState<Period>("1Y");
   const [metric, setMetric] = useState<Metric>("yield");
@@ -47,7 +54,9 @@ export function HistoricalDashboard() {
   const [technical, setTechnical] = useState<Technical | null>(null);
   useEffect(() => {
     fetch("/data/rf.json").then(r => r.json()).then(setData);
-    Promise.all(swapTenors.map(async ([code,years])=>{const r=await fetch(`/data/historico_bloomberg/${code}.json`);if(!r.ok)return null;const j=await r.json();const s=j[code] as {fecha?:string[];valor?:number[]}|undefined;if(!s?.fecha||!s.valor)return null;return {code,years,rows:s.fecha.map((date,i)=>({date,value:s.valor![i]})).filter(x=>Number.isFinite(x.value)).sort((a,b)=>a.date.localeCompare(b.date))} as SwapHistory;})).then(rows=>setSwapHistory(rows.filter((x):x is SwapHistory=>x!=null)));
+    const loadSwaps = (tenors: readonly (readonly [string, number])[]) => Promise.all(tenors.map(async ([code,years])=>{const r=await fetch(`/data/historico_bloomberg/${code}.json`);if(!r.ok)return null;const j=await r.json();const s=j[code] as {fecha?:string[];valor?:number[]}|undefined;if(!s?.fecha||!s.valor)return null;return {code,years,rows:s.fecha.map((date,i)=>({date,value:s.valor![i]})).filter(x=>Number.isFinite(x.value)).sort((a,b)=>a.date.localeCompare(b.date))} as SwapHistory;})).then(rows=>rows.filter((x):x is SwapHistory=>x!=null));
+    loadSwaps(swapTenors).then(setSwapHistory);
+    loadSwaps(ufSwapTenors).then(setUfSwapHistory);
   }, []);
   const active = useMemo(() => data ? data.instruments.filter(i => isActiveInstrument(i) && (i.type === "BTP" || i.type === "BTU")).sort((a, b) => a.type.localeCompare(b.type) || a.maturityYear - b.maturityYear || a.maturityMonth - b.maturityMonth || a.code.localeCompare(b.code)) : [], [data]);
   const selectedTechnical = metric === "yield" ? technical : null;
@@ -56,8 +65,11 @@ export function HistoricalDashboard() {
     const codes = [code, ...(selectedTechnical ? [] : compare.filter(c => c !== code))];
     const map = new Map<string, TechnicalPoint>();
     const start = cutoff(period, data.lastMarketDate);
+    const bondDates = new Set(data.history.map(h => h.date));
     for (const c of codes) {
-      const obs = observations(data, c).filter(p => Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
+      // Swaps solo en fechas con datos de bonos: evita cortes en las líneas por feriados que Bloomberg rellena.
+      const swapRows = isSwap(c) ? ([...swapHistory, ...ufSwapHistory].find(h => `swap:${h.code}` === c)?.rows ?? []).filter(r => bondDates.has(r.date)) : null;
+      const obs = swapRows ?? observations(data, c).filter(p => Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
       const instrument = data.instruments.find(i=>i.code===c);
       const series = metric === "yield" ? obs : metric === "change" ? obs.slice(1).map((p, i) => ({ date: p.date, value: (p.value - obs[i].value) * 100 })) : metric === "aswDur" && instrument?.type === "BTP" ? obs.map(p=>{const historyRow=data.history.find(h=>h.date===p.date);const historicalDuration=(historyRow?.values?.[c] as any)?.duration ?? instrument.duration;const swap=historicalDuration!=null?interpolateSwapAtDuration(swapHistory,p.date,historicalDuration):null;return {date:p.date,value:swap==null?NaN:(p.value-swap)*100};}).filter(p=>Number.isFinite(p.value)) : metric === "aswVenc" && instrument?.type === "BTP" ? obs.map(p=>{const swap=interpolateSwapAtMaturity(swapHistory,p.date,instrument.maturityYear,instrument.maturityMonth);return {date:p.date,value:swap==null?NaN:(p.value-swap)*100};}).filter(p=>Number.isFinite(p.value)) : rollingVolatility(obs, metric === "vol10" ? 10 : metric === "vol30" ? 30 : 90);
       for (const p of series) {
@@ -70,11 +82,12 @@ export function HistoricalDashboard() {
       }
     }
     return [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
-  }, [data, code, compare, metric, period, selectedTechnical, swapHistory]);
+  }, [data, code, compare, metric, period, selectedTechnical, swapHistory, ufSwapHistory]);
   if (!data) return <AppShell><div className="loading">Cargando históricos…</div></AppShell>;
   const lines = [code, ...(selectedTechnical ? [] : compare.filter(c => c !== code))];
   const primary = data.instruments.find(i => i.code === code);
   const spreads = metric === "yield" && !selectedTechnical && primary ? compare.filter(c => c !== code).flatMap(c => {
+    if (isSwap(c)) return [{ left: code, right: c, label: `${code} − ${swapLabel(c)}`, ...yieldSpread(chart, code, c) }];
     const comparison = data.instruments.find(i => i.code === c);
     if (!comparison) return [];
     const pair = spreadPair(primary, comparison);
@@ -102,9 +115,9 @@ export function HistoricalDashboard() {
   return <AppShell>
     <header className="page-head"><div><div className="eyebrow">Series históricas</div><h1>Históricos</h1><p>Yield, cambios diarios y volatilidad móvil calculada sobre cambios de tasa en basis points.</p></div><div className="asof"><span>Último cierre</span><strong>{data.lastMarketDate}</strong></div></header>
     <section className="panel controls-panel">
-      <div className="control"><label htmlFor="history-instrument">Instrumento</label><select id="history-instrument" value={code} onChange={e => setCode(e.target.value)}>{active.map(i => <option key={i.code}>{i.code}</option>)}</select></div>
+      <div className="control"><label htmlFor="history-instrument">Instrumento</label><select id="history-instrument" value={code} onChange={e => { const next = e.target.value, nextType = next.slice(0, 3); setCode(next); setCompare(current => current.filter(c => !isSwap(c) || swapType(c) === nextType)); }}>{active.map(i => <option key={i.code}>{i.code}</option>)}</select></div>
       <div className="control wide"><label>Período</label><div className="segmented">{(["1M", "3M", "YTD", "1Y", "MAX"] as Period[]).map(p => <button key={p} className={period === p ? "selected" : ""} onClick={() => setPeriod(p)}>{p}</button>)}</div></div>
-      <div className="control"><label htmlFor="history-metric">Métrica</label><select id="history-metric" value={metric} onChange={e => { const nextMetric = e.target.value as Metric; setMetric(nextMetric); setTechnical(null); if (nextMetric === "yield") setCompare(current => { const first = current.find(c => c !== code); return first ? current.filter(c => c !== code && c.slice(0, 3) === first.slice(0, 3)) : []; }); }}><option value="yield">Yield</option><option value="change">Cambio diario</option><option value="aswDur">ASW Dur</option><option value="aswVenc">ASW Venc.</option><option value="vol10">Volatilidad 10d</option><option value="vol30">Volatilidad 30d</option><option value="vol90">Volatilidad 90d</option></select></div>
+      <div className="control"><label htmlFor="history-metric">Métrica</label><select id="history-metric" value={metric} onChange={e => { const nextMetric = e.target.value as Metric; setMetric(nextMetric); setTechnical(null); setCompare(current => current.filter(c => !isSwap(c))); if (nextMetric === "yield") setCompare(current => { const first = current.find(c => c !== code); return first ? current.filter(c => c !== code && c.slice(0, 3) === first.slice(0, 3)) : []; }); }}><option value="yield">Yield</option><option value="change">Cambio diario</option><option value="aswDur">ASW Dur</option><option value="aswVenc">ASW Venc.</option><option value="vol10">Volatilidad 10d</option><option value="vol30">Volatilidad 30d</option><option value="vol90">Volatilidad 90d</option></select></div>
     </section>
     <section className="panel">
       <div className="panel-head"><div><div className="eyebrow">Comparación</div><h2>{isBp ? "Basis points" : "Yield (%)"}</h2></div></div>
@@ -112,16 +125,24 @@ export function HistoricalDashboard() {
         const on = compare.includes(i.code) && !selectedTechnical;
         return <button key={i.code} className={`chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => { setTechnical(null); setCompare(current => {
           if (on) return current.filter(c => c !== i.code);
-          const sameGroup = current.filter(c => c !== code && (metric !== "yield" || c.slice(0, 3) === type));
+          const sameGroup = current.filter(c => c !== code && (metric !== "yield" || (isSwap(c) ? swapType(c) === type && type === primary?.type : c.slice(0, 3) === type)));
           return sameGroup.length < 3 ? [...sameGroup, i.code] : sameGroup;
         }); }}>{i.code.replace("BTP", "BTP ").replace("BTU", "BTU ")}</button>;
       })}</div></div>)}
       {metric === "yield" && <div className="history-compare-group" role="group" aria-label="Indicadores técnicos"><h3 className="history-compare-title">Técnicos</h3><div className="compare-row">{technicalOptions.map(o => <button key={o.id} className={`chip ${selectedTechnical === o.id ? "on" : ""}`} aria-pressed={selectedTechnical === o.id} title={o.description} onClick={() => { setTechnical(current => current === o.id ? null : o.id); setCompare([]); }}>{o.label}</button>)}</div></div>}
+      {metric === "yield" && primary && <div className="history-compare-group" role="group" aria-label="Comparar con swaps"><h3 className="history-compare-title">{primary.type === "BTP" ? "Swaps CLP" : "Swaps UF"}</h3><div className="compare-row">{(primary.type === "BTP" ? swapHistory : ufSwapHistory).map(h => {
+        const id = `swap:${h.code}`, on = compare.includes(id) && !selectedTechnical;
+        return <button key={id} className={`chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => { setTechnical(null); setCompare(current => {
+          if (on) return current.filter(c => c !== id);
+          const kept = current.filter(c => c !== code && (isSwap(c) ? swapType(c) === primary.type : c.slice(0, 3) === primary.type));
+          return kept.length < 3 ? [...kept, id] : kept;
+        }); }}>{swapLabel(id)}</button>;
+      })}</div></div>}
       {option && <p className="technical-description">{code} · {option.description} Pulsa la opción activa para quitarla.</p>}
       <div className="history-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={chart} syncId="historical-technicals" margin={{ left: 8, right: 18, top: 10, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="date" minTickGap={35}/><YAxis domain={["auto", "auto"]} tickFormatter={v => `${Number(v).toFixed(1)}${isBp ? "" : "%"}`}/><Tooltip formatter={(v, name) => [`${Number(v).toFixed(isBp ? 2 : 3)}${isBp ? " bp" : "%"}`, String(name)]}/><Legend/>
         {metric === "change" && <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" ifOverflow="extendDomain"/>}
-        {lines.map((c, i) => <Line key={c} type="linear" dataKey={c} name={c} stroke={colors[i % colors.length]} dot={metric === "change" ? <DailyChangeDot/> : false} activeDot={metric === "change" ? <DailyChangeDot/> : undefined} strokeWidth={metric === "change" ? 0 : i === 0 ? 2.3 : 1.7} isAnimationActive={metric !== "change"} connectNulls={false}/>)}
+        {lines.map((c, i) => <Line key={c} type="linear" dataKey={c} name={seriesLabel(c)} stroke={colors[i % colors.length]} dot={metric === "change" ? <DailyChangeDot/> : false} activeDot={metric === "change" ? <DailyChangeDot/> : undefined} strokeWidth={metric === "change" ? 0 : i === 0 ? 2.3 : 1.7} isAnimationActive={metric !== "change"} connectNulls={isSwap(c)}/>)}
         {overlay && <Line dataKey="ma20" name="Media 20" stroke="#f59e0b" dot={false} strokeWidth={1.8}/>}
         {selectedTechnical === "ma" && <Line dataKey="ma60" name="Media 60" stroke="#10b981" dot={false} strokeWidth={1.8}/>}
         {selectedTechnical === "bollinger" && ["upper", "lower"].map(key => <Line key={key} dataKey={key} name={key === "upper" ? "Banda superior" : "Banda inferior"} stroke="#8b5cf6" strokeDasharray="5 4" dot={false}/>)}
@@ -134,7 +155,7 @@ export function HistoricalDashboard() {
             <YAxis domain={["auto", "auto"]} tickFormatter={value => Number(value).toFixed(1)}/>
             <Tooltip formatter={value => [`${Number(value).toFixed(2)} pb`, spread.label]}/>
             <ReferenceLine y={spread.average} stroke="#d94b4b" strokeWidth={1.8} strokeDasharray="6 4" ifOverflow="extendDomain"/>
-            <Line dataKey="spread" name={spread.label} type="linear" stroke="#0f9f6e" strokeWidth={2} dot={false} connectNulls={false} isAnimationActive={false}/>
+            <Line dataKey="spread" name={spread.label} type="linear" stroke="#0f9f6e" strokeWidth={2} dot={false} connectNulls={isSwap(spread.right)} isAnimationActive={false}/>
           </LineChart></ResponsiveContainer></div>
           <p className="technical-description">Promedio del período: <span style={{ color: "var(--red)" }}>{spread.average.toFixed(2)} pb</span> · línea roja punteada.</p>
         </>}
@@ -159,6 +180,6 @@ export function HistoricalDashboard() {
       </ComposedChart></ResponsiveContainer></div></div>}
       {selectedTechnical && !hasIndicatorData && <p className="technical-description" role="status">Historia insuficiente para calcular este indicador en el período seleccionado.</p>}
     </section>
-    <div className="note">{selectedTechnical ? "El indicador usa solamente el instrumento principal. Seleccionar un BTP o BTU adicional desactiva el indicador y permite comparar nuevamente. Las ventanas usan observaciones disponibles y se calculan antes de recortar el período visible." : "Puedes comparar hasta 4 series simultáneamente. En Yield, las comparaciones deben ser todas BTP o todas BTU; seleccionar el otro grupo reemplaza las anteriores. La volatilidad usa desviación estándar muestral de 10, 30 o 90 cambios diarios de yield."}</div>
+    <div className="note">{selectedTechnical ? "El indicador usa solamente el instrumento principal. Seleccionar un BTP o BTU adicional desactiva el indicador y permite comparar nuevamente. Las ventanas usan observaciones disponibles y se calculan antes de recortar el período visible." : "Puedes comparar hasta 4 series simultáneamente. En Yield, las comparaciones deben ser todas BTP o todas BTU; seleccionar el otro grupo reemplaza las anteriores. Un BTP se puede comparar con swaps Cámara CLP y un BTU con swaps Cámara UF; el gráfico de diferencia muestra bono − swap en pb. La volatilidad usa desviación estándar muestral de 10, 30 o 90 cambios diarios de yield."}</div>
   </AppShell>;
 }
