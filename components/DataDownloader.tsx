@@ -8,6 +8,9 @@ import { buildTable, toCsv, toXlsx, type ExportColumn, type ExportMeta, type Fre
 
 type Period = "1m" | "3m" | "1y" | "5y" | "all" | "custom";
 type Format = "xlsx" | "csv-cl" | "csv";
+// Descarga deshabilitada temporalmente (sitio público). Cambiar a true para habilitarla.
+const DOWNLOAD_ENABLED = false;
+
 const PERIODS: [Period, string][] = [["1m", "1M"], ["3m", "3M"], ["1y", "1A"], ["5y", "5A"], ["all", "Todo"]];
 const BOND_FIELDS = [["tir", "TIR"], ["duracion", "Duración"], ["precio", "Precio"], ["convexidad", "Convexidad"]] as const;
 const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -90,6 +93,7 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
   const shownFrom = period === "custom" ? from : (range.from ?? firstDate), shownTo = period === "custom" ? to : lastDate;
 
   const download = () => {
+    if (!DOWNLOAD_ENABLED) return;
     const stamp = (table.rows.at(-1)?.[0] ?? lastDate).replace(/-/g, "");
     const name = `rfchilena_${stamp}.${format === "xlsx" ? "xlsx" : "csv"}`;
     const blob = format === "xlsx"
@@ -161,9 +165,9 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
           <p className="db-hint">{format === "xlsx" ? "Hoja Datos + hoja Descripción con fuente y unidad de cada columna." : format === "csv-cl" ? "Separador ; y coma decimal: abre directo en Excel en español." : "Separador , y punto decimal: para Python, R u otros."}</p>
         </div>
         {error && <div className="model-notice" role="alert">{error}</div>}
-        <button className="db-download" disabled={!selected.length || !ready || !table.rows.length} onClick={download}>
+        <button className="db-download" disabled={!DOWNLOAD_ENABLED || !selected.length || !ready || !table.rows.length} onClick={download} title={DOWNLOAD_ENABLED ? undefined : "Descarga deshabilitada"}>
           <Download size={16} aria-hidden="true" />
-          {!selected.length ? "Elige al menos una serie" : !ready ? "Cargando datos…" : `Descargar ${columns.length} ${columns.length === 1 ? "columna" : "columnas"} · ${table.rows.length.toLocaleString("es-CL")} filas`}
+          {!DOWNLOAD_ENABLED ? "Descarga deshabilitada" : !selected.length ? "Elige al menos una serie" : !ready ? "Cargando datos…" : `Descargar ${columns.length} ${columns.length === 1 ? "columna" : "columnas"} · ${table.rows.length.toLocaleString("es-CL")} filas`}
         </button>
       </aside>
     </div>
