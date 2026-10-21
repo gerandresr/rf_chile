@@ -41,8 +41,20 @@ export default function InflationPage() {
         </div>
         <div className="asof"><span>Cierre ICAP</span><strong>{icapData.fecha}</strong></div>
       </header>
-      <InflationMonthlyChart observed={observed} expected={expected} />
-      <TpmProbabilities data={tpmModelData()} />
+      <section className="page-block" aria-labelledby="bloque-ipc">
+        <div className="page-block-head">
+          <h2 id="bloque-ipc">IPC Mensual</h2>
+          <p>Variación mensual observada y esperada por el mercado (forwards de inflación ICAP).</p>
+        </div>
+        <InflationMonthlyChart observed={observed} expected={expected} />
+      </section>
+      <section className="page-block" aria-labelledby="bloque-tpm">
+        <div className="page-block-head">
+          <h2 id="bloque-tpm">TPM Esperada por mercado</h2>
+          <p>Probabilidad de cada nivel de TPM por reunión del Consejo, implícita en los swaps Cámara.</p>
+        </div>
+        <TpmProbabilities data={tpmModelData()} />
+      </section>
     </AppShell>
   );
 }
