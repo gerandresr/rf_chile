@@ -109,6 +109,7 @@ export type DashboardData = {
   ticker: TickerItem[];
   macro: { label: string; value: string; detail: string }[];
   benchmarks: BenchmarkRow[];
+  benchmarkPapers: { BTP: string[]; BTU: string[] };
   curves: CurveSet[];
   spreads: SpreadCard[];
   monitor: { key: string; label: string; unit: "%" | "% mensual"; rows: MonitorRow[] }[];
@@ -297,5 +298,5 @@ export function dashboardData(): DashboardData {
     { key: "DPF", label: "DPF", unit: "% mensual" as const, rows: dpfRows },
   ];
 
-  return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg }, ticker, macro, benchmarks, curves, spreads, monitor };
+  return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg }, ticker, macro, benchmarks, benchmarkPapers: { BTP: benchmark.BTP ?? [], BTU: benchmark.BTU ?? [] }, curves, spreads, monitor };
 }

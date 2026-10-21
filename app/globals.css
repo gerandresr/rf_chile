@@ -240,3 +240,6 @@
 .dash-bench th:not(:first-child),.dash-bench td:not(:first-child){text-align:right}
 .dash-bench td{padding:11px 10px;font-size:14px;font-variant-numeric:tabular-nums}
 .dash-live{background:#e5f6ed;color:#176b44;font-weight:700}
+.dash-papers{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:11px;line-height:1.7;color:var(--muted)}
+.dash-papers strong{display:block;color:var(--text);font-size:11px}
+.dash-papers b{color:var(--text);font-weight:650}

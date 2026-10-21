@@ -46,7 +46,7 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
   </div>;
 }
 
-function Benchmarks({ rows }: { rows: BenchmarkRow[] }) {
+function Benchmarks({ rows, papers }: { rows: BenchmarkRow[]; papers: DashboardData["benchmarkPapers"] }) {
   const officialDate = rows[0]?.date ?? "";
   const [estimate, setEstimate] = useState<BenchmarkEstimate | null>(null);
   const [failed, setFailed] = useState(false);
@@ -83,8 +83,13 @@ function Benchmarks({ rows }: { rows: BenchmarkRow[] }) {
     <p className="dash-note">
       {estimate ? `Cierre hoy est. = estimación de las ${estimate.hora}; Δ hoy contra el cierre oficial del ${day(officialDate)}.`
         : failed ? "No se pudo leer el archivo de estimaciones: se muestra el cierre oficial." : `Sin estimación para hoy: se muestra el cierre oficial del ${day(officialDate)} (Δ hoy = 0).`}
-      {" "}MTD y YTD contra el último cierre del mes y del año anteriores. PESOS = BTP, UF = BTU; papeles benchmark de instrumentos-benchmark.json.
+      {" "}MTD y YTD contra el último cierre del mes y del año anteriores.
     </p>
+    <div className="dash-papers">
+      <strong>Papeles a considerar</strong>
+      <div><b>BTP:</b> {papers.BTP.join(", ")}</div>
+      <div><b>BTU:</b> {papers.BTU.join(", ")}</div>
+    </div>
   </section>;
 }
 
@@ -188,7 +193,7 @@ export function DashboardRF({ data }: { data: DashboardData }) {
     </header>
     <div className="dash-ticker">{data.ticker.map(t => <Ticker key={t.label} item={t} />)}</div>
     <div className="dash-macro">{data.macro.map(m => <div key={m.label}><span>{m.label}</span><strong>{m.value}</strong><em>{m.detail}</em></div>)}</div>
-    <div className="dash-grid"><Benchmarks rows={data.benchmarks} /><Curves curves={data.curves} /></div>
+    <div className="dash-grid"><Benchmarks rows={data.benchmarks} papers={data.benchmarkPapers} /><Curves curves={data.curves} /></div>
     <section className="dash-spreads-section">
       <div className="panel-head"><div><div className="eyebrow">Valor relativo</div><h2>Spreads clave</h2></div><span className="pill">Rango y percentil del último año</span></div>
       <div className="dash-spreads">{data.spreads.map(s => <Spread key={s.label} s={s} />)}</div>
