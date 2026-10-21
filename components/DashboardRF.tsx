@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "./AppShell";
-import type { Changes, DashboardData, MonitorRow, SpreadCard, TickerItem } from "@/lib/dashboard.server";
+import type { BenchmarkRow, Changes, DashboardData, MonitorRow, SpreadCard, TickerItem } from "@/lib/dashboard.server";
+import { chileToday, latestBenchmarkEstimate, type BenchmarkEstimate } from "@/lib/benchmark-estimates";
 
 const fmt = (v: number, d = 2) => new Intl.NumberFormat("es-CL", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
 const sgn = (v: number, d = 1) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${fmt(Math.abs(v), d)}`;
@@ -13,11 +14,6 @@ const tenorLabel = (t: number) => t < 1 ? `${Math.round(t * 12)}m` : `${t}a`;
 // Convención del sitio: azul = baja de tasa (favorable para el tenedor), rojo = alza.
 const BLUE = "#2f6fed", RED = "#d94b4b";
 const tone = (v: number | null | undefined, goodWhenDown = true) => v == null || Math.abs(v) < 1e-9 ? "dash-flat" : (v < 0) === goodWhenDown ? "dash-down" : "dash-up";
-const heat = (bp: number | null) => {
-  if (bp == null) return undefined;
-  const a = Math.min(Math.abs(bp) / 30, 1) * 0.55;
-  return bp < 0 ? `rgba(47, 111, 237, ${a.toFixed(3)})` : `rgba(217, 75, 75, ${a.toFixed(3)})`;
-};
 
 function Sparkline({ values, width = 84, height = 24, color = "#64748b" }: { values: number[]; width?: number; height?: number; color?: string }) {
   if (values.length < 2) return <span className="muted">—</span>;
@@ -43,7 +39,6 @@ function Ticker({ item }: { item: TickerItem }) {
 }
 
 type Period = keyof Changes;
-const PERIODS: [Period, string][] = [["d1", "1D"], ["w1", "1S"], ["m1", "1M"], ["ytd", "YTD"]];
 
 function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label: string }) {
   return <div className="segmented" role="group" aria-label={label}>
@@ -51,18 +46,45 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
   </div>;
 }
 
-function Heatmap({ data }: { data: DashboardData["heatmap"] }) {
-  const [period, setPeriod] = useState<Period>("d1");
+function Benchmarks({ rows }: { rows: BenchmarkRow[] }) {
+  const officialDate = rows[0]?.date ?? "";
+  const [estimate, setEstimate] = useState<BenchmarkEstimate | null>(null);
+  const [failed, setFailed] = useState(false);
+  // La estimación del día se lee en el navegador (sin caché): si el archivo trae una estimación de hoy
+  // posterior al cierre oficial, reemplaza el cierre; si no, se muestra el cierre del día anterior.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/data/cierre-estimado-rf.json", { cache: "no-store" })
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(json => { if (!cancelled) setEstimate(latestBenchmarkEstimate(json, officialDate, chileToday())); })
+      .catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, [officialDate]);
+  const bp = (v: number | null, d = 0) => v == null ? "—" : `${sgn(v, d)} pb`;
   return <section className="panel dash-panel">
-    <div className="panel-head"><div><div className="eyebrow">Cambios en pb</div><h2>¿Qué se movió?</h2></div><Segmented value={period} options={PERIODS} onChange={setPeriod} label="Período" /></div>
-    <div className="table-wrap"><table className="dash-heat">
-      <thead><tr><th>Plazo</th>{data.columns.map(c => <th key={c}>{c}</th>)}</tr></thead>
-      <tbody>{data.rows.map((r, i) => <tr key={r}><td className="strong">{r} años</td>{data.cells[i].map((c, j) => {
-        const v = c.changes[period];
-        return <td key={j} style={{ background: heat(v) }}><div className="dash-heat-change">{v == null ? "—" : sgn(v, 1)}</div><div className="dash-heat-level">{c.level == null ? "" : `${fmt(c.level, 2)}%`}</div></td>;
-      })}</tr>)}</tbody>
+    <div className="panel-head"><div><div className="eyebrow">Cierre oficial y estimación intradía</div><h2>Tasas Benchmark</h2></div>
+      <span className={estimate ? "pill dash-live" : "pill"}>{estimate ? `Estimación ${estimate.hora} (Chile)` : `Cierre ${day(officialDate)}`}</span></div>
+    <div className="table-wrap"><table className="dash-bench">
+      <thead><tr><th>Benchmark</th><th>Cierre hoy est.</th><th>Δ hoy</th><th>MTD</th><th>YTD</th></tr></thead>
+      <tbody>{rows.map(r => {
+        const est = estimate?.benchmark[r.code as keyof BenchmarkEstimate["benchmark"]] ?? r.close;
+        const dayChange = est != null && r.close != null ? (est - r.close) * 100 : null;
+        const mtd = est != null && r.mtdBase != null ? (est - r.mtdBase) * 100 : null;
+        const ytd = est != null && r.ytdBase != null ? (est - r.ytdBase) * 100 : null;
+        return <tr key={r.code}>
+          <td className="strong">{r.code}</td>
+          <td className="strong">{est == null ? "—" : `${fmt(est, 2)}%`}</td>
+          <td className={tone(dayChange)}>{bp(dayChange, 1)}</td>
+          <td className={tone(mtd)}>{bp(mtd)}</td>
+          <td className={tone(ytd)}>{bp(ytd)}</td>
+        </tr>;
+      })}</tbody>
     </table></div>
-    <p className="dash-note">Azul: baja de tasa · rojo: alza. Breakeven = compensación inflacionaria BTP/BTU. Intensidad máxima en ±30 pb.</p>
+    <p className="dash-note">
+      {estimate ? `Cierre hoy est. = estimación de las ${estimate.hora}; Δ hoy contra el cierre oficial del ${day(officialDate)}.`
+        : failed ? "No se pudo leer el archivo de estimaciones: se muestra el cierre oficial." : `Sin estimación para hoy: se muestra el cierre oficial del ${day(officialDate)} (Δ hoy = 0).`}
+      {" "}MTD y YTD contra el último cierre del mes y del año anteriores. PESOS = BTP, UF = BTU; papeles benchmark de instrumentos-benchmark.json.
+    </p>
   </section>;
 }
 
@@ -166,7 +188,7 @@ export function DashboardRF({ data }: { data: DashboardData }) {
     </header>
     <div className="dash-ticker">{data.ticker.map(t => <Ticker key={t.label} item={t} />)}</div>
     <div className="dash-macro">{data.macro.map(m => <div key={m.label}><span>{m.label}</span><strong>{m.value}</strong><em>{m.detail}</em></div>)}</div>
-    <div className="dash-grid"><Heatmap data={data.heatmap} /><Curves curves={data.curves} /></div>
+    <div className="dash-grid"><Benchmarks rows={data.benchmarks} /><Curves curves={data.curves} /></div>
     <section className="dash-spreads-section">
       <div className="panel-head"><div><div className="eyebrow">Valor relativo</div><h2>Spreads clave</h2></div><span className="pill">Rango y percentil del último año</span></div>
       <div className="dash-spreads">{data.spreads.map(s => <Spread key={s.label} s={s} />)}</div>

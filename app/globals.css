@@ -236,3 +236,7 @@
 .db-preview td{font-variant-numeric:tabular-nums}
 @media(max-width:1100px){.db-layout{grid-template-columns:1fr}.db-config{position:static}}
 @media(max-width:600px){.db-list{grid-template-columns:1fr}}
+.dash-bench{min-width:420px}
+.dash-bench th:not(:first-child),.dash-bench td:not(:first-child){text-align:right}
+.dash-bench td{padding:11px 10px;font-size:14px;font-variant-numeric:tabular-nums}
+.dash-live{background:#e5f6ed;color:#176b44;font-weight:700}

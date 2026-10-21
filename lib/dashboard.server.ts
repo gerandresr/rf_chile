@@ -98,6 +98,8 @@ function interpolate(term: number, points: { term: number; y: number }[], flat: 
 
 export type TickerItem = { label: string; value: number; unit: "%" | "pb" | ""; digits: number; change: number | null; changeUnit: "pb" | "%"; spark: number[]; asOf: string };
 export type HeatCell = { level: number | null; changes: Changes };
+/** Tasa benchmark al cierre oficial, con las bases de MTD (último cierre del mes anterior) y YTD (último cierre del año anterior). */
+export type BenchmarkRow = { code: string; date: string; close: number | null; mtdBase: number | null; ytdBase: number | null };
 export type SpreadCard = { label: string; detail: string; value: number; unit: "pb" | "%"; changes: Changes; percentile: number | null; min: number; max: number; spark: number[]; reference?: { label: string; value: number } };
 export type MonitorRow = { code: string; detail: string; duration: number | null; value: number; changes: Changes; spark: number[]; percentile: number | null;
   aswDuration?: number | null; aswMaturity?: number | null; carry1d?: number | null };
@@ -106,7 +108,7 @@ export type DashboardData = {
   asOf: { bonds: string; bloomberg: string };
   ticker: TickerItem[];
   macro: { label: string; value: string; detail: string }[];
-  heatmap: { rows: number[]; columns: string[]; cells: HeatCell[][] };
+  benchmarks: BenchmarkRow[];
   curves: CurveSet[];
   spreads: SpreadCard[];
   monitor: { key: string; label: string; unit: "%" | "% mensual"; rows: MonitorRow[] }[];
@@ -179,10 +181,13 @@ export function dashboardData(): DashboardData {
   }
   if (meetings[0]) macro.push({ label: "Próxima RPM", value: new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${meetings[0]}T00:00:00Z`)), detail: `${Math.round((toTime(meetings[0]) - toTime(lastBloomberg)) / DAY)} días` });
 
-  // Mapa de calor
-  const columns = ["BTP", "BTU", "SPC CLP", "SPC UF", "Breakeven"];
-  const columnSeries = (c: string, t: number) => c === "BTP" ? cm.BTP[t] : c === "BTU" ? cm.BTU[t] : c === "SPC CLP" ? swapsCLP[t] : c === "SPC UF" ? swapsUF[t] : breakeven[t];
-  const cells = tenors.map(t => columns.map(c => { const s = columnSeries(c, t); return { level: s.values.length ? last(s) : null, changes: changes(s, "bp") }; }));
+  // Tasas benchmark (misma metodología que Mercados): PESOS-xx = BTP, UF-xx = BTU a 2, 5 y 10 años.
+  const before = (ser: Series, date: string) => { const i = indexOnOrBefore(ser, iso(toTime(date) - DAY)); return i < 0 ? null : ser.values[i]; };
+  const benchmarks: BenchmarkRow[] = ([["PESOS", "BTP"], ["UF", "BTU"]] as const).flatMap(([prefix, type]) => [2, 5, 10].map(t => {
+    const ser = cm[type][t], date = lastDate(ser);
+    return { code: `${prefix}-${String(t).padStart(2, "0")}`, date, close: ser.values.length ? last(ser) : null,
+      mtdBase: before(ser, `${date.slice(0, 7)}-01`), ytdBase: before(ser, `${date.slice(0, 4)}-01-01`) };
+  }));
 
   // Curvas con comparación
   const refDates = (dates: string[]) => {
@@ -292,5 +297,5 @@ export function dashboardData(): DashboardData {
     { key: "DPF", label: "DPF", unit: "% mensual" as const, rows: dpfRows },
   ];
 
-  return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg }, ticker, macro, heatmap: { rows: tenors, columns, cells }, curves, spreads, monitor };
+  return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg }, ticker, macro, benchmarks, curves, spreads, monitor };
 }
