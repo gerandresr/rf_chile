@@ -486,8 +486,15 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
 
   return <AppShell>
     <header className="page-head">
-      <div><div className="eyebrow">Herramientas</div><h1>Gráficos</h1><p>Arma tu propio gráfico: elige series, estilos, rango y anotaciones, y descárgalo como imagen.</p></div>
+      <div><div className="eyebrow">Herramientas</div><h1>Personaliza tu gráfico</h1><p>Combina series financieras, ajusta el diseño y destaca los movimientos que quieras analizar.</p></div>
     </header>
+    {recommended.length > 0 && <section className="panel cb-block cb-recommended-top">
+      <h2>Gráficos recomendados</h2>
+      <p className="db-hint">Empieza con un gráfico preparado y personalízalo con tus propias series y anotaciones.</p>
+      <div className="cb-recs">{recommended.map(r => <button key={r.nombre} className="cb-rec" onClick={() => { setConfig({ ...DEFAULT_CONFIG, annotations: [], ...r.config } as Config); window.history.replaceState(null, "", window.location.pathname); flash(`Abierto “${r.nombre}”.`); }}>
+        <strong>{r.nombre}</strong>{r.config.subtitle && <span>{resolveText(r.config.subtitle, r.config.series ?? [])}</span>}
+      </button>)}</div>
+    </section>}
     <div className="cb-layout">
       <aside className="cb-side">
         <section className="panel cb-block">
@@ -522,69 +529,6 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
               </div>
             </div>;
           })}</div>
-        </section>
-
-        <section className="panel cb-block">
-          <h2>Líneas verticales y hechos relevantes</h2>
-          <div className="cb-series-grid">
-            <label className="cb-wide">Texto<input value={ev.label} onChange={e => setEv(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: RPM, estallido social, COVID…" /></label>
-            <label>Marca<select value={ev.style} onChange={e => setEv(d => ({ ...d, style: e.target.value as "line" | "arrow" }))}><option value="line">Línea vertical</option><option value="arrow">Flecha al punto</option></select></label>
-            <label>Color<input type="color" value={ev.color} onChange={e => setEv(d => ({ ...d, color: e.target.value }))} /></label>
-            <label>Tipo de línea<select value={ev.dash} onChange={e => setEv(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
-            <label>Grosor<select value={ev.width} onChange={e => setEv(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
-            {ev.style === "arrow" && <>
-              <label>Serie<select value={ev.seriesUid} onChange={e => setEv(d => ({ ...d, seriesUid: e.target.value }))}><option value="">Primera serie</option>{visible.map(s => <option key={s.uid} value={s.uid}>{s.label}</option>)}</select></label>
-              <label>Dirección<select value={ev.dir} onChange={e => setEv(d => ({ ...d, dir: e.target.value as "down" | "up" }))}><option value="down">Desde arriba ↓</option><option value="up">Desde abajo ↑</option></select></label>
-            </>}
-          </div>
-          <button className={`cb-btn ${mode === "event" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "event" ? "none" : "event")}><MousePointerClick size={14} aria-hidden="true" />{mode === "event" ? "Haz clic en el gráfico…" : "Marcar con clic en el gráfico"}</button>
-          {annotationList(a => a.kind === "vline" || a.kind === "arrow")}
-        </section>
-
-        <section className="panel cb-block">
-          <h2>Líneas horizontales</h2>
-          <div className="cb-series-grid">
-            <label className="cb-wide">Texto<input value={hl.label} onChange={e => setHl(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: TPM, meta 3%, máximo…" /></label>
-            <label>Texto a la<select value={hl.pos} onChange={e => setHl(d => ({ ...d, pos: e.target.value as "left" | "right" }))}><option value="left">Izquierda</option><option value="right">Derecha</option></select></label>
-            <label>Eje<select value={hl.axis} onChange={e => setHl(d => ({ ...d, axis: e.target.value as Axis }))}><option value="left">Izquierdo</option><option value="right">Derecho</option></select></label>
-            <label>Color línea<input type="color" value={hl.color} onChange={e => setHl(d => ({ ...d, color: e.target.value }))} /></label>
-            <label>Color texto<input type="color" value={hl.textColor} onChange={e => setHl(d => ({ ...d, textColor: e.target.value }))} /></label>
-            <label>Tipo de línea<select value={hl.dash} onChange={e => setHl(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
-            <label>Grosor<select value={hl.width} onChange={e => setHl(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
-          </div>
-          <div className="cb-inline"><input value={hl.value} onChange={e => setHl(d => ({ ...d, value: e.target.value }))} placeholder="Nivel, ej. 4,5" aria-label="Nivel de la línea horizontal" onKeyDown={e => { if (e.key === "Enter") addHLineTyped(); }} /><button className="cb-btn" onClick={addHLineTyped}><Plus size={14} aria-hidden="true" />Agregar</button></div>
-          <button className={`cb-btn ${mode === "hline" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "hline" ? "none" : "hline")}><MousePointerClick size={14} aria-hidden="true" />{mode === "hline" ? "Haz clic en el nivel…" : "Marcar con clic en el gráfico"}</button>
-          <p className="db-hint">Atajo: haz clic directamente sobre el eje Y en el nivel que quieras.</p>
-          {annotationList(a => a.kind === "hline")}
-        </section>
-
-        <section className="panel cb-block">
-          <h2>Formas</h2>
-          <div className="cb-tools">{([["arrow", "Flecha", MoveUpRight], ["ellipse", "Círculo", Circle], ["rect", "Cuadrado", Square], ["text", "Texto", Type]] as const).map(([k, l, Icon]) =>
-            <button key={k} className={`cb-btn ${mode === "shape" && sh.tool === k ? "cb-armed" : ""}`} onClick={() => { setSh(d => ({ ...d, tool: k })); setMode(m => m === "shape" && sh.tool === k ? "none" : "shape"); }}><Icon size={14} aria-hidden="true" />{l}</button>)}</div>
-          <div className="cb-series-grid">
-            <label>Color<input type="color" value={sh.color} onChange={e => setSh(d => ({ ...d, color: e.target.value }))} /></label>
-            {sh.tool === "text" ? <>
-              <label>Tamaño<select value={sh.size} onChange={e => setSh(d => ({ ...d, size: Number(e.target.value) }))}>{[11, 13, 16, 20, 24, 32].map(n => <option key={n} value={n}>{n} px</option>)}</select></label>
-              <label className="cb-check"><input type="checkbox" checked={sh.bold} onChange={e => setSh(d => ({ ...d, bold: e.target.checked }))} />Negrita</label>
-            </> : <>
-              <label>Grosor<select value={sh.width} onChange={e => setSh(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
-              <label>Tipo de línea<select value={sh.dash} onChange={e => setSh(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
-              {sh.tool !== "arrow" && <label className="cb-check"><input type="checkbox" checked={sh.fill} onChange={e => setSh(d => ({ ...d, fill: e.target.checked }))} />Relleno suave</label>}
-            </>}
-          </div>
-          <p className="db-hint">{sh.tool === "text" ? "Elige Texto y haz clic en el gráfico: se abre un cuadro para escribir (Enter para confirmar). Doble clic sobre un texto para editarlo." : "Elige la forma y arrástrala sobre el gráfico."} Todo se puede mover arrastrándolo.</p>
-          {annotationList(a => a.kind === "farrow" || a.kind === "shape" || a.kind === "text")}
-        </section>
-
-        <section className="panel cb-block">
-          <h2>Otros</h2>
-          <div className="cb-series-grid">
-            <label className="cb-check"><input type="checkbox" checked={config.yAxis !== false} onChange={e => set({ yAxis: e.target.checked })} />Eje vertical</label>
-            <label className="cb-check"><input type="checkbox" checked={config.grid} onChange={e => set({ grid: e.target.checked })} />Grilla horizontal</label>
-            <label className="cb-check"><input type="checkbox" checked={!!config.gridV} onChange={e => set({ gridV: e.target.checked })} />Grilla vertical</label>
-            <label className="cb-check"><input type="checkbox" checked={!!config.lastValue} onChange={e => set({ lastValue: e.target.checked })} />Último dato al final</label>
-          </div>
         </section>
 
         <section className="panel cb-block">
@@ -670,13 +614,80 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
           {config.source && <p className="dash-note">{config.source}</p>}
         </section>
 
+        <section className="cb-annotations-section" aria-label="Herramientas de anotación">
+          <div className="cb-annotations-head"><h2>Anotaciones</h2><p>Personaliza tu gráfico con eventos, referencias y elementos visuales.</p></div>
+          <div className="cb-annotations-grid">
+            <section className="panel cb-block">
+              <h2>Líneas verticales</h2>
+              <p className="db-hint">Destaca acontecimientos importantes: agrega tus propios eventos o utiliza referencias de la lista cuando estén disponibles.</p>
+              <div className="cb-series-grid">
+                <label className="cb-wide">Texto<input value={ev.label} onChange={e => setEv(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: RPM, estallido social, COVID…" /></label>
+                <label>Marca<select value={ev.style} onChange={e => setEv(d => ({ ...d, style: e.target.value as "line" | "arrow" }))}><option value="line">Línea vertical</option><option value="arrow">Flecha al punto</option></select></label>
+                <label>Color<input type="color" value={ev.color} onChange={e => setEv(d => ({ ...d, color: e.target.value }))} /></label>
+                <label>Tipo de línea<select value={ev.dash} onChange={e => setEv(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
+                <label>Grosor<select value={ev.width} onChange={e => setEv(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
+                {ev.style === "arrow" && <>
+                  <label>Serie<select value={ev.seriesUid} onChange={e => setEv(d => ({ ...d, seriesUid: e.target.value }))}><option value="">Primera serie</option>{visible.map(s => <option key={s.uid} value={s.uid}>{s.label}</option>)}</select></label>
+                  <label>Dirección<select value={ev.dir} onChange={e => setEv(d => ({ ...d, dir: e.target.value as "down" | "up" }))}><option value="down">Desde arriba ↓</option><option value="up">Desde abajo ↑</option></select></label>
+                </>}
+              </div>
+              <button className={`cb-btn ${mode === "event" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "event" ? "none" : "event")}><MousePointerClick size={14} aria-hidden="true" />{mode === "event" ? "Haz clic en el gráfico…" : "Marcar con clic en el gráfico"}</button>
+              {annotationList(a => a.kind === "vline" || a.kind === "arrow")}
+            </section>
+
+            <section className="panel cb-block">
+              <h2>Líneas horizontales</h2>
+              <p className="db-hint">Marca promedios, objetivos, máximos, mínimos u otros niveles de referencia para comparar las series.</p>
+              <div className="cb-series-grid">
+                <label className="cb-wide">Texto<input value={hl.label} onChange={e => setHl(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: TPM, meta 3%, máximo…" /></label>
+                <label>Texto a la<select value={hl.pos} onChange={e => setHl(d => ({ ...d, pos: e.target.value as "left" | "right" }))}><option value="left">Izquierda</option><option value="right">Derecha</option></select></label>
+                <label>Eje<select value={hl.axis} onChange={e => setHl(d => ({ ...d, axis: e.target.value as Axis }))}><option value="left">Izquierdo</option><option value="right">Derecho</option></select></label>
+                <label>Color línea<input type="color" value={hl.color} onChange={e => setHl(d => ({ ...d, color: e.target.value }))} /></label>
+                <label>Color texto<input type="color" value={hl.textColor} onChange={e => setHl(d => ({ ...d, textColor: e.target.value }))} /></label>
+                <label>Tipo de línea<select value={hl.dash} onChange={e => setHl(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
+                <label>Grosor<select value={hl.width} onChange={e => setHl(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
+              </div>
+              <div className="cb-inline"><input value={hl.value} onChange={e => setHl(d => ({ ...d, value: e.target.value }))} placeholder="Nivel, ej. 4,5" aria-label="Nivel de la línea horizontal" onKeyDown={e => { if (e.key === "Enter") addHLineTyped(); }} /><button className="cb-btn" onClick={addHLineTyped}><Plus size={14} aria-hidden="true" />Agregar</button></div>
+              <button className={`cb-btn ${mode === "hline" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "hline" ? "none" : "hline")}><MousePointerClick size={14} aria-hidden="true" />{mode === "hline" ? "Haz clic en el nivel…" : "Marcar con clic en el gráfico"}</button>
+              <p className="db-hint">Atajo: haz clic directamente sobre el eje Y en el nivel que quieras.</p>
+              {annotationList(a => a.kind === "hline")}
+            </section>
+
+            <section className="panel cb-block">
+              <h2>Formas</h2>
+              <p className="db-hint">Destaca zonas y movimientos con flechas, círculos, rectángulos o texto.</p>
+              <div className="cb-tools">{([["arrow", "Flecha", MoveUpRight], ["ellipse", "Círculo", Circle], ["rect", "Cuadrado", Square], ["text", "Texto", Type]] as const).map(([k, l, Icon]) =>
+                <button key={k} className={`cb-btn ${mode === "shape" && sh.tool === k ? "cb-armed" : ""}`} onClick={() => { setSh(d => ({ ...d, tool: k })); setMode(m => m === "shape" && sh.tool === k ? "none" : "shape"); }}><Icon size={14} aria-hidden="true" />{l}</button>)}</div>
+              <div className="cb-series-grid">
+                <label>Color<input type="color" value={sh.color} onChange={e => setSh(d => ({ ...d, color: e.target.value }))} /></label>
+                {sh.tool === "text" ? <>
+                  <label>Tamaño<select value={sh.size} onChange={e => setSh(d => ({ ...d, size: Number(e.target.value) }))}>{[11, 13, 16, 20, 24, 32].map(n => <option key={n} value={n}>{n} px</option>)}</select></label>
+                  <label className="cb-check"><input type="checkbox" checked={sh.bold} onChange={e => setSh(d => ({ ...d, bold: e.target.checked }))} />Negrita</label>
+                </> : <>
+                  <label>Grosor<select value={sh.width} onChange={e => setSh(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
+                  <label>Tipo de línea<select value={sh.dash} onChange={e => setSh(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
+                  {sh.tool !== "arrow" && <label className="cb-check"><input type="checkbox" checked={sh.fill} onChange={e => setSh(d => ({ ...d, fill: e.target.checked }))} />Relleno suave</label>}
+                </>}
+              </div>
+              <p className="db-hint">{sh.tool === "text" ? "Elige Texto y haz clic en el gráfico: se abre un cuadro para escribir (Enter para confirmar). Doble clic sobre un texto para editarlo." : "Elige la forma y arrástrala sobre el gráfico."} Todo se puede mover arrastrándolo.</p>
+              {annotationList(a => a.kind === "farrow" || a.kind === "shape" || a.kind === "text")}
+            </section>
+
+            <section className="panel cb-block">
+              <h2>Otros</h2>
+              <p className="db-hint">Controla la visualización de los ejes, las cuadrículas y los últimos valores.</p>
+              <div className="cb-series-grid">
+                <label className="cb-check"><input type="checkbox" checked={config.yAxis !== false} onChange={e => set({ yAxis: e.target.checked })} />Eje vertical</label>
+                <label className="cb-check"><input type="checkbox" checked={config.grid} onChange={e => set({ grid: e.target.checked })} />Grilla horizontal</label>
+                <label className="cb-check"><input type="checkbox" checked={!!config.gridV} onChange={e => set({ gridV: e.target.checked })} />Grilla vertical</label>
+                <label className="cb-check"><input type="checkbox" checked={!!config.lastValue} onChange={e => set({ lastValue: e.target.checked })} />Último dato al final</label>
+              </div>
+            </section>
+
+          </div>
+        </section>
+
         <section className="panel cb-block">
-          {recommended.length > 0 && <>
-            <h2>Gráficos recomendados</h2>
-            <div className="cb-recs">{recommended.map(r => <button key={r.nombre} className="cb-rec" onClick={() => { setConfig({ ...DEFAULT_CONFIG, annotations: [], ...r.config } as Config); window.history.replaceState(null, "", window.location.pathname); flash(`Abierto “${r.nombre}”.`); }}>
-              <strong>{r.nombre}</strong>{r.config.subtitle && <span>{resolveText(r.config.subtitle, r.config.series ?? [])}</span>}
-            </button>)}</div>
-          </>}
           <h2>Guardar</h2>
           <div className="cb-inline"><input value={saveName} onChange={e => setSaveName(e.target.value)} placeholder={config.title || "Nombre del gráfico"} aria-label="Nombre para guardar" /><button className="cb-btn" onClick={saveChart}><Save size={14} aria-hidden="true" />Guardar en este navegador</button></div>
           {Object.keys(saved).length > 0 ? <ul className="cb-annots">{Object.keys(saved).sort().map(name => <li key={name}><button className="db-link" onClick={() => { setConfig({ ...DEFAULT_CONFIG, ...saved[name] }); flash(`Abierto “${name}”.`); }}>{name}</button><button className="cb-icon" onClick={() => removeSaved(name)} title="Borrar"><Trash2 size={13} /></button></li>)}</ul>
