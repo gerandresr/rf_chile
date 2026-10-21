@@ -36,7 +36,7 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
   const byId = useMemo(() => new Map(catalog.groups.flatMap(g => g.series.map(s => [s.id, s] as const))), [catalog]);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
-  const [open, setOpen] = useState<Record<string, boolean>>({ "Bonos BTP (pesos)": true });
+  const [open, setOpen] = useState<Record<string, boolean>>({});
   const [period, setPeriod] = useState<Period>("1y");
   const [from, setFrom] = useState(""), [to, setTo] = useState("");
   const [fields, setFields] = useState<string[]>(["tir"]);
@@ -106,7 +106,7 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
 
   return <AppShell>
     <header className="page-head">
-      <div><div className="eyebrow">Históricos</div><h1>Nueva base de datos</h1><p>Elige series, ajusta período y frecuencia, revisa y descarga en Excel o CSV.</p></div>
+      <div><div className="eyebrow">Históricos</div><h1>Base de Datos</h1><p>Elige series, ajusta período y frecuencia, revisa y descarga en Excel o CSV.</p></div>
     </header>
     <div className="db-layout">
       <section className="panel db-picker">

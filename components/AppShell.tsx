@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, LayoutDashboard, Landmark, FlaskConical, Calculator, Database, DatabaseZap, Lightbulb, LineChart, TrendingUp } from "lucide-react";
+import { Activity, BarChart3, LayoutDashboard, Landmark, FlaskConical, Calculator, Database, Lightbulb, LineChart, TrendingUp } from "lucide-react";
 import { VisitorCounter } from "./VisitorCounter";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -18,7 +18,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/recomendaciones", label: "Recomendaciones", icon: Lightbulb },
     { href: "/calculadoras", label: "Calculadoras", icon: Calculator },
     { href: "/base-de-datos", label: "Base de Datos", icon: Database },
-    { href: "/nueva-base-de-datos", label: "Nueva base de datos", icon: DatabaseZap },
   ];
 
   return (
