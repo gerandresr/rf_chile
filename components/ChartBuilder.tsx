@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, Bar, Brush, CartesianGrid, ComposedChart, Customized, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowDownRight, Copy, Download, Eye, EyeOff, MousePointerClick, MoveUpRight, Plus, Save, Search, Trash2, Type, X } from "lucide-react";
+import { Circle, Copy, Download, Eye, EyeOff, MousePointerClick, MoveUpRight, Plus, Save, Search, Square, Trash2, Type, X } from "lucide-react";
 import { AppShell } from "./AppShell";
 import type { Catalog, CatalogSeries } from "@/lib/data-catalog.server";
 import { extractSeries } from "@/lib/series-data";
@@ -15,19 +15,25 @@ type Transform = "level" | "d1" | "fromStart" | "base100";
 type Leg = { id: string; field: string };
 type Source = { kind: "catalog"; leg: Leg } | { kind: "calc"; op: "diff" | "fly"; legs: Leg[] };
 type PlotSeries = { uid: string; label: string; source: Source; type: ChartType; color: string; width: number; dash: Dash; axis: Axis; transform: Transform; visible: boolean };
+// Los campos opcionales mantienen compatibles los gráficos guardados antes de agregarlos.
 type Annotation =
-  | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string }
-  | { id: string; kind: "vline"; date: string; label: string; color: string }
-  | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up" }
-  | { id: string; kind: "farrow"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number }
+  | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string; textColor?: string; width?: number; dash?: Dash; pos?: "left" | "right" }
+  | { id: string; kind: "vline"; date: string; label: string; color: string; width?: number; dash?: Dash }
+  | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up"; width?: number; dash?: Dash }
+  | { id: string; kind: "farrow"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash?: Dash }
+  | { id: string; kind: "shape"; shape: "ellipse" | "rect"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash: Dash; fill: boolean }
   | { id: string; kind: "text"; x: string; y: number; axis: Axis; text: string; color: string; size: number; bold: boolean };
-type FreeAnnotation = Extract<Annotation, { kind: "farrow" | "text" }>;
-type Mode = "none" | "vline" | "arrow" | "farrow" | "text";
+type FreeAnnotation = Extract<Annotation, { kind: "farrow" | "shape" | "text" }>;
+type ShapeTool = "arrow" | "ellipse" | "rect" | "text";
+/** event = línea vertical o flecha al punto; hline = clic fija el nivel; shape = herramienta de Formas. */
+type Mode = "none" | "event" | "hline" | "shape";
 type PngOptions = { background: "white" | "none"; text: "dark" | "light"; header: boolean };
 type Period = "1m" | "3m" | "1y" | "5y" | "all" | "custom";
 type Config = {
   v: 1; series: PlotSeries[]; annotations: Annotation[]; period: Period; from: string; to: string;
   title: string; subtitle: string; source: string; legend: "top" | "bottom" | "none"; grid: boolean; height: number;
+  /** grid = grilla horizontal (nombre antiguo); gridV = grilla vertical; yAxis = mostrar eje vertical izquierdo. */
+  gridV?: boolean; yAxis?: boolean;
   /** Etiqueta con el último dato al final de cada línea. */
   lastValue?: boolean;
   left: { min: string; max: string }; right: { min: string; max: string };
@@ -35,6 +41,10 @@ type Config = {
 
 const PALETTE = ["#2f6fed", "#d94b4b", "#0f9f6e", "#f59e0b", "#8b5cf6", "#172033", "#0ea5e9", "#64748b"];
 const DASH: Record<Dash, string | undefined> = { solid: undefined, dash: "7 4", dot: "2 3" };
+const DASH_OPTIONS = <><option value="solid">Continua</option><option value="dash">Segmentada</option><option value="dot">Punteada</option></>;
+const WIDTH_OPTIONS = <><option value={1}>Fina</option><option value={1.5}>Normal</option><option value={2.5}>Media</option><option value={3.5}>Gruesa</option></>;
+/** Redondeo "limpio" para niveles elegidos con el mouse (según el rango del eje). */
+const niceRound = (v: number, span: number) => { const step = Math.pow(10, Math.floor(Math.log10(Math.abs(span) || 1)) - 2); return Number((Math.round(v / step) * step).toFixed(6)); };
 const PERIODS: [Period, string][] = [["1m", "1M"], ["3m", "3M"], ["1y", "1A"], ["5y", "5A"], ["all", "Todo"]];
 const TRANSFORMS: [Transform, string][] = [["level", "Nivel"], ["d1", "Cambio diario"], ["fromStart", "Cambio desde inicio"], ["base100", "Base 100"]];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -86,26 +96,32 @@ function ArrowLayer({ xAxisMap, yAxisMap, arrows, rows, series }: { xAxisMap?: A
     const up = a.dir === "up", len = 46, tipY = up ? y + 6 : y - 6, tailY = up ? y + len : y - len;
     const head = up ? `${x},${tipY} ${x - 5},${tipY + 9} ${x + 5},${tipY + 9}` : `${x},${tipY} ${x - 5},${tipY - 9} ${x + 5},${tipY - 9}`;
     return <g key={a.id}>
-      <line x1={x} x2={x} y1={tailY} y2={up ? tipY + 8 : tipY - 8} stroke={a.color} strokeWidth={1.8} />
+      <line x1={x} x2={x} y1={tailY} y2={up ? tipY + 8 : tipY - 8} stroke={a.color} strokeWidth={a.width ?? 1.8} strokeDasharray={DASH[a.dash ?? "solid"]} />
       <polygon points={head} fill={a.color} />
       {a.label && <text x={x} y={up ? tailY + 14 : tailY - 6} textAnchor="middle" fontSize={12} fontWeight={700} fill={a.color} stroke="#fff" strokeWidth={3} paintOrder="stroke">{a.label}</text>}
     </g>;
   })}</g>;
 }
 
-// ---------------- Capa libre: flechas y textos en coordenadas del gráfico ----------------
+// ---------------- Capa libre: formas, textos y líneas horizontales con el mouse ----------------
 type Pt = { date: string; value: number };
+type Px = { x: number; y: number };
+type ShapePreview = { tool: "arrow" | "ellipse" | "rect"; from: Pt; to: Pt; color: string; width: number; dash: Dash; fill: boolean };
 type FreeLayerProps = {
   xAxisMap?: AxisMap; yAxisMap?: AxisMap & Record<string, { scale: { invert?: (v: number) => number } }>; offset?: { left: number; top: number; width: number; height: number };
-  dates: string[]; items: FreeAnnotation[]; mode: Mode; axis: Axis; preview: { from: Pt; to: Pt; color: string; width: number } | null;
-  onPointer: (kind: "down" | "move" | "up", pt: Pt) => void; onGrab: (id: string, pt: Pt) => void; moving: boolean;
+  dates: string[]; items: FreeAnnotation[]; mode: Mode; axis: Axis; preview: ShapePreview | null;
+  onPointer: (kind: "down" | "move" | "up", pt: Pt, px: Px) => void; onGrab: (id: string, pt: Pt) => void; onEditText: (id: string, px: Px) => void; moving: boolean;
+  /** Franjas sobre los ejes Y: clic agrega una línea horizontal en ese nivel (como Bloomberg). */
+  axes: { left: boolean; right: boolean }; ghost: { axis: Axis; value: number } | null;
+  onAxis: (kind: "hover" | "leave" | "click", axis: Axis, value: number) => void;
 };
-function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, preview, onPointer, onGrab, moving }: FreeLayerProps) {
+function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, preview, onPointer, onGrab, onEditText, moving, axes, ghost, onAxis }: FreeLayerProps) {
   const xAxis = xAxisMap ? Object.values(xAxisMap)[0] : undefined;
   if (!xAxis || !yAxisMap || !offset) return null;
   const band = xAxis.scale.bandwidth ? xAxis.scale.bandwidth() / 2 : 0;
   const xOf = (d: string) => { const v = xAxis.scale(d); return typeof v === "number" && !Number.isNaN(v) ? v + band : null; };
-  const yScale = (a: Axis) => (yAxisMap[a] ?? yAxisMap.left)?.scale as unknown as ((v: number) => number) & { invert?: (v: number) => number };
+  type YScale = ((v: number) => number) & { invert?: (v: number) => number; domain?: () => number[] };
+  const yScale = (a: Axis) => (yAxisMap[a] ?? yAxisMap.left)?.scale as unknown as YScale;
   const visibleDates = dates.filter(d => xOf(d) !== null);
   // Píxel → fecha más cercana y valor del eje.
   const toData = (px: number, py: number, a: Axis): Pt | null => {
@@ -115,38 +131,70 @@ function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, previ
     const inv = yScale(a)?.invert;
     return inv ? { date: best, value: inv(py) } : null;
   };
-  const point = (e: React.MouseEvent<SVGElement>) => {
+  const local = (e: React.MouseEvent<SVGElement>): Px => {
     const svg = (e.currentTarget as SVGElement).ownerSVGElement ?? (e.currentTarget as unknown as SVGSVGElement);
     const r = svg.getBoundingClientRect();
-    return toData(e.clientX - r.left, e.clientY - r.top, axis);
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
-  const arrow = (key: string, a: { x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number }, grab?: (e: React.MouseEvent<SVGElement>) => void) => {
+  const box = (a: { x1: string; y1: number; x2: string; y2: number; axis: Axis }) => {
     const x1 = xOf(a.x1), x2 = xOf(a.x2), ys = yScale(a.axis);
     if (x1 === null || x2 === null || !ys) return null;
-    const y1 = ys(a.y1), y2 = ys(a.y2), ang = Math.atan2(y2 - y1, x2 - x1), h = 8 + a.width * 2;
+    return { x1, x2, y1: ys(a.y1), y2: ys(a.y2) };
+  };
+  const arrow = (key: string, a: { x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash?: Dash }, grab?: (e: React.MouseEvent<SVGElement>) => void) => {
+    const b = box(a);
+    if (!b) return null;
+    const { x1, y1, x2, y2 } = b, ang = Math.atan2(y2 - y1, x2 - x1), h = 8 + a.width * 2;
     const head = `${x2},${y2} ${x2 - h * Math.cos(ang - 0.45)},${y2 - h * Math.sin(ang - 0.45)} ${x2 - h * Math.cos(ang + 0.45)},${y2 - h * Math.sin(ang + 0.45)}`;
     const ex = x2 - (h * 0.7) * Math.cos(ang), ey = y2 - (h * 0.7) * Math.sin(ang);
-    return <g key={key} onMouseDown={grab} style={grab ? { cursor: "move" } : undefined}>
+    return <g key={key} onMouseDown={grab} style={{ cursor: grab ? "move" : undefined, pointerEvents: grab ? undefined : "none" }}>
       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="transparent" strokeWidth={12} />
-      <line x1={x1} y1={y1} x2={ex} y2={ey} stroke={a.color} strokeWidth={a.width} strokeLinecap="round" />
+      <line x1={x1} y1={y1} x2={ex} y2={ey} stroke={a.color} strokeWidth={a.width} strokeDasharray={DASH[a.dash ?? "solid"]} strokeLinecap="round" />
       <polygon points={head} fill={a.color} />
     </g>;
   };
-  const capture = mode === "farrow" || mode === "text" || moving;
+  const shape = (key: string, a: { shape: "ellipse" | "rect"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash: Dash; fill: boolean }, grab?: (e: React.MouseEvent<SVGElement>) => void) => {
+    const b = box(a);
+    if (!b) return null;
+    const x = Math.min(b.x1, b.x2), y = Math.min(b.y1, b.y2), w = Math.abs(b.x2 - b.x1), h = Math.abs(b.y2 - b.y1);
+    const common = { fill: a.fill ? a.color : "transparent", fillOpacity: a.fill ? 0.14 : 1, stroke: a.color, strokeWidth: a.width, strokeDasharray: DASH[a.dash], onMouseDown: grab, style: { cursor: grab ? "move" : undefined, pointerEvents: grab ? undefined : "none" } as React.CSSProperties };
+    return a.shape === "rect" ? <rect key={key} x={x} y={y} width={w} height={h} rx={3} {...common} /> : <ellipse key={key} cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} {...common} />;
+  };
+  const capture = mode === "shape" || mode === "hline" || moving;
+  const axisValue = (a: Axis, py: number) => { const sc = yScale(a), d = sc?.domain?.() ?? [0, 1]; return sc?.invert ? niceRound(sc.invert(py), d[1] - d[0]) : null; };
+  const strip = (a: Axis) => {
+    const x = a === "left" ? offset.left - 56 : offset.left + offset.width;
+    const handler = (kind: "hover" | "click") => (e: React.MouseEvent<SVGElement>) => { const v = axisValue(a, local(e).y); if (v !== null) onAxis(kind, a, v); };
+    return <rect key={`axis-${a}`} x={x} y={offset.top} width={56} height={offset.height} fill="transparent" style={{ cursor: "pointer" }}
+      onMouseMove={handler("hover")} onMouseLeave={() => onAxis("leave", a, 0)} onClick={e => { e.stopPropagation(); handler("click")(e); }}>
+      <title>Clic para agregar una línea horizontal en este nivel</title>
+    </rect>;
+  };
+  const ghostY = ghost ? yScale(ghost.axis)?.(ghost.value) : null;
   return <g>
     {items.map(it => {
-      const grab = mode === "none" ? (e: React.MouseEvent<SVGElement>) => { e.stopPropagation(); const r = (e.currentTarget as SVGElement).ownerSVGElement!.getBoundingClientRect(); const pt = toData(e.clientX - r.left, e.clientY - r.top, it.axis); if (pt) onGrab(it.id, pt); } : undefined;
+      const grab = mode === "none" ? (e: React.MouseEvent<SVGElement>) => { e.stopPropagation(); const p = local(e); const pt = toData(p.x, p.y, it.axis); if (pt) onGrab(it.id, pt); } : undefined;
       if (it.kind === "farrow") return arrow(it.id, it, grab);
+      if (it.kind === "shape") return shape(it.id, it, grab);
       const x = xOf(it.x), ys = yScale(it.axis);
       if (x === null || !ys) return null;
-      return <text key={it.id} x={x} y={ys(it.y)} fontSize={it.size} fontWeight={it.bold ? 700 : 400} fill={it.color} stroke="#fff" strokeWidth={3} paintOrder="stroke" dominantBaseline="middle" onMouseDown={grab} style={grab ? { cursor: "move" } : undefined}>{it.text}</text>;
+      return <text key={it.id} x={x} y={ys(it.y)} fontSize={it.size} fontWeight={it.bold ? 700 : 400} fill={it.color} stroke="#fff" strokeWidth={3} paintOrder="stroke" dominantBaseline="middle"
+        onMouseDown={grab} onDoubleClick={e => { e.stopPropagation(); onEditText(it.id, { x, y: ys(it.y) }); }} style={{ cursor: grab ? "move" : undefined, pointerEvents: grab ? undefined : "none" }}>{it.text}</text>;
     })}
-    {preview && arrow("preview", { x1: preview.from.date, y1: preview.from.value, x2: preview.to.date, y2: preview.to.value, axis, color: preview.color, width: preview.width })}
+    {preview && (preview.tool === "arrow"
+      ? arrow("preview", { x1: preview.from.date, y1: preview.from.value, x2: preview.to.date, y2: preview.to.value, axis, color: preview.color, width: preview.width, dash: preview.dash })
+      : shape("preview", { shape: preview.tool, x1: preview.from.date, y1: preview.from.value, x2: preview.to.date, y2: preview.to.value, axis, color: preview.color, width: preview.width, dash: preview.dash, fill: preview.fill }))}
+    {ghost && typeof ghostY === "number" && Number.isFinite(ghostY) && <g style={{ pointerEvents: "none" }}>
+      <line x1={offset.left} x2={offset.left + offset.width} y1={ghostY} y2={ghostY} stroke="#64748b" strokeDasharray="4 4" />
+      <rect x={ghost.axis === "left" ? offset.left - 54 : offset.left + offset.width + 2} y={ghostY - 9} width={52} height={18} rx={3} fill="#172033" />
+      <text x={ghost.axis === "left" ? offset.left - 28 : offset.left + offset.width + 28} y={ghostY + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{fmt(ghost.value, Math.abs(ghost.value) >= 100 ? 1 : 2)}</text>
+    </g>}
     {capture && <rect x={offset.left} y={offset.top} width={offset.width} height={offset.height} fill="transparent" style={{ cursor: moving ? "grabbing" : "crosshair" }}
-      onMouseDown={e => { const pt = point(e); if (pt) onPointer("down", pt); }}
-      onMouseMove={e => { const pt = point(e); if (pt) onPointer("move", pt); }}
-      onMouseUp={e => { const pt = point(e); if (pt) onPointer("up", pt); }}
-      onMouseLeave={e => { const pt = point(e); if (pt) onPointer("up", pt); }} />}
+      onMouseDown={e => { e.preventDefault(); const p = local(e), pt = toData(p.x, p.y, axis); if (pt) onPointer("down", pt, p); }}
+      onMouseMove={e => { const p = local(e), pt = toData(p.x, p.y, axis); if (pt) onPointer("move", pt, p); }}
+      onMouseUp={e => { const p = local(e), pt = toData(p.x, p.y, axis); if (pt) onPointer("up", pt, p); }}
+      onMouseLeave={e => { const p = local(e), pt = toData(p.x, p.y, axis); if (pt) onPointer("up", pt, p); }} />}
+    {!moving && (mode === "none" || mode === "hline") && <>{axes.left && strip("left")}{axes.right && strip("right")}</>}
   </g>;
 }
 
@@ -161,8 +209,13 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
   const [query, setQuery] = useState("");
   const [calc, setCalc] = useState<{ op: "diff" | "fly"; legs: string[] }>({ op: "diff", legs: ["", "", ""] });
   const [mode, setMode] = useState<Mode>("none");
-  const [draft, setDraft] = useState({ label: "", value: "3", axis: "left" as Axis, color: "#d94b4b", seriesUid: "", dir: "down" as "down" | "up", size: 13, bold: true, width: 2 });
+  // Borradores de cada bloque de anotaciones.
+  const [ev, setEv] = useState({ label: "", color: "#d94b4b", dash: "dash" as Dash, width: 1.5, style: "line" as "line" | "arrow", seriesUid: "", dir: "down" as "down" | "up" });
+  const [hl, setHl] = useState({ label: "", value: "", axis: "left" as Axis, color: "#d94b4b", textColor: "#d94b4b", width: 1.5, dash: "dash" as Dash, pos: "left" as "left" | "right" });
+  const [sh, setSh] = useState({ tool: "arrow" as ShapeTool, color: "#d94b4b", width: 2, dash: "solid" as Dash, fill: false, size: 13, bold: true });
   const [drag, setDrag] = useState<{ from: Pt; to: Pt } | null>(null);
+  const [ghost, setGhost] = useState<{ axis: Axis; value: number } | null>(null);
+  const [editing, setEditing] = useState<{ id?: string; pt?: Pt; x: number; y: number; text: string } | null>(null);
   const [move, setMove] = useState<{ id: string; start: Pt; original: FreeAnnotation } | null>(null);
   const [png, setPng] = useState<PngOptions>({ background: "white", text: "dark", header: true });
   const [saved, setSaved] = useState<Record<string, Config>>({});
@@ -261,52 +314,75 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
     const label = calc.op === "diff" ? `${name(ids[0])} − ${name(ids[1])}` : `Fly 2×${name(ids[1])} − ${name(ids[0])} − ${name(ids[2])}`;
     setConfig(c => ({ ...c, series: [...c.series, { uid: uid(), label, source: { kind: "calc", op: calc.op, legs }, type: "line", color: nextColor(c.series), width: 2, dash: "solid", axis: "right", transform: "level", visible: true }] }));
   };
-  const addHLine = () => {
-    const value = Number(draft.value.replace(",", "."));
-    if (!Number.isFinite(value)) { flash("Ingresa un valor numérico."); return; }
-    set({ annotations: [...config.annotations, { id: uid(), kind: "hline", value, axis: draft.axis, label: draft.label, color: draft.color }] });
+  const add = (a: Annotation) => setConfig(c => ({ ...c, annotations: [...c.annotations, a] }));
+  const setAnnotation = (id: string, patch: Partial<Annotation>) => setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === id ? { ...a, ...patch } as Annotation : a) }));
+  const addHLine = (value: number, axis: Axis) => add({ id: uid(), kind: "hline", value, axis, label: hl.label, color: hl.color, textColor: hl.textColor, width: hl.width, dash: hl.dash, pos: hl.pos });
+  const addHLineTyped = () => {
+    const value = Number(hl.value.replace(",", "."));
+    if (hl.value.trim() === "" || !Number.isFinite(value)) { flash("Ingresa un valor numérico o haz clic en el eje Y."); return; }
+    addHLine(value, hl.axis);
+  };
+  const onAxis = (kind: "hover" | "leave" | "click", axis: Axis, value: number) => {
+    if (kind === "leave") { setGhost(null); return; }
+    if (kind === "hover") { setGhost({ axis, value }); return; }
+    addHLine(value, axis); setGhost(null); setMode("none");
   };
   const onChartClick = (state: { activeLabel?: string | number } | null) => {
     // La fecha sale del punto bajo el cursor (se guarda al mover el mouse, por si el clic no la trae).
     const date = state?.activeLabel ? String(state.activeLabel) : hoverDate.current;
-    if ((mode !== "vline" && mode !== "arrow") || !date) return;
-    if (mode === "vline") set({ annotations: [...config.annotations, { id: uid(), kind: "vline", date, label: draft.label, color: draft.color }] });
+    if (mode !== "event" || !date) return;
+    if (ev.style === "line") add({ id: uid(), kind: "vline", date, label: ev.label, color: ev.color, width: ev.width, dash: ev.dash });
     else {
-      const target = draft.seriesUid || config.series.find(s => s.visible)?.uid;
-      if (target) set({ annotations: [...config.annotations, { id: uid(), kind: "arrow", date, seriesUid: target, label: draft.label, color: draft.color, dir: draft.dir }] });
+      const target = ev.seriesUid || config.series.find(s => s.visible)?.uid;
+      if (target) add({ id: uid(), kind: "arrow", date, seriesUid: target, label: ev.label, color: ev.color, dir: ev.dir, width: ev.width, dash: ev.dash });
     }
     setMode("none");
   };
-  // Flecha libre (arrastrar), texto libre (clic) y mover anotaciones libres existentes.
+  // Formas (arrastrar), texto (clic abre un cuadro), línea horizontal con clic y mover anotaciones libres.
   const freeAxis: Axis = config.series.some(s => s.visible && s.axis === "left") ? "left" : "right";
   const dateIndex = (d: string) => rows.findIndex(r => r.date === d);
-  const onFreePointer = (kind: "down" | "move" | "up", pt: Pt) => {
+  const onFreePointer = (kind: "down" | "move" | "up", pt: Pt, px: Px) => {
     if (move) {
       if (kind === "down") return;
       const shiftIdx = dateIndex(pt.date) - dateIndex(move.start.date), dv = pt.value - move.start.value;
       const shiftDate = (d: string) => { const i = dateIndex(d); const j = Math.min(rows.length - 1, Math.max(0, i + shiftIdx)); return i < 0 ? d : String(rows[j].date); };
       const o = move.original;
-      const moved: FreeAnnotation = o.kind === "farrow" ? { ...o, x1: shiftDate(o.x1), x2: shiftDate(o.x2), y1: o.y1 + dv, y2: o.y2 + dv } : { ...o, x: shiftDate(o.x), y: o.y + dv };
+      const moved: FreeAnnotation = o.kind === "text" ? { ...o, x: shiftDate(o.x), y: o.y + dv } : { ...o, x1: shiftDate(o.x1), x2: shiftDate(o.x2), y1: o.y1 + dv, y2: o.y2 + dv };
       setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === o.id ? moved : a) }));
       if (kind === "up") setMove(null);
       return;
     }
-    if (mode === "text" && kind === "down") {
-      if (!draft.label.trim()) { flash("Escribe el texto antes de hacer clic."); return; }
-      set({ annotations: [...config.annotations, { id: uid(), kind: "text", x: pt.date, y: pt.value, axis: freeAxis, text: draft.label, color: draft.color, size: draft.size, bold: draft.bold }] });
-      setMode("none");
+    if (mode === "hline" && kind === "down") { addHLine(pt.value, hl.axis); setMode("none"); return; }
+    if (mode !== "shape") return;
+    if (sh.tool === "text") {
+      if (kind === "down") { setEditing({ pt, x: px.x, y: px.y, text: "" }); setMode("none"); }
+      return;
     }
-    if (mode === "farrow") {
-      if (kind === "down") setDrag({ from: pt, to: pt });
-      else if (kind === "move" && drag) setDrag({ ...drag, to: pt });
-      else if (kind === "up" && drag) {
-        if (drag.from.date !== pt.date || Math.abs(drag.from.value - pt.value) > 1e-9) set({ annotations: [...config.annotations, { id: uid(), kind: "farrow", x1: drag.from.date, y1: drag.from.value, x2: pt.date, y2: pt.value, axis: freeAxis, color: draft.color, width: draft.width }] });
-        setDrag(null); setMode("none");
+    if (kind === "down") setDrag({ from: pt, to: pt });
+    else if (kind === "move" && drag) setDrag({ ...drag, to: pt });
+    else if (kind === "up" && drag) {
+      if (drag.from.date !== pt.date || Math.abs(drag.from.value - pt.value) > 1e-9) {
+        const base = { id: uid(), x1: drag.from.date, y1: drag.from.value, x2: pt.date, y2: pt.value, axis: freeAxis, color: sh.color, width: sh.width, dash: sh.dash };
+        add(sh.tool === "arrow" ? { ...base, kind: "farrow" } : { ...base, kind: "shape", shape: sh.tool, fill: sh.fill });
       }
+      setDrag(null); setMode("none");
     }
   };
+  const commitText = () => {
+    if (!editing) return;
+    const text = editing.text.trim();
+    if (editing.id) {
+      if (text) setAnnotation(editing.id, { text } as Partial<Annotation>);
+      else setConfig(c => ({ ...c, annotations: c.annotations.filter(a => a.id !== editing.id) }));
+    } else if (text && editing.pt) add({ id: uid(), kind: "text", x: editing.pt.date, y: editing.pt.value, axis: freeAxis, text, color: sh.color, size: sh.size, bold: sh.bold });
+    setEditing(null);
+  };
+  const onEditText = (id: string, px: Px) => {
+    const t = config.annotations.find(a => a.id === id);
+    if (t?.kind === "text") setEditing({ id, x: px.x, y: px.y, text: t.text });
+  };
   const onGrab = (id: string, pt: Pt) => {
-    const original = config.annotations.find((a): a is FreeAnnotation => a.id === id && (a.kind === "farrow" || a.kind === "text"));
+    const original = config.annotations.find((a): a is FreeAnnotation => a.id === id && (a.kind === "farrow" || a.kind === "shape" || a.kind === "text"));
     if (original) setMove({ id, start: pt, original });
   };
 
@@ -329,6 +405,13 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
     const clone = svg.cloneNode(true) as SVGSVGElement;
     clone.setAttribute("xmlns", "http://www.w3.org/2000/svg"); clone.setAttribute("style", "font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"); clone.setAttribute("width", String(width)); clone.setAttribute("height", String(height));
     clone.querySelectorAll(".recharts-brush").forEach(n => n.remove());
+    // Etiquetas de último dato: se dibujan directo en el canvas (algunos navegadores no las pintan al rasterizar el SVG).
+    const box = svg.getBoundingClientRect();
+    const lastTags = [...svg.querySelectorAll(".cb-last")].map(g => {
+      const r = g.querySelector("rect")!.getBoundingClientRect();
+      return { x: r.left - box.left, y: r.top - box.top, w: r.width, h: r.height, fill: g.querySelector("rect")!.getAttribute("fill") ?? "#172033", text: g.querySelector("text")?.textContent ?? "" };
+    });
+    clone.querySelectorAll(".cb-last").forEach(n => n.remove());
     const light = png.text === "light";
     if (light) {
       // Texto y ejes claros para fondos oscuros (las anotaciones mantienen su color).
@@ -362,7 +445,14 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
         y += legendH;
       };
       if (png.header && config.legend === "top") drawLegend();
-      ctx.drawImage(img, pad, y, width, height); y += height;
+      ctx.drawImage(img, pad, y, width, height);
+      for (const t of lastTags) {
+        ctx.fillStyle = t.fill; ctx.beginPath(); ctx.roundRect(pad + t.x, y + t.y, t.w, t.h, 3); ctx.fill();
+        ctx.fillStyle = "#ffffff"; ctx.font = `700 11px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(t.text, pad + t.x + t.w / 2, y + t.y + t.h / 2 + 0.5);
+        ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      }
+      y += height;
       if (png.header && config.legend === "bottom") drawLegend();
       if (png.header) {
         ctx.fillStyle = ink.foot; ctx.font = `11px ${font}`; ctx.fillText(config.source || "", pad, H - 14);
@@ -382,6 +472,17 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
   const visible = config.series.filter(s => s.visible);
   const shownFrom = config.period === "custom" ? config.from : String(rows[0]?.date ?? ""), shownTo = config.period === "custom" ? config.to : lastDate;
   const optionGroups = catalog.groups.map(g => <optgroup key={g.name} label={g.name}>{g.series.map(s => <option key={s.id} value={s.id}>{s.fields.length > 1 ? `${s.id} · ${s.label}` : s.label}</option>)}</optgroup>);
+
+  const describe = (a: Annotation) => a.kind === "hline" ? `${fmt(a.value, Math.abs(a.value) >= 100 ? 1 : 2)}${a.label ? ` · ${a.label}` : ""}` : a.kind === "vline" ? `Línea ${a.date}${a.label ? ` · ${a.label}` : ""}`
+    : a.kind === "arrow" ? `Flecha ${a.date}${a.label ? ` · ${a.label}` : ""}` : a.kind === "farrow" ? "Flecha" : a.kind === "shape" ? (a.shape === "rect" ? "Cuadrado" : "Círculo") : `Texto “${a.text}”`;
+  const annotationList = (filter: (a: Annotation) => boolean) => {
+    const list = config.annotations.filter(filter);
+    return list.length > 0 && <ul className="cb-annots">{list.map(a => <li key={a.id}>
+      <input type="color" className="cb-swatch" value={a.color} onChange={e => setAnnotation(a.id, a.kind === "hline" && (a.textColor ?? a.color) === a.color ? { color: e.target.value, textColor: e.target.value } : { color: e.target.value })} title="Cambiar color" />
+      <span className="cb-annot-text">{describe(a)}</span>
+      <button className="cb-icon" onClick={() => set({ annotations: config.annotations.filter(x => x.id !== a.id) })} title="Borrar"><Trash2 size={13} /></button>
+    </li>)}</ul>;
+  };
 
   return <AppShell>
     <header className="page-head">
@@ -424,28 +525,66 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
         </section>
 
         <section className="panel cb-block">
-          <h2>Anotaciones</h2>
+          <h2>Líneas verticales y hechos relevantes</h2>
           <div className="cb-series-grid">
-            <label className="cb-wide">Texto<input value={draft.label} onChange={e => setDraft(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: RPM, máximo del año…" /></label>
-            <label>Color<input type="color" value={draft.color} onChange={e => setDraft(d => ({ ...d, color: e.target.value }))} /></label>
+            <label className="cb-wide">Texto<input value={ev.label} onChange={e => setEv(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: RPM, estallido social, COVID…" /></label>
+            <label>Marca<select value={ev.style} onChange={e => setEv(d => ({ ...d, style: e.target.value as "line" | "arrow" }))}><option value="line">Línea vertical</option><option value="arrow">Flecha al punto</option></select></label>
+            <label>Color<input type="color" value={ev.color} onChange={e => setEv(d => ({ ...d, color: e.target.value }))} /></label>
+            <label>Tipo de línea<select value={ev.dash} onChange={e => setEv(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
+            <label>Grosor<select value={ev.width} onChange={e => setEv(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
+            {ev.style === "arrow" && <>
+              <label>Serie<select value={ev.seriesUid} onChange={e => setEv(d => ({ ...d, seriesUid: e.target.value }))}><option value="">Primera serie</option>{visible.map(s => <option key={s.uid} value={s.uid}>{s.label}</option>)}</select></label>
+              <label>Dirección<select value={ev.dir} onChange={e => setEv(d => ({ ...d, dir: e.target.value as "down" | "up" }))}><option value="down">Desde arriba ↓</option><option value="up">Desde abajo ↑</option></select></label>
+            </>}
           </div>
-          <div className="cb-annot-actions">
-            <div className="cb-inline">
-              <button className={`cb-btn ${mode === "farrow" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "farrow" ? "none" : "farrow")}><MoveUpRight size={14} aria-hidden="true" />Flecha libre: arrastrar</button>
-              <select value={draft.width} onChange={e => setDraft(d => ({ ...d, width: Number(e.target.value) }))} aria-label="Grosor de la flecha"><option value={1.5}>Fina</option><option value={2}>Media</option><option value={3}>Gruesa</option></select>
-            </div>
-            <div className="cb-inline">
-              <button className={`cb-btn ${mode === "text" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "text" ? "none" : "text")}><Type size={14} aria-hidden="true" />Texto libre: clic</button>
-              <select value={draft.size} onChange={e => setDraft(d => ({ ...d, size: Number(e.target.value) }))} aria-label="Tamaño del texto">{[11, 13, 16, 20, 24].map(n => <option key={n} value={n}>{n} px</option>)}</select>
-              <label className="cb-check"><input type="checkbox" checked={draft.bold} onChange={e => setDraft(d => ({ ...d, bold: e.target.checked }))} />Negrita</label>
-            </div>
-            <div className="cb-inline"><input value={draft.value} onChange={e => setDraft(d => ({ ...d, value: e.target.value }))} aria-label="Valor de la línea horizontal" /><select value={draft.axis} onChange={e => setDraft(d => ({ ...d, axis: e.target.value as Axis }))} aria-label="Eje"><option value="left">Eje izq.</option><option value="right">Eje der.</option></select><button className="cb-btn" onClick={addHLine}>Línea horizontal</button></div>
-            <button className={`cb-btn ${mode === "vline" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "vline" ? "none" : "vline")}><MousePointerClick size={14} aria-hidden="true" />Línea vertical: clic en el gráfico</button>
-            <div className="cb-inline"><select value={draft.seriesUid} onChange={e => setDraft(d => ({ ...d, seriesUid: e.target.value }))} aria-label="Serie de la flecha"><option value="">Primera serie</option>{visible.map(s => <option key={s.uid} value={s.uid}>{s.label}</option>)}</select><select value={draft.dir} onChange={e => setDraft(d => ({ ...d, dir: e.target.value as "down" | "up" }))} aria-label="Dirección"><option value="down">↓</option><option value="up">↑</option></select>
-              <button className={`cb-btn ${mode === "arrow" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "arrow" ? "none" : "arrow")}><ArrowDownRight size={14} aria-hidden="true" />Flecha: clic</button></div>
+          <button className={`cb-btn ${mode === "event" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "event" ? "none" : "event")}><MousePointerClick size={14} aria-hidden="true" />{mode === "event" ? "Haz clic en el gráfico…" : "Marcar con clic en el gráfico"}</button>
+          {annotationList(a => a.kind === "vline" || a.kind === "arrow")}
+        </section>
+
+        <section className="panel cb-block">
+          <h2>Líneas horizontales</h2>
+          <div className="cb-series-grid">
+            <label className="cb-wide">Texto<input value={hl.label} onChange={e => setHl(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: TPM, meta 3%, máximo…" /></label>
+            <label>Texto a la<select value={hl.pos} onChange={e => setHl(d => ({ ...d, pos: e.target.value as "left" | "right" }))}><option value="left">Izquierda</option><option value="right">Derecha</option></select></label>
+            <label>Eje<select value={hl.axis} onChange={e => setHl(d => ({ ...d, axis: e.target.value as Axis }))}><option value="left">Izquierdo</option><option value="right">Derecho</option></select></label>
+            <label>Color línea<input type="color" value={hl.color} onChange={e => setHl(d => ({ ...d, color: e.target.value }))} /></label>
+            <label>Color texto<input type="color" value={hl.textColor} onChange={e => setHl(d => ({ ...d, textColor: e.target.value }))} /></label>
+            <label>Tipo de línea<select value={hl.dash} onChange={e => setHl(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
+            <label>Grosor<select value={hl.width} onChange={e => setHl(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
           </div>
-          <p className="db-hint">Las flechas y textos libres se pueden arrastrar para moverlos.</p>
-          {config.annotations.length > 0 && <ul className="cb-annots">{config.annotations.map(a => <li key={a.id}><span className="cb-annot-text"><span className="cb-dot" style={{ background: a.color }} />{a.kind === "hline" ? `Horizontal en ${a.value}${a.label ? ` · ${a.label}` : ""}` : a.kind === "vline" ? `Vertical ${a.date}${a.label ? ` · ${a.label}` : ""}` : a.kind === "arrow" ? `Flecha ${a.date}${a.label ? ` · ${a.label}` : ""}` : a.kind === "farrow" ? `Flecha libre ${a.x1} → ${a.x2}` : `Texto “${a.text}”`}</span><button className="cb-icon" onClick={() => set({ annotations: config.annotations.filter(x => x.id !== a.id) })} title="Borrar"><Trash2 size={13} /></button></li>)}</ul>}
+          <div className="cb-inline"><input value={hl.value} onChange={e => setHl(d => ({ ...d, value: e.target.value }))} placeholder="Nivel, ej. 4,5" aria-label="Nivel de la línea horizontal" onKeyDown={e => { if (e.key === "Enter") addHLineTyped(); }} /><button className="cb-btn" onClick={addHLineTyped}><Plus size={14} aria-hidden="true" />Agregar</button></div>
+          <button className={`cb-btn ${mode === "hline" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "hline" ? "none" : "hline")}><MousePointerClick size={14} aria-hidden="true" />{mode === "hline" ? "Haz clic en el nivel…" : "Marcar con clic en el gráfico"}</button>
+          <p className="db-hint">Atajo: haz clic directamente sobre el eje Y en el nivel que quieras.</p>
+          {annotationList(a => a.kind === "hline")}
+        </section>
+
+        <section className="panel cb-block">
+          <h2>Formas</h2>
+          <div className="cb-tools">{([["arrow", "Flecha", MoveUpRight], ["ellipse", "Círculo", Circle], ["rect", "Cuadrado", Square], ["text", "Texto", Type]] as const).map(([k, l, Icon]) =>
+            <button key={k} className={`cb-btn ${mode === "shape" && sh.tool === k ? "cb-armed" : ""}`} onClick={() => { setSh(d => ({ ...d, tool: k })); setMode(m => m === "shape" && sh.tool === k ? "none" : "shape"); }}><Icon size={14} aria-hidden="true" />{l}</button>)}</div>
+          <div className="cb-series-grid">
+            <label>Color<input type="color" value={sh.color} onChange={e => setSh(d => ({ ...d, color: e.target.value }))} /></label>
+            {sh.tool === "text" ? <>
+              <label>Tamaño<select value={sh.size} onChange={e => setSh(d => ({ ...d, size: Number(e.target.value) }))}>{[11, 13, 16, 20, 24, 32].map(n => <option key={n} value={n}>{n} px</option>)}</select></label>
+              <label className="cb-check"><input type="checkbox" checked={sh.bold} onChange={e => setSh(d => ({ ...d, bold: e.target.checked }))} />Negrita</label>
+            </> : <>
+              <label>Grosor<select value={sh.width} onChange={e => setSh(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
+              <label>Tipo de línea<select value={sh.dash} onChange={e => setSh(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
+              {sh.tool !== "arrow" && <label className="cb-check"><input type="checkbox" checked={sh.fill} onChange={e => setSh(d => ({ ...d, fill: e.target.checked }))} />Relleno suave</label>}
+            </>}
+          </div>
+          <p className="db-hint">{sh.tool === "text" ? "Elige Texto y haz clic en el gráfico: se abre un cuadro para escribir (Enter para confirmar). Doble clic sobre un texto para editarlo." : "Elige la forma y arrástrala sobre el gráfico."} Todo se puede mover arrastrándolo.</p>
+          {annotationList(a => a.kind === "farrow" || a.kind === "shape" || a.kind === "text")}
+        </section>
+
+        <section className="panel cb-block">
+          <h2>Otros</h2>
+          <div className="cb-series-grid">
+            <label className="cb-check"><input type="checkbox" checked={config.yAxis !== false} onChange={e => set({ yAxis: e.target.checked })} />Eje vertical</label>
+            <label className="cb-check"><input type="checkbox" checked={config.grid} onChange={e => set({ grid: e.target.checked })} />Grilla horizontal</label>
+            <label className="cb-check"><input type="checkbox" checked={!!config.gridV} onChange={e => set({ gridV: e.target.checked })} />Grilla vertical</label>
+            <label className="cb-check"><input type="checkbox" checked={!!config.lastValue} onChange={e => set({ lastValue: e.target.checked })} />Último dato al final</label>
+          </div>
         </section>
 
         <section className="panel cb-block">
@@ -461,8 +600,6 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
             <label>Eje izq. máx<input value={config.left.max} placeholder="auto" onChange={e => set({ left: { ...config.left, max: e.target.value } })} /></label>
             <label>Eje der. mín<input value={config.right.min} placeholder="auto" onChange={e => set({ right: { ...config.right, min: e.target.value } })} /></label>
             <label>Eje der. máx<input value={config.right.max} placeholder="auto" onChange={e => set({ right: { ...config.right, max: e.target.value } })} /></label>
-            <label className="cb-check"><input type="checkbox" checked={config.grid} onChange={e => set({ grid: e.target.checked })} />Grilla</label>
-            <label className="cb-check"><input type="checkbox" checked={!!config.lastValue} onChange={e => set({ lastValue: e.target.checked })} />Último dato al final</label>
           </div>
         </section>
       </aside>
@@ -488,15 +625,15 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
               <button className="cb-btn" onClick={shareLink}><Copy size={14} aria-hidden="true" />Link</button>
             </div>
           </div>
-          {mode !== "none" && <div className="cb-mode">{mode === "farrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : mode === "text" ? "Haz clic donde quieres el texto." : `Haz clic en el gráfico para poner la ${mode === "vline" ? "línea vertical" : "flecha"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
+          {mode !== "none" && <div className="cb-mode">{mode === "event" ? `Haz clic en la fecha donde va la ${ev.style === "line" ? "línea vertical" : "flecha"}.` : mode === "hline" ? "Haz clic en el nivel de la línea horizontal (o sobre el eje Y)." : sh.tool === "text" ? "Haz clic donde quieres escribir." : sh.tool === "arrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : `Arrastra para dibujar el ${sh.tool === "rect" ? "cuadrado" : "círculo"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
           {notice && <div className="cb-notice">{notice}</div>}
           <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
           <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }}>
             {!config.series.length ? <div className="loading">Agrega una serie para empezar.</div> : !ready ? <div className="loading">Cargando datos…</div> :
               <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
-                {config.grid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5eaf2" />}
+                {(config.grid || config.gridV) && <CartesianGrid strokeDasharray="3 3" horizontal={config.grid} vertical={!!config.gridV} stroke="#e5eaf2" />}
                 <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="left" domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
+                <YAxis yAxisId="left" hide={config.yAxis === false} domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
                 <YAxis yAxisId="right" orientation="right" hide={!hasRight} domain={domain(config.right)} allowDataOverflow={config.right.min !== "" || config.right.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
                 <Tooltip formatter={(v, _n, item) => { const u = units[String(item.dataKey)] ?? ""; return [`${fmt(Number(v), u === "pb" ? 1 : 3)}${u === "%" ? "%" : u ? ` ${u}` : ""}`, config.series.find(s => s.uid === item.dataKey)?.label ?? ""]; }} />
                 {config.legend !== "none" && <Legend verticalAlign={config.legend} wrapperStyle={{ fontSize: 12 }} />}
@@ -516,13 +653,19 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
                   return <Line key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} strokeWidth={s.type === "dots" ? 0 : s.width} strokeDasharray={DASH[s.dash]} dot={s.type === "dots" ? { r: 2.2, fill: s.color, stroke: s.color } : false} connectNulls isAnimationActive={false} legendType={s.type === "dots" ? "circle" : "line"} label={lastLabel} />;
                 })}
                 {config.annotations.map(a => a.kind === "hline"
-                  ? <ReferenceLine key={a.id} yAxisId={a.axis === "right" && hasRight ? "right" : "left"} y={a.value} stroke={a.color} strokeDasharray="6 4" strokeWidth={1.5} label={a.label ? { value: a.label, position: "insideTopLeft", fill: a.color, fontSize: 12, fontWeight: 700 } : undefined} />
-                  : a.kind === "vline" ? <ReferenceLine key={a.id} yAxisId="left" x={a.date} stroke={a.color} strokeDasharray="6 4" strokeWidth={1.5} label={a.label ? { value: a.label, position: "insideTopRight", fill: a.color, fontSize: 12, fontWeight: 700 } : undefined} />
+                  ? <ReferenceLine key={a.id} yAxisId={a.axis === "right" && hasRight ? "right" : "left"} y={a.value} stroke={a.color} strokeDasharray={DASH[a.dash ?? "dash"]} strokeWidth={a.width ?? 1.5} label={a.label ? { value: a.label, position: a.pos === "right" ? "insideTopRight" : "insideTopLeft", fill: a.textColor ?? a.color, fontSize: 12, fontWeight: 700 } : undefined} />
+                  : a.kind === "vline" ? <ReferenceLine key={a.id} yAxisId="left" x={a.date} stroke={a.color} strokeDasharray={DASH[a.dash ?? "dash"]} strokeWidth={a.width ?? 1.5} label={a.label ? { value: a.label, position: "insideTopRight", fill: a.color, fontSize: 12, fontWeight: 700 } : undefined} />
                   : null)}
                 {arrows.length > 0 && <Customized component={(p: { xAxisMap?: AxisMap; yAxisMap?: AxisMap }) => <ArrowLayer xAxisMap={p.xAxisMap} yAxisMap={p.yAxisMap} arrows={arrows} rows={rows} series={config.series} />} />}
                 {rows.length > 30 && <Brush dataKey="date" height={22} stroke="#94a3b8" travellerWidth={8} />}
-                <Customized component={(p: Pick<FreeLayerProps, "xAxisMap" | "yAxisMap" | "offset">) => <FreeLayer {...p} dates={rows.map(r => String(r.date))} items={config.annotations.filter((a): a is FreeAnnotation => a.kind === "farrow" || a.kind === "text")} mode={mode} axis={freeAxis} preview={drag ? { ...drag, color: draft.color, width: draft.width } : null} onPointer={onFreePointer} onGrab={onGrab} moving={!!move} />} />
+                <Customized component={(p: Pick<FreeLayerProps, "xAxisMap" | "yAxisMap" | "offset">) => <FreeLayer {...p} dates={rows.map(r => String(r.date))} items={config.annotations.filter((a): a is FreeAnnotation => a.kind === "farrow" || a.kind === "shape" || a.kind === "text")}
+                  mode={mode} axis={mode === "hline" ? (hl.axis === "right" && hasRight ? "right" : "left") : freeAxis} preview={drag && sh.tool !== "text" ? { tool: sh.tool, ...drag, color: sh.color, width: sh.width, dash: sh.dash, fill: sh.fill } : null}
+                  onPointer={onFreePointer} onGrab={onGrab} onEditText={onEditText} moving={!!move} axes={{ left: config.yAxis !== false, right: hasRight }} ghost={ghost} onAxis={onAxis} />} />
               </ComposedChart></ResponsiveContainer>}
+            {editing && <input className="cb-text-editor" autoFocus value={editing.text} placeholder="Escribe y presiona Enter"
+              style={{ left: editing.x, top: editing.y, color: sh.color, fontSize: sh.size, fontWeight: sh.bold ? 700 : 400 }}
+              onChange={e => setEditing(d => d && ({ ...d, text: e.target.value }))} onBlur={commitText}
+              onKeyDown={e => { if (e.key === "Enter") commitText(); if (e.key === "Escape") setEditing(null); }} />}
           </div>
           {config.source && <p className="dash-note">{config.source}</p>}
         </section>
