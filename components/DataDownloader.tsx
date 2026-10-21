@@ -4,11 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Download, Search, X } from "lucide-react";
 import { AppShell } from "./AppShell";
 import type { Catalog, CatalogSeries } from "@/lib/data-catalog.server";
-import { buildTable, toCsv, toXlsx, type ExportColumn, type ExportMeta, type Frequency } from "@/lib/export-table";
+import { buildTable, toCsv, toXlsx, type ExportColumn, type ExportMeta, type Frequency, type MonthlyMode } from "@/lib/export-table";
 
 type Period = "1m" | "3m" | "1y" | "5y" | "all" | "custom";
 type Format = "xlsx" | "csv-cl" | "csv";
-const PERIODS: [Period, string][] = [["1m", "1M"], ["3m", "3M"], ["1y", "1A"], ["5y", "5A"], ["all", "Todo"], ["custom", "Fechas"]];
+const PERIODS: [Period, string][] = [["1m", "1M"], ["3m", "3M"], ["1y", "1A"], ["5y", "5A"], ["all", "Todo"]];
 const BOND_FIELDS = [["tir", "TIR"], ["duracion", "Duración"], ["precio", "Precio"], ["convexidad", "Convexidad"]] as const;
 const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const shortDate = (d: string) => d ? `${MONTHS[Number(d.slice(5, 7)) - 1]}-${d.slice(2, 4)}` : "—";
@@ -39,6 +39,7 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
   const [fields, setFields] = useState<string[]>(["tir"]);
   const [frequency, setFrequency] = useState<Frequency>("daily");
   const [format, setFormat] = useState<Format>("xlsx");
+  const [monthlyMode, setMonthlyMode] = useState<MonthlyMode>("once");
   const cache = useRef(new Map<string, unknown>());
   const [loaded, setLoaded] = useState(0);
   const [error, setError] = useState("");
@@ -75,15 +76,18 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
       const chosen = s.fields.length > 1 ? s.fields.filter(f => fields.includes(f.key)) : s.fields;
       for (const f of chosen) {
         const header = s.fields.length > 1 ? `${s.id} ${f.label}` : s.label;
-        columns.push({ header, values: extract(json, s, f.key) });
+        columns.push({ header, values: extract(json, s, f.key), monthly: s.frequency === "Mensual" });
         meta.push({ header, name: s.fields.length > 1 ? `${s.label} · ${f.label}` : s.label, source: s.source, unit: f.unit, frequency: s.frequency,
-          notes: s.id.startsWith("DPF_") ? "Tasa mensual (no anualizada)." : s.source === "Bloomberg" ? "Bloomberg repite el último valor en feriados chilenos." : s.frequency === "Mensual" ? "Fechada el día 1 del mes de referencia." : "" });
+          notes: s.id.startsWith("DPF_") ? "Tasa mensual (no anualizada)." : s.source === "Bloomberg" ? "Bloomberg repite el último valor en feriados chilenos." : s.frequency === "Mensual" ? "Dato mensual: corresponde al mes de la fecha de la fila (mes de referencia), no a la fecha de publicación." : "" });
       }
     }
     return { columns, meta };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, fields, ready, loaded]);
-  const table = useMemo(() => buildTable(columns, { ...range, frequency }), [columns, range.from, range.to, frequency]); // eslint-disable-line react-hooks/exhaustive-deps
+  const table = useMemo(() => buildTable(columns, { ...range, frequency, monthlyMode }), [columns, range.from, range.to, frequency, monthlyMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  const mixedFrequencies = frequency !== "monthly" && series.some(s => s.frequency === "Mensual") && series.some(s => s.frequency === "Diaria");
+  // Fechas que se muestran en los campos Desde/Hasta (las del atajo, o las elegidas).
+  const shownFrom = period === "custom" ? from : (range.from ?? firstDate), shownTo = period === "custom" ? to : lastDate;
 
   const download = () => {
     const stamp = (table.rows.at(-1)?.[0] ?? lastDate).replace(/-/g, "");
@@ -136,7 +140,11 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
 
         <div className="db-option"><label>Período</label>
           <div className="segmented">{PERIODS.map(([k, l]) => <button key={k} className={period === k ? "selected" : ""} aria-pressed={period === k} onClick={() => setPeriod(k)}>{l}</button>)}</div>
-          {period === "custom" && <div className="db-dates"><input type="date" value={from} min={firstDate} max={lastDate} onChange={e => setFrom(e.target.value)} aria-label="Desde" /><span>a</span><input type="date" value={to} min={firstDate} max={lastDate} onChange={e => setTo(e.target.value)} aria-label="Hasta" /></div>}
+          <div className="db-dates">
+            <label>Desde<input type="date" value={shownFrom} min={firstDate} max={lastDate} onChange={e => { setFrom(e.target.value); setTo(shownTo); setPeriod("custom"); }} /></label>
+            <label>Hasta<input type="date" value={shownTo} min={firstDate} max={lastDate} onChange={e => { setTo(e.target.value); setFrom(shownFrom); setPeriod("custom"); }} /></label>
+          </div>
+          {period === "custom" && <p className="db-hint">Rango personalizado. Elige un atajo para volver a un período estándar.</p>}
         </div>
         {hasBonds && <div className="db-option"><label>Campos de bonos</label>
           <div className="db-checks">{BOND_FIELDS.map(([k, l]) => <label key={k}><input type="checkbox" checked={fields.includes(k)} onChange={() => setFields(f => f.includes(k) ? (f.length > 1 ? f.filter(x => x !== k) : f) : [...f, k])} />{l}</label>)}</div>
@@ -144,6 +152,10 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
         <div className="db-option"><label>Frecuencia</label>
           <div className="segmented">{([["daily", "Diaria"], ["weekly", "Semanal"], ["monthly", "Mensual"]] as [Frequency, string][]).map(([k, l]) => <button key={k} className={frequency === k ? "selected" : ""} aria-pressed={frequency === k} onClick={() => setFrequency(k)}>{l}</button>)}</div>
         </div>
+        {mixedFrequencies && <div className="db-option"><label>Series mensuales</label>
+          <div className="segmented">{([["once", "Una vez por mes"], ["fill", "Repetir en el mes"]] as [MonthlyMode, string][]).map(([k, l]) => <button key={k} className={monthlyMode === k ? "selected" : ""} aria-pressed={monthlyMode === k} onClick={() => setMonthlyMode(k)}>{l}</button>)}</div>
+          <p className="db-hint">{monthlyMode === "once" ? "El dato mensual va en el primer día con datos de su mes de referencia; el resto del mes queda vacío." : "El dato mensual se repite en todos los días de su mes de referencia."} Ojo: el IPC de un mes se publica a inicios del mes siguiente; para backtests conviene desfasarlo.</p>
+        </div>}
         <div className="db-option"><label>Formato</label>
           <div className="segmented">{([["xlsx", "Excel"], ["csv-cl", "CSV (;)"], ["csv", "CSV (,)"]] as [Format, string][]).map(([k, l]) => <button key={k} className={format === k ? "selected" : ""} aria-pressed={format === k} onClick={() => setFormat(k)}>{l}</button>)}</div>
           <p className="db-hint">{format === "xlsx" ? "Hoja Datos + hoja Descripción con fuente y unidad de cada columna." : format === "csv-cl" ? "Separador ; y coma decimal: abre directo en Excel en español." : "Separador , y punto decimal: para Python, R u otros."}</p>

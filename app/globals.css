@@ -222,8 +222,9 @@
 .db-option{display:flex;flex-direction:column;gap:6px}
 .db-option>label{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#71809a}
 .db-option .segmented{flex-wrap:wrap}
-.db-dates{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
-.db-dates input{flex:1;min-width:0;border:1px solid #dbe2ec;border-radius:7px;padding:5px 8px;font:inherit;font-size:12px}
+.db-dates{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.db-dates label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted)}
+.db-dates input{min-width:0;border:1px solid #dbe2ec;border-radius:7px;padding:6px 8px;font:inherit;font-size:13px;color:var(--text)}
 .db-checks{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
 .db-checks label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .db-checks input{accent-color:var(--accent)}

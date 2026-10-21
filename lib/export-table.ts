@@ -1,7 +1,9 @@
 import { strToU8, zipSync } from "fflate";
 
 /** Una columna lista para exportar: valores por fecha (AAAA-MM-DD). */
-export type ExportColumn = { header: string; values: Map<string, number> };
+export type ExportColumn = { header: string; values: Map<string, number>; /** Serie mensual (fechada el día 1 del mes). */ monthly?: boolean };
+/** Cómo ubicar las series mensuales en una tabla diaria o semanal. */
+export type MonthlyMode = "once" | "fill";
 export type ExportMeta = { header: string; name: string; source: string; unit: string; frequency: string; notes: string };
 export type Frequency = "daily" | "weekly" | "monthly";
 
@@ -22,20 +24,42 @@ function periodKey(date: string, frequency: Frequency) {
  * Tabla ancha: una fila por fecha, una columna por serie. Sin relleno: si una serie no tiene
  * dato en una fecha, la celda queda vacía. Semanal y mensual toman el último dato de cada
  * período y fechan la fila al cierre del período (viernes / fin de mes).
+ * Series mensuales mezcladas con diarias (frecuencia diaria o semanal): "once" pone el valor en
+ * la primera fecha disponible de su mes de referencia; "fill" lo repite en todas las fechas del mes.
  */
-export function buildTable(columns: ExportColumn[], options: { from?: string; to?: string; frequency: Frequency }) {
-  const { from = "0000-00-00", to = "9999-12-31", frequency } = options;
-  const perColumn = columns.map(col => {
+export function buildTable(columns: ExportColumn[], options: { from?: string; to?: string; frequency: Frequency; monthlyMode?: MonthlyMode }) {
+  const { from = "0000-00-00", to = "9999-12-31", frequency, monthlyMode = "once" } = options;
+  const collapse = (col: ExportColumn, f: Frequency, lo: string, hi: string) => {
     const out = new Map<string, { date: string; value: number }>();
     for (const [date, value] of col.values) {
-      if (date < from || date > to || !Number.isFinite(value)) continue;
-      const key = periodKey(date, frequency), prev = out.get(key);
+      if (date < lo || date > hi || !Number.isFinite(value)) continue;
+      const key = periodKey(date, f), prev = out.get(key);
       if (!prev || date > prev.date) out.set(key, { date, value });
     }
     return out;
-  });
-  const dates = [...new Set(perColumn.flatMap(m => [...m.keys()]))].sort();
-  const rows = dates.map(date => [date, ...perColumn.map(m => m.get(date)?.value ?? null)] as [string, ...(number | null)[]]);
+  };
+  // Las mensuales se ubican sobre las fechas de las series diarias (si las hay), en vez de crear
+  // filas propias el día 1 (que puede ser fin de semana).
+  const mixed = frequency !== "monthly" && columns.some(c => c.monthly) && columns.some(c => !c.monthly);
+  const perColumn = columns.map(col => mixed && col.monthly ? null : collapse(col, frequency, from, to));
+  const dates = [...new Set(perColumn.flatMap(m => m ? [...m.keys()] : []))].sort();
+  if (mixed) {
+    columns.forEach((col, i) => {
+      if (!col.monthly) return;
+      // Valor de cada mes de referencia (AAAA-MM), sin filtrar por período: el mes puede empezar antes de "desde".
+      const byMonth = new Map([...col.values].filter(([, v]) => Number.isFinite(v)).map(([d, v]) => [d.slice(0, 7), v]));
+      const out = new Map<string, { date: string; value: number }>();
+      const seen = new Set<string>();
+      for (const d of dates) {
+        const month = d.slice(0, 7), v = byMonth.get(month);
+        if (v === undefined) continue;
+        if (monthlyMode === "once" && seen.has(month)) continue;
+        seen.add(month); out.set(d, { date: d, value: v });
+      }
+      perColumn[i] = out;
+    });
+  }
+  const rows = dates.map(date => [date, ...perColumn.map(m => m!.get(date)?.value ?? null)] as [string, ...(number | null)[]]);
   return { headers: ["Fecha", ...columns.map(c => c.header)], rows };
 }
 
