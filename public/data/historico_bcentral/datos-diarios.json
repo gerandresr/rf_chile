@@ -25816,5 +25816,53 @@
     "tpm": 4.5,
     "usdclp_obs": 978.61,
     "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-14",
+    "tpm": 4.5,
+    "usdclp_obs": 980.79,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-15",
+    "tpm": 4.5,
+    "usdclp_obs": 987.03,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-16",
+    "tpm": 4.5,
+    "usdclp_obs": 984.09,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-17",
+    "tpm": null,
+    "usdclp_obs": null,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-18",
+    "tpm": null,
+    "usdclp_obs": null,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-19",
+    "tpm": 4.5,
+    "usdclp_obs": 981.65,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-20",
+    "tpm": 4.5,
+    "usdclp_obs": 981.86,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-21",
+    "tpm": 4.5,
+    "usdclp_obs": 978.56,
+    "componente_m2": null
   }
 ]
