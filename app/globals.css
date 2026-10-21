@@ -344,3 +344,16 @@
 .cb-swatch{width:20px;height:20px;padding:0;border:1px solid #dbe2ec;border-radius:5px;background:none;cursor:pointer;flex:none}
 .cb-swatch::-webkit-color-swatch-wrapper{padding:2px}.cb-swatch::-webkit-color-swatch{border:none;border-radius:3px}
 .cb-text-editor{position:absolute;transform:translateY(-50%);min-width:180px;border:1.5px solid var(--accent);border-radius:6px;padding:3px 6px;background:rgba(255,255,255,.96);font-family:inherit;outline:none;z-index:5;box-shadow:0 4px 14px rgba(15,23,42,.12)}
+
+/* Gráficos: recomendaciones en cabecera y anotaciones en cuadrícula bajo el gráfico. */
+.cb-recommended-top{margin-bottom:14px}
+.cb-recommended-top h2{margin:0;font-size:18px}
+.cb-annotations-section{display:flex;flex-direction:column;gap:12px}
+.cb-annotations-head h2{margin:0 0 4px;font-size:19px}
+.cb-annotations-head p{margin:0;color:var(--muted);font-size:13px}
+.cb-annotations-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.cb-annotations-grid .cb-block{min-width:0;height:100%}
+.cb-annotations-grid .cb-block h2{font-size:16px}
+.cb-annotations-grid .cb-tools{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cb-annotations-grid .cb-btn{white-space:normal}
+@media(max-width:780px){.cb-annotations-grid{grid-template-columns:1fr}}
