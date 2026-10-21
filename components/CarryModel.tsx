@@ -38,7 +38,7 @@ export function CarryModel({ data }: { data: CarryModelData }) {
     </div>
     <div className="kpi-grid">
       <div className="kpi"><div className="kpi-label">Financiamiento {h}m (swap Cámara)</div><div className="kpi-value">{number(result.fundingRate)}%</div><div className="kpi-foot kpi-foot-static">Costo del período: {number(result.fundingPct, 3)}%</div></div>
-      <div className="kpi"><div className="kpi-label">UF esperada al {day(result.end)}</div><div className="kpi-value">{number(result.ufGrowthPct, 2)}%</div><div className="kpi-foot kpi-foot-static">≈ {number(ufAnnual, 1)}% anualizado (IPC observado + forwards ICAP)</div></div>
+      <div className="kpi"><div className="kpi-label">UF esperada al {day(result.end)}</div><div className="kpi-value">{number(result.ufGrowthPct, 2)}%</div><div className="kpi-foot kpi-foot-static">≈ {number(ufAnnual, 1)}% anualizado (IPC observado + forwards de mercado)</div></div>
       <div className="kpi"><div className="kpi-label">Mejor retorno/riesgo {type}</div><div className="kpi-value">{best ? best.code : "—"}</div><div className="kpi-foot kpi-foot-static">{best ? `${signed(best.totalPct)}% en ${h}m · breakeven ${number(best.breakevenBp, 0)} pb` : ""}</div></div>
       <div className="kpi"><div className="kpi-label">Curva {type} (Nelson-Siegel)</div><div className="kpi-value">{curve ? `${number(curve.rmseBp, 1)} pb` : "—"}</div><div className="kpi-foot kpi-foot-static">Error medio del ajuste · datos al {day(result.date)}</div></div>
     </div>

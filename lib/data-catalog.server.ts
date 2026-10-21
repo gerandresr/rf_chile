@@ -75,11 +75,11 @@ export function dataCatalog(): Catalog {
       const label = `${type} ${(Number(cpn) / 10).toFixed(1).replace(".", ",")}% ${MONTHS[Number(mm) - 1]}-20${yy}`;
       const fields: SeriesField[] = [{ key: "tir", label: "TIR", unit: type === "BTU" ? "% real (UF)" : "%" }, { key: "duracion", label: "Duración", unit: "años" }, { key: "precio", label: "Precio", unit: "% del par" }, { key: "convexidad", label: "Convexidad", unit: "" }]
         .filter(f => Array.isArray(s[f.key]));
-      all.push({ id: code, group: type === "BTP" ? "Bonos BTP (pesos)" : "Bonos BTU (UF)", label, detail: code, source: "RiskAmerica", frequency: "Diaria",
+      all.push({ id: code, group: type === "BTP" ? "Bonos BTP (pesos)" : "Bonos BTU (UF)", label, detail: code, source: "Mercado", frequency: "Diaria",
         ...r, file: `/data/historico_riskamerica/${file}`, format: "riskamerica", key: code, fields, search: `${code} ${label}`.toLowerCase() });
     } else if (/^DPF_\d+$/.test(code)) {
       const days = Number(code.slice(4));
-      all.push({ id: code, group: "Depósitos a plazo (DPF)", label: `DPF ${days} días`, detail: "Tasa mensual", source: "RiskAmerica", frequency: "Diaria",
+      all.push({ id: code, group: "Depósitos a plazo (DPF)", label: `DPF ${days} días`, detail: "Tasa mensual", source: "Mercado", frequency: "Diaria",
         ...r, file: `/data/historico_riskamerica/${file}`, format: "riskamerica", key: code, fields: [{ key: "tir", label: "Tasa", unit: "% mensual" }], search: `dpf deposito ${days}`.toLowerCase() });
     }
   }

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const folders = [
-    { path: path.join(process.cwd(), "public", "data", "historico_riskamerica"), source: "RiskAmerica" },
+    { path: path.join(process.cwd(), "public", "data", "historico_riskamerica"), source: "Mercado" },
     { path: path.join(process.cwd(), "public", "data", "json_bbg"), source: "Bloomberg" },
     // Todos los históricos Bloomberg: swaps, monedas, índices, tasas y volatilidad.
     { path: path.join(process.cwd(), "public", "data", "historico_bloomberg"), source: "Bloomberg" },

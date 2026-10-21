@@ -47,7 +47,7 @@ export function tpmModelData(): TpmModelData {
       forwardHistory({ label: "Entre 3 y 6 meses", near: swaps.clpcam_3m, nearMonths: 3, far: swaps.clpcam_6m, farMonths: 6, tpmOn: tpm.on, lastTpmDate: tpm.last, spreadBp }),
       forwardHistory({ label: "Entre 6 y 12 meses", near: swaps.clpcam_6m, nearMonths: 6, far: swaps.clpcam_1y, farMonths: 12, tpmOn: tpm.on, lastTpmDate: tpm.last, spreadBp }),
     ];
-    return { path, source: useIcap ? `Cierre ICAP ${icap.fecha}` : `Swaps Cámara Bloomberg ${bbDate}`, history, spreadObservations: observations };
+    return { path, source: useIcap ? `Cierre Mercado ${icap.fecha}` : `Swaps Cámara Bloomberg ${bbDate}`, history, spreadObservations: observations };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "No fue posible calcular la trayectoria de TPM." };
   }

@@ -39,12 +39,12 @@ export default function InflationPage() {
           <h1>Inflación y TPM</h1>
           <p>IPC mensual observado, expectativas de mercado y TPM descontada por los swaps.</p>
         </div>
-        <div className="asof"><span>Cierre ICAP</span><strong>{icapData.fecha}</strong></div>
+        <div className="asof"><span>Cierre Mercado</span><strong>{icapData.fecha}</strong></div>
       </header>
       <section className="page-block" aria-labelledby="bloque-ipc">
         <div className="page-block-head">
           <h2 id="bloque-ipc">IPC Mensual</h2>
-          <p>Variación mensual observada y esperada por el mercado (forwards de inflación ICAP).</p>
+          <p>Variación mensual observada y esperada por el mercado (forwards de inflación de mercado).</p>
         </div>
         <InflationMonthlyChart observed={observed} expected={expected} />
       </section>

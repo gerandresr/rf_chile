@@ -236,7 +236,7 @@ export function BondSpreadCalculators() {
           utilizando los instrumentos seleccionados para Tasas Benchmark.
         </p>
         <div className="calculator-data-date" aria-live="polite">
-          {data && <>Cierre de referencia: <strong>{data.lastMarketDate}</strong> · RiskAmerica</>}
+          {data && <>Cierre de referencia: <strong>{data.lastMarketDate}</strong> · Mercado</>}
           {!data && !error && "Cargando curvas de referencia…"}
           {error && "No se pudieron cargar las curvas de referencia."}
         </div>
