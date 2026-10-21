@@ -38,9 +38,9 @@
               }
             },
             "type": "line",
-            "color": "#8f1d1d",
+            "color": "#2f6fed",
             "width": 2,
-            "dash": "dash",
+            "dash": "solid",
             "axis": "left",
             "transform": "level",
             "visible": true
