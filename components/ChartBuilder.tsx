@@ -139,7 +139,8 @@ function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, previ
 }
 
 // ---------------- Componente principal ----------------
-export function ChartBuilder({ catalog }: { catalog: Catalog }) {
+export type RecommendedChart = { nombre: string; config: Partial<Config> };
+export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; recommended?: RecommendedChart[] }) {
   const byId = useMemo(() => new Map(catalog.groups.flatMap(g => g.series.map(s => [s.id, s] as const))), [catalog]);
   const allSeries = useMemo(() => catalog.groups.flatMap(g => g.series), [catalog]);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
@@ -480,8 +481,8 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
               <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: 12, bottom: 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
                 {config.grid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5eaf2" />}
                 <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="left" domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 100 ? 0 : 2)} />
-                <YAxis yAxisId="right" orientation="right" hide={!hasRight} domain={domain(config.right)} allowDataOverflow={config.right.min !== "" || config.right.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 100 ? 0 : 2)} />
+                <YAxis yAxisId="left" domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
+                <YAxis yAxisId="right" orientation="right" hide={!hasRight} domain={domain(config.right)} allowDataOverflow={config.right.min !== "" || config.right.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
                 <Tooltip formatter={(v, _n, item) => { const u = units[String(item.dataKey)] ?? ""; return [`${fmt(Number(v), u === "pb" ? 1 : 3)}${u === "%" ? "%" : u ? ` ${u}` : ""}`, config.series.find(s => s.uid === item.dataKey)?.label ?? ""]; }} />
                 {config.legend !== "none" && <Legend verticalAlign={config.legend} wrapperStyle={{ fontSize: 12 }} />}
                 {visible.map(s => {
@@ -503,6 +504,12 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
         </section>
 
         <section className="panel cb-block">
+          {recommended.length > 0 && <>
+            <h2>Gráficos recomendados</h2>
+            <div className="cb-recs">{recommended.map(r => <button key={r.nombre} className="cb-rec" onClick={() => { setConfig({ ...DEFAULT_CONFIG, annotations: [], ...r.config } as Config); window.history.replaceState(null, "", window.location.pathname); flash(`Abierto “${r.nombre}”.`); }}>
+              <strong>{r.nombre}</strong>{r.config.subtitle && <span>{r.config.subtitle}</span>}
+            </button>)}</div>
+          </>}
           <h2>Guardar</h2>
           <div className="cb-inline"><input value={saveName} onChange={e => setSaveName(e.target.value)} placeholder={config.title || "Nombre del gráfico"} aria-label="Nombre para guardar" /><button className="cb-btn" onClick={saveChart}><Save size={14} aria-hidden="true" />Guardar en este navegador</button></div>
           {Object.keys(saved).length > 0 ? <ul className="cb-annots">{Object.keys(saved).sort().map(name => <li key={name}><button className="db-link" onClick={() => { setConfig({ ...DEFAULT_CONFIG, ...saved[name] }); flash(`Abierto “${name}”.`); }}>{name}</button><button className="cb-icon" onClick={() => removeSaved(name)} title="Borrar"><Trash2 size={13} /></button></li>)}</ul>
