@@ -186,3 +186,52 @@
 .page-block-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;margin:6px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line)}
 .page-block-head h2{font-size:22px;margin:0;letter-spacing:-.02em}
 .page-block-head p{margin:0;color:var(--muted);font-size:13px}
+
+/* ---------- Nueva base de datos ---------- */
+.db-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+.db-picker{padding:14px}
+.db-search{display:flex;align-items:center;gap:8px;border:1px solid #dbe2ec;border-radius:9px;padding:0 12px;background:#fff;color:#748096}
+.db-search input{flex:1;border:0;outline:0;height:40px;font:inherit;font-size:14px;color:var(--text);background:transparent;min-width:0}
+.db-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
+.db-shortcuts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 6px}
+.db-shortcuts>span{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#71809a;margin-right:4px}
+.db-group{border-top:1px solid var(--line)}
+.db-group-head{display:flex;align-items:center;gap:8px}
+.db-group-toggle{flex:1;display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:11px 2px;cursor:pointer;font:inherit;text-align:left;color:var(--text)}
+.db-group-name{font-weight:700;font-size:14px}
+.db-group-count{margin-left:auto;font-size:11px;color:#71809a}
+.db-group-count b{color:var(--accent)}
+.db-chevron{transition:transform .15s;color:#94a3b8;transform:rotate(-90deg)}
+.db-chevron.open{transform:none}
+.db-link{border:0;background:transparent;color:var(--accent);font:inherit;font-size:12px;font-weight:650;cursor:pointer;padding:4px 6px}
+.db-list{list-style:none;margin:0 0 10px;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px 10px}
+.db-list label{display:grid;grid-template-columns:18px minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;padding:6px 8px;border-radius:7px;cursor:pointer}
+.db-list label:hover{background:#f3f6fb}
+.db-list label.on{background:#eaf0ff}
+.db-list input{grid-row:1/3;width:15px;height:15px;accent-color:var(--accent);margin:0}
+.db-name{font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-meta{grid-column:2;font-size:11px;color:#8b96a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-range{grid-column:3;grid-row:1/3;font-size:11px;color:#71809a;font-variant-numeric:tabular-nums;white-space:nowrap}
+.db-config{position:sticky;top:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.db-config-head{display:flex;align-items:center;justify-content:space-between}
+.db-config-head h2{margin:0;font-size:17px}
+.db-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow:auto}
+.db-chip{display:inline-flex;align-items:center;gap:4px;background:#eaf0ff;color:#245ac8;border-radius:999px;padding:4px 6px 4px 10px;font-size:11px;font-weight:650}
+.db-chip button{display:inline-flex;border:0;background:transparent;color:inherit;cursor:pointer;padding:2px;border-radius:50%}
+.db-chip button:hover{background:rgba(36,90,200,.15)}
+.db-option{display:flex;flex-direction:column;gap:6px}
+.db-option>label{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#71809a}
+.db-option .segmented{flex-wrap:wrap}
+.db-dates{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.db-dates input{flex:1;min-width:0;border:1px solid #dbe2ec;border-radius:7px;padding:5px 8px;font:inherit;font-size:12px}
+.db-checks{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.db-checks label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.db-checks input{accent-color:var(--accent)}
+.db-hint{margin:0;font-size:11px;color:#8b96a8}
+.db-download{display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:9px;background:var(--accent);color:#fff;font:inherit;font-size:14px;font-weight:700;padding:12px;cursor:pointer}
+.db-download:hover:not(:disabled){background:#2459c9}
+.db-download:disabled{background:#cbd5e1;cursor:not-allowed}
+.db-preview{min-width:600px}
+.db-preview td{font-variant-numeric:tabular-nums}
+@media(max-width:1100px){.db-layout{grid-template-columns:1fr}.db-config{position:static}}
+@media(max-width:600px){.db-list{grid-template-columns:1fr}}
