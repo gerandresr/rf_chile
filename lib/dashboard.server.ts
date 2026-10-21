@@ -154,8 +154,8 @@ export function dashboardData(): DashboardData {
   const tick = (label: string, s: Series, unit: TickerItem["unit"], digits: number, kind: "bp" | "pct"): TickerItem =>
     ({ label, value: last(s), unit, digits, change: changes(s, kind).d1, changeUnit: kind === "bp" ? "pb" : "%", spark: spark(s, 1), asOf: lastDate(s) });
   const ticker: TickerItem[] = [
-    tick("BTP 2", cm.BTP[2], "%", 2, "bp"), tick("BTP 5", cm.BTP[5], "%", 2, "bp"), tick("BTP 10", cm.BTP[10], "%", 2, "bp"),
-    tick("BTU 5", cm.BTU[5], "%", 2, "bp"), tick("BTU 10", cm.BTU[10], "%", 2, "bp"),
+    tick("BTP-02", cm.BTP[2], "%", 2, "bp"), tick("BTP-05", cm.BTP[5], "%", 2, "bp"), tick("BTP-10", cm.BTP[10], "%", 2, "bp"),
+    tick("BTU-05", cm.BTU[5], "%", 2, "bp"), tick("BTU-10", cm.BTU[10], "%", 2, "bp"),
     tick("SPC 2a", swapsCLP[2], "%", 2, "bp"), tick("SPC 10a", swapsCLP[10], "%", 2, "bp"),
     tick("USD/CLP", usdclp, "", 2, "pct"), tick("UST 10a", ust10, "%", 2, "bp"),
     tick("Cobre", copper, "", 1, "pct"), tick("CDS Chile 5a", cds, "pb", 1, "bp"), tick("IPSA", bloomberg("ipsa"), "", 0, "pct"),
@@ -223,8 +223,8 @@ export function dashboardData(): DashboardData {
     card("Pendiente BTP 2–10", "BTP 10 − BTP 2", combine(cm.BTP[10], cm.BTP[2], (x, y) => (x - y) * 100), "pb"),
     card("Pendiente SPC 2–10", "SPC 10a − SPC 2a", combine(swapsCLP[10], swapsCLP[2], (x, y) => (x - y) * 100), "pb"),
     card("BTP 10 − SPC 10", "Spread bono-swap (convenciones sin ajustar)", combine(cm.BTP[10], swapsCLP[10], (x, y) => (x - y) * 100), "pb"),
-    card("Breakeven 5 años", "Compensación inflacionaria bonos", breakeven[5], "%", { label: "Meta", value: 3 }),
-    card("Breakeven 10 años", "Compensación inflacionaria bonos", breakeven[10], "%", { label: "Meta", value: 3 }),
+    card("BEI PAPEL 5A", "Compensación inflacionaria bonos", breakeven[5], "%", { label: "Meta", value: 3 }),
+    card("BEI PAPEL 10A", "Compensación inflacionaria bonos", breakeven[10], "%", { label: "Meta", value: 3 }),
     card("BTP 10 − UST 10", "Diferencial con Treasury", combine(cm.BTP[10], ust10, (x, y) => (x - y) * 100), "pb"),
     card("SPC 1a − TPM", "Alzas (+) o recortes (−) descontados a 1 año", combine(bloomberg("clpcam_1y"), tpm, (x, y) => (x - y) * 100), "pb"),
   ];
