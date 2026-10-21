@@ -48,9 +48,8 @@ export function TpmProbabilities({ data }: { data: TpmModelData }) {
         <tfoot><tr><td className="strong">Esperada</td>{path.path.map(p => <td key={p.meeting} style={{ textAlign: "center", fontWeight: 650 }}>{number(p.expectedTpm, 2)}</td>)}</tr>
           <tr><td className="muted">Cambio</td>{path.path.map(p => <td key={p.meeting} className="muted" style={{ textAlign: "center" }}>{signed(p.change * 100, 1)} pb</td>)}</tr></tfoot>
       </table></div>
-    </section>
 
-    <section className="panel" aria-label="Historia de lo descontado versus lo efectivo">
+      <div className="model-chart-section" aria-label="Historia de lo descontado versus lo efectivo">
       <div className="panel-head" style={{ flexWrap: "wrap" }}>
         <div><div className="eyebrow">Historia</div><h2>¿Acierta el mercado?</h2></div>
         <div className="segmented" role="group" aria-label="Ventana">
@@ -67,6 +66,7 @@ export function TpmProbabilities({ data }: { data: TpmModelData }) {
         <Line dataKey="implied" name="Descontado por swaps" stroke="#2f6fed" strokeWidth={1.8} dot={false} isAnimationActive={false} />
         <Line dataKey="realized" name="TPM efectiva" stroke="#d94b4b" strokeWidth={1.8} dot={false} isAnimationActive={false} connectNulls={false} />
       </LineChart></ResponsiveContainer></div>
+      </div>
     </section>
 
     <div className="model-notice">
