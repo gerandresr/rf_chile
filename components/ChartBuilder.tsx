@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, Bar, Brush, CartesianGrid, ComposedChart, Customized, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowDownRight, Copy, Download, Eye, EyeOff, MousePointerClick, Plus, Save, Search, Trash2, X } from "lucide-react";
+import { ArrowDownRight, Copy, Download, Eye, EyeOff, MousePointerClick, MoveUpRight, Plus, Save, Search, Trash2, Type, X } from "lucide-react";
 import { AppShell } from "./AppShell";
 import type { Catalog, CatalogSeries } from "@/lib/data-catalog.server";
 import { extractSeries } from "@/lib/series-data";
@@ -18,7 +18,12 @@ type PlotSeries = { uid: string; label: string; source: Source; type: ChartType;
 type Annotation =
   | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string }
   | { id: string; kind: "vline"; date: string; label: string; color: string }
-  | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up" };
+  | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up" }
+  | { id: string; kind: "farrow"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number }
+  | { id: string; kind: "text"; x: string; y: number; axis: Axis; text: string; color: string; size: number; bold: boolean };
+type FreeAnnotation = Extract<Annotation, { kind: "farrow" | "text" }>;
+type Mode = "none" | "vline" | "arrow" | "farrow" | "text";
+type PngOptions = { background: "white" | "none"; text: "dark" | "light"; header: boolean };
 type Period = "1m" | "3m" | "1y" | "5y" | "all" | "custom";
 type Config = {
   v: 1; series: PlotSeries[]; annotations: Annotation[]; period: Period; from: string; to: string;
@@ -76,6 +81,63 @@ function ArrowLayer({ xAxisMap, yAxisMap, arrows, rows, series }: { xAxisMap?: A
   })}</g>;
 }
 
+// ---------------- Capa libre: flechas y textos en coordenadas del gráfico ----------------
+type Pt = { date: string; value: number };
+type FreeLayerProps = {
+  xAxisMap?: AxisMap; yAxisMap?: AxisMap & Record<string, { scale: { invert?: (v: number) => number } }>; offset?: { left: number; top: number; width: number; height: number };
+  dates: string[]; items: FreeAnnotation[]; mode: Mode; axis: Axis; preview: { from: Pt; to: Pt; color: string; width: number } | null;
+  onPointer: (kind: "down" | "move" | "up", pt: Pt) => void; onGrab: (id: string, pt: Pt) => void; moving: boolean;
+};
+function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, preview, onPointer, onGrab, moving }: FreeLayerProps) {
+  const xAxis = xAxisMap ? Object.values(xAxisMap)[0] : undefined;
+  if (!xAxis || !yAxisMap || !offset) return null;
+  const band = xAxis.scale.bandwidth ? xAxis.scale.bandwidth() / 2 : 0;
+  const xOf = (d: string) => { const v = xAxis.scale(d); return typeof v === "number" && !Number.isNaN(v) ? v + band : null; };
+  const yScale = (a: Axis) => (yAxisMap[a] ?? yAxisMap.left)?.scale as unknown as ((v: number) => number) & { invert?: (v: number) => number };
+  const visibleDates = dates.filter(d => xOf(d) !== null);
+  // Píxel → fecha más cercana y valor del eje.
+  const toData = (px: number, py: number, a: Axis): Pt | null => {
+    if (!visibleDates.length) return null;
+    let best = visibleDates[0], dist = Infinity;
+    for (const d of visibleDates) { const x = xOf(d)!, dd = Math.abs(x - px); if (dd < dist) { dist = dd; best = d; } }
+    const inv = yScale(a)?.invert;
+    return inv ? { date: best, value: inv(py) } : null;
+  };
+  const point = (e: React.MouseEvent<SVGElement>) => {
+    const svg = (e.currentTarget as SVGElement).ownerSVGElement ?? (e.currentTarget as unknown as SVGSVGElement);
+    const r = svg.getBoundingClientRect();
+    return toData(e.clientX - r.left, e.clientY - r.top, axis);
+  };
+  const arrow = (key: string, a: { x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number }, grab?: (e: React.MouseEvent<SVGElement>) => void) => {
+    const x1 = xOf(a.x1), x2 = xOf(a.x2), ys = yScale(a.axis);
+    if (x1 === null || x2 === null || !ys) return null;
+    const y1 = ys(a.y1), y2 = ys(a.y2), ang = Math.atan2(y2 - y1, x2 - x1), h = 8 + a.width * 2;
+    const head = `${x2},${y2} ${x2 - h * Math.cos(ang - 0.45)},${y2 - h * Math.sin(ang - 0.45)} ${x2 - h * Math.cos(ang + 0.45)},${y2 - h * Math.sin(ang + 0.45)}`;
+    const ex = x2 - (h * 0.7) * Math.cos(ang), ey = y2 - (h * 0.7) * Math.sin(ang);
+    return <g key={key} onMouseDown={grab} style={grab ? { cursor: "move" } : undefined}>
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="transparent" strokeWidth={12} />
+      <line x1={x1} y1={y1} x2={ex} y2={ey} stroke={a.color} strokeWidth={a.width} strokeLinecap="round" />
+      <polygon points={head} fill={a.color} />
+    </g>;
+  };
+  const capture = mode === "farrow" || mode === "text" || moving;
+  return <g>
+    {items.map(it => {
+      const grab = mode === "none" ? (e: React.MouseEvent<SVGElement>) => { e.stopPropagation(); const r = (e.currentTarget as SVGElement).ownerSVGElement!.getBoundingClientRect(); const pt = toData(e.clientX - r.left, e.clientY - r.top, it.axis); if (pt) onGrab(it.id, pt); } : undefined;
+      if (it.kind === "farrow") return arrow(it.id, it, grab);
+      const x = xOf(it.x), ys = yScale(it.axis);
+      if (x === null || !ys) return null;
+      return <text key={it.id} x={x} y={ys(it.y)} fontSize={it.size} fontWeight={it.bold ? 700 : 400} fill={it.color} stroke="#fff" strokeWidth={3} paintOrder="stroke" dominantBaseline="middle" onMouseDown={grab} style={grab ? { cursor: "move" } : undefined}>{it.text}</text>;
+    })}
+    {preview && arrow("preview", { x1: preview.from.date, y1: preview.from.value, x2: preview.to.date, y2: preview.to.value, axis, color: preview.color, width: preview.width })}
+    {capture && <rect x={offset.left} y={offset.top} width={offset.width} height={offset.height} fill="transparent" style={{ cursor: moving ? "grabbing" : "crosshair" }}
+      onMouseDown={e => { const pt = point(e); if (pt) onPointer("down", pt); }}
+      onMouseMove={e => { const pt = point(e); if (pt) onPointer("move", pt); }}
+      onMouseUp={e => { const pt = point(e); if (pt) onPointer("up", pt); }}
+      onMouseLeave={e => { const pt = point(e); if (pt) onPointer("up", pt); }} />}
+  </g>;
+}
+
 // ---------------- Componente principal ----------------
 export function ChartBuilder({ catalog }: { catalog: Catalog }) {
   const byId = useMemo(() => new Map(catalog.groups.flatMap(g => g.series.map(s => [s.id, s] as const))), [catalog]);
@@ -85,8 +147,11 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
   const setSeries = (u: string, patch: Partial<PlotSeries>) => setConfig(c => ({ ...c, series: c.series.map(s => s.uid === u ? { ...s, ...patch } : s) }));
   const [query, setQuery] = useState("");
   const [calc, setCalc] = useState<{ op: "diff" | "fly"; legs: string[] }>({ op: "diff", legs: ["", "", ""] });
-  const [mode, setMode] = useState<"none" | "vline" | "arrow">("none");
-  const [draft, setDraft] = useState({ label: "", value: "3", axis: "left" as Axis, color: "#d94b4b", seriesUid: "", dir: "down" as "down" | "up" });
+  const [mode, setMode] = useState<Mode>("none");
+  const [draft, setDraft] = useState({ label: "", value: "3", axis: "left" as Axis, color: "#d94b4b", seriesUid: "", dir: "down" as "down" | "up", size: 13, bold: true, width: 2 });
+  const [drag, setDrag] = useState<{ from: Pt; to: Pt } | null>(null);
+  const [move, setMove] = useState<{ id: string; start: Pt; original: FreeAnnotation } | null>(null);
+  const [png, setPng] = useState<PngOptions>({ background: "white", text: "dark", header: true });
   const [saved, setSaved] = useState<Record<string, Config>>({});
   const [saveName, setSaveName] = useState("");
   const [notice, setNotice] = useState("");
@@ -191,7 +256,7 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
   const onChartClick = (state: { activeLabel?: string | number } | null) => {
     // La fecha sale del punto bajo el cursor (se guarda al mover el mouse, por si el clic no la trae).
     const date = state?.activeLabel ? String(state.activeLabel) : hoverDate.current;
-    if (mode === "none" || !date) return;
+    if ((mode !== "vline" && mode !== "arrow") || !date) return;
     if (mode === "vline") set({ annotations: [...config.annotations, { id: uid(), kind: "vline", date, label: draft.label, color: draft.color }] });
     else {
       const target = draft.seriesUid || config.series.find(s => s.visible)?.uid;
@@ -199,6 +264,39 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
     }
     setMode("none");
   };
+  // Flecha libre (arrastrar), texto libre (clic) y mover anotaciones libres existentes.
+  const freeAxis: Axis = config.series.some(s => s.visible && s.axis === "left") ? "left" : "right";
+  const dateIndex = (d: string) => rows.findIndex(r => r.date === d);
+  const onFreePointer = (kind: "down" | "move" | "up", pt: Pt) => {
+    if (move) {
+      if (kind === "down") return;
+      const shiftIdx = dateIndex(pt.date) - dateIndex(move.start.date), dv = pt.value - move.start.value;
+      const shiftDate = (d: string) => { const i = dateIndex(d); const j = Math.min(rows.length - 1, Math.max(0, i + shiftIdx)); return i < 0 ? d : String(rows[j].date); };
+      const o = move.original;
+      const moved: FreeAnnotation = o.kind === "farrow" ? { ...o, x1: shiftDate(o.x1), x2: shiftDate(o.x2), y1: o.y1 + dv, y2: o.y2 + dv } : { ...o, x: shiftDate(o.x), y: o.y + dv };
+      setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === o.id ? moved : a) }));
+      if (kind === "up") setMove(null);
+      return;
+    }
+    if (mode === "text" && kind === "down") {
+      if (!draft.label.trim()) { flash("Escribe el texto antes de hacer clic."); return; }
+      set({ annotations: [...config.annotations, { id: uid(), kind: "text", x: pt.date, y: pt.value, axis: freeAxis, text: draft.label, color: draft.color, size: draft.size, bold: draft.bold }] });
+      setMode("none");
+    }
+    if (mode === "farrow") {
+      if (kind === "down") setDrag({ from: pt, to: pt });
+      else if (kind === "move" && drag) setDrag({ ...drag, to: pt });
+      else if (kind === "up" && drag) {
+        if (drag.from.date !== pt.date || Math.abs(drag.from.value - pt.value) > 1e-9) set({ annotations: [...config.annotations, { id: uid(), kind: "farrow", x1: drag.from.date, y1: drag.from.value, x2: pt.date, y2: pt.value, axis: freeAxis, color: draft.color, width: draft.width }] });
+        setDrag(null); setMode("none");
+      }
+    }
+  };
+  const onGrab = (id: string, pt: Pt) => {
+    const original = config.annotations.find((a): a is FreeAnnotation => a.id === id && (a.kind === "farrow" || a.kind === "text"));
+    if (original) setMove({ id, start: pt, original });
+  };
+
   const saveChart = () => {
     const name = saveName.trim() || config.title || "Gráfico";
     const next = { ...readSaved(), [name]: config };
@@ -217,34 +315,45 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
     const clone = svg.cloneNode(true) as SVGSVGElement;
     clone.setAttribute("xmlns", "http://www.w3.org/2000/svg"); clone.setAttribute("style", "font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif"); clone.setAttribute("width", String(width)); clone.setAttribute("height", String(height));
     clone.querySelectorAll(".recharts-brush").forEach(n => n.remove());
+    const light = png.text === "light";
+    if (light) {
+      // Texto y ejes claros para fondos oscuros (las anotaciones mantienen su color).
+      const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
+      style.textContent = ".recharts-cartesian-axis-tick-value,.recharts-cartesian-axis-tick-value tspan{fill:#e2e8f0!important}.recharts-cartesian-axis-line,.recharts-cartesian-axis-tick-line{stroke:#94a3b8!important}.recharts-cartesian-grid line{stroke:rgba(255,255,255,.18)!important}";
+      clone.insertBefore(style, clone.firstChild);
+      clone.querySelectorAll("text").forEach(t => { if (t.getAttribute("stroke") === "#fff") t.setAttribute("stroke", "rgba(15,23,42,.6)"); });
+    }
     const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml;charset=utf-8" }));
     const img = new Image();
     img.onload = () => {
-      const visible = config.series.filter(s => s.visible), scale = 2, pad = 24;
-      const header = (config.title ? 34 : 0) + (config.subtitle ? 22 : 0) + 8, legendH = config.legend === "none" ? 0 : 26, footer = 30;
+      const visible = config.series.filter(s => s.visible), scale = 2, pad = png.header ? 24 : 8;
+      const header = png.header ? (config.title ? 34 : 0) + (config.subtitle ? 22 : 0) + 8 : 0, legendH = !png.header || config.legend === "none" ? 0 : 26, footer = png.header ? 30 : 0;
+      const ink = light ? { title: "#f8fafc", sub: "#cbd5e1", legend: "#e2e8f0", foot: "#94a3b8" } : { title: "#172033", sub: "#748096", legend: "#31405a", foot: "#8b96a8" };
       const W = width + pad * 2, H = header + legendH + height + footer + pad;
       const canvas = document.createElement("canvas"); canvas.width = W * scale; canvas.height = H * scale;
       const ctx = canvas.getContext("2d")!; ctx.scale(scale, scale);
-      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+      if (png.background === "white") { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H); }
       const font = "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
       let y = pad;
-      if (config.title) { ctx.fillStyle = "#172033"; ctx.font = `700 20px ${font}`; ctx.fillText(config.title, pad, y + 16); y += 34; }
-      if (config.subtitle) { ctx.fillStyle = "#748096"; ctx.font = `13px ${font}`; ctx.fillText(config.subtitle, pad, y + 10); y += 22; }
-      y += 8;
+      if (png.header && config.title) { ctx.fillStyle = ink.title; ctx.font = `700 20px ${font}`; ctx.fillText(config.title, pad, y + 16); y += 34; }
+      if (png.header && config.subtitle) { ctx.fillStyle = ink.sub; ctx.font = `13px ${font}`; ctx.fillText(config.subtitle, pad, y + 10); y += 22; }
+      if (png.header) y += 8;
       const drawLegend = () => {
         let x = pad; ctx.font = `12px ${font}`;
         for (const s of visible) {
           ctx.fillStyle = s.color; ctx.fillRect(x, y + 4, 14, s.type === "line" ? 3 : 9);
-          ctx.fillStyle = "#31405a"; const text = `${s.label}${units[s.uid] ? ` (${units[s.uid]})` : ""}${s.axis === "right" ? " · eje der." : ""}`;
+          ctx.fillStyle = ink.legend; const text = `${s.label}${units[s.uid] ? ` (${units[s.uid]})` : ""}${s.axis === "right" ? " · eje der." : ""}`;
           ctx.fillText(text, x + 20, y + 12); x += 20 + ctx.measureText(text).width + 18;
         }
         y += legendH;
       };
-      if (config.legend === "top") drawLegend();
+      if (png.header && config.legend === "top") drawLegend();
       ctx.drawImage(img, pad, y, width, height); y += height;
-      if (config.legend === "bottom") drawLegend();
-      ctx.fillStyle = "#8b96a8"; ctx.font = `11px ${font}`; ctx.fillText(config.source || "", pad, H - 14);
-      ctx.textAlign = "right"; ctx.fillText("rfchilena.cl", W - pad, H - 14);
+      if (png.header && config.legend === "bottom") drawLegend();
+      if (png.header) {
+        ctx.fillStyle = ink.foot; ctx.font = `11px ${font}`; ctx.fillText(config.source || "", pad, H - 14);
+        ctx.textAlign = "right"; ctx.fillText("rfchilena.cl", W - pad, H - 14);
+      }
       URL.revokeObjectURL(url);
       canvas.toBlob(b => { if (!b) return; const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `${(config.title || "grafico").replace(/[^\p{L}\p{N}]+/gu, "_").slice(0, 60)}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }, "image/png");
     };
@@ -307,12 +416,22 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
             <label>Color<input type="color" value={draft.color} onChange={e => setDraft(d => ({ ...d, color: e.target.value }))} /></label>
           </div>
           <div className="cb-annot-actions">
+            <div className="cb-inline">
+              <button className={`cb-btn ${mode === "farrow" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "farrow" ? "none" : "farrow")}><MoveUpRight size={14} aria-hidden="true" />Flecha libre: arrastrar</button>
+              <select value={draft.width} onChange={e => setDraft(d => ({ ...d, width: Number(e.target.value) }))} aria-label="Grosor de la flecha"><option value={1.5}>Fina</option><option value={2}>Media</option><option value={3}>Gruesa</option></select>
+            </div>
+            <div className="cb-inline">
+              <button className={`cb-btn ${mode === "text" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "text" ? "none" : "text")}><Type size={14} aria-hidden="true" />Texto libre: clic</button>
+              <select value={draft.size} onChange={e => setDraft(d => ({ ...d, size: Number(e.target.value) }))} aria-label="Tamaño del texto">{[11, 13, 16, 20, 24].map(n => <option key={n} value={n}>{n} px</option>)}</select>
+              <label className="cb-check"><input type="checkbox" checked={draft.bold} onChange={e => setDraft(d => ({ ...d, bold: e.target.checked }))} />Negrita</label>
+            </div>
             <div className="cb-inline"><input value={draft.value} onChange={e => setDraft(d => ({ ...d, value: e.target.value }))} aria-label="Valor de la línea horizontal" /><select value={draft.axis} onChange={e => setDraft(d => ({ ...d, axis: e.target.value as Axis }))} aria-label="Eje"><option value="left">Eje izq.</option><option value="right">Eje der.</option></select><button className="cb-btn" onClick={addHLine}>Línea horizontal</button></div>
             <button className={`cb-btn ${mode === "vline" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "vline" ? "none" : "vline")}><MousePointerClick size={14} aria-hidden="true" />Línea vertical: clic en el gráfico</button>
             <div className="cb-inline"><select value={draft.seriesUid} onChange={e => setDraft(d => ({ ...d, seriesUid: e.target.value }))} aria-label="Serie de la flecha"><option value="">Primera serie</option>{visible.map(s => <option key={s.uid} value={s.uid}>{s.label}</option>)}</select><select value={draft.dir} onChange={e => setDraft(d => ({ ...d, dir: e.target.value as "down" | "up" }))} aria-label="Dirección"><option value="down">↓</option><option value="up">↑</option></select>
               <button className={`cb-btn ${mode === "arrow" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "arrow" ? "none" : "arrow")}><ArrowDownRight size={14} aria-hidden="true" />Flecha: clic</button></div>
           </div>
-          {config.annotations.length > 0 && <ul className="cb-annots">{config.annotations.map(a => <li key={a.id}><span className="cb-annot-text"><span className="cb-dot" style={{ background: a.color }} />{a.kind === "hline" ? `Horizontal en ${a.value}` : a.kind === "vline" ? `Vertical ${a.date}` : `Flecha ${a.date}`}{a.label ? ` · ${a.label}` : ""}</span><button className="cb-icon" onClick={() => set({ annotations: config.annotations.filter(x => x.id !== a.id) })} title="Borrar"><Trash2 size={13} /></button></li>)}</ul>}
+          <p className="db-hint">Las flechas y textos libres se pueden arrastrar para moverlos.</p>
+          {config.annotations.length > 0 && <ul className="cb-annots">{config.annotations.map(a => <li key={a.id}><span className="cb-annot-text"><span className="cb-dot" style={{ background: a.color }} />{a.kind === "hline" ? `Horizontal en ${a.value}${a.label ? ` · ${a.label}` : ""}` : a.kind === "vline" ? `Vertical ${a.date}${a.label ? ` · ${a.label}` : ""}` : a.kind === "arrow" ? `Flecha ${a.date}${a.label ? ` · ${a.label}` : ""}` : a.kind === "farrow" ? `Flecha libre ${a.x1} → ${a.x2}` : `Texto “${a.text}”`}</span><button className="cb-icon" onClick={() => set({ annotations: config.annotations.filter(x => x.id !== a.id) })} title="Borrar"><Trash2 size={13} /></button></li>)}</ul>}
         </section>
 
         <section className="panel cb-block">
@@ -341,11 +460,19 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
               <label>Hasta<input type="date" value={shownTo} onChange={e => set({ period: "custom", to: e.target.value, from: shownFrom })} /></label>
             </div>
             <div className="cb-actions">
-              <button className="cb-btn" onClick={downloadPng} disabled={!rows.length}><Download size={14} aria-hidden="true" />PNG</button>
+              <details className="cb-png">
+                <summary className="cb-btn"><Download size={14} aria-hidden="true" />PNG</summary>
+                <div className="cb-png-panel">
+                  <div className="cb-png-opt"><span>Fondo</span><div className="segmented">{([["white", "Blanco"], ["none", "Transparente"]] as const).map(([k, l]) => <button key={k} className={png.background === k ? "selected" : ""} onClick={() => setPng(p => ({ ...p, background: k }))}>{l}</button>)}</div></div>
+                  <div className="cb-png-opt"><span>Texto y ejes</span><div className="segmented">{([["dark", "Oscuro"], ["light", "Claro (fondos oscuros)"]] as const).map(([k, l]) => <button key={k} className={png.text === k ? "selected" : ""} onClick={() => setPng(p => ({ ...p, text: k }))}>{l}</button>)}</div></div>
+                  <label className="cb-check"><input type="checkbox" checked={png.header} onChange={e => setPng(p => ({ ...p, header: e.target.checked }))} />Incluir título, leyenda y fuente</label>
+                  <button className="db-download" onClick={downloadPng} disabled={!rows.length}><Download size={15} aria-hidden="true" />Descargar PNG</button>
+                </div>
+              </details>
               <button className="cb-btn" onClick={shareLink}><Copy size={14} aria-hidden="true" />Link</button>
             </div>
           </div>
-          {mode !== "none" && <div className="cb-mode">Haz clic en el gráfico para poner la {mode === "vline" ? "línea vertical" : "flecha"}. <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
+          {mode !== "none" && <div className="cb-mode">{mode === "farrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : mode === "text" ? "Haz clic donde quieres el texto." : `Haz clic en el gráfico para poner la ${mode === "vline" ? "línea vertical" : "flecha"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
           {notice && <div className="cb-notice">{notice}</div>}
           <div className="cb-titles">{config.title && <h2>{config.title}</h2>}{config.subtitle && <p>{config.subtitle}</p>}</div>
           <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }}>
@@ -369,6 +496,7 @@ export function ChartBuilder({ catalog }: { catalog: Catalog }) {
                   : null)}
                 {arrows.length > 0 && <Customized component={(p: { xAxisMap?: AxisMap; yAxisMap?: AxisMap }) => <ArrowLayer xAxisMap={p.xAxisMap} yAxisMap={p.yAxisMap} arrows={arrows} rows={rows} series={config.series} />} />}
                 {rows.length > 30 && <Brush dataKey="date" height={22} stroke="#94a3b8" travellerWidth={8} />}
+                <Customized component={(p: Pick<FreeLayerProps, "xAxisMap" | "yAxisMap" | "offset">) => <FreeLayer {...p} dates={rows.map(r => String(r.date))} items={config.annotations.filter((a): a is FreeAnnotation => a.kind === "farrow" || a.kind === "text")} mode={mode} axis={freeAxis} preview={drag ? { ...drag, color: draft.color, width: draft.width } : null} onPointer={onFreePointer} onGrab={onGrab} moving={!!move} />} />
               </ComposedChart></ResponsiveContainer>}
           </div>
           {config.source && <p className="dash-note">{config.source}</p>}
