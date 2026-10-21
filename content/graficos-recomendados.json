@@ -4,13 +4,47 @@
       "nombre": "Futuros de Petróleo",
       "config": {
         "title": "Futuros de Petróleo",
-        "subtitle": "Contratos de WTI y Brent",
+        "subtitle": "Contrato{s} de {series}",
         "source": "Fuente: Bloomberg.",
         "period": "5y",
         "legend": "bottom",
         "series": [
-          { "uid": "wti", "label": "WTI", "source": { "kind": "catalog", "leg": { "id": "bbg:wti", "field": "valor" } }, "type": "line", "color": "#d94b4b", "width": 2, "dash": "solid", "axis": "left", "transform": "level", "visible": true },
-          { "uid": "brent", "label": "Brent", "source": { "kind": "catalog", "leg": { "id": "bbg:brent", "field": "valor" } }, "type": "line", "color": "#8f1d1d", "width": 2, "dash": "dash", "axis": "left", "transform": "level", "visible": true }
+          {
+            "uid": "wti",
+            "label": "WTI",
+            "source": {
+              "kind": "catalog",
+              "leg": {
+                "id": "bbg:wti",
+                "field": "valor"
+              }
+            },
+            "type": "line",
+            "color": "#d94b4b",
+            "width": 2,
+            "dash": "solid",
+            "axis": "left",
+            "transform": "level",
+            "visible": true
+          },
+          {
+            "uid": "brent",
+            "label": "Brent",
+            "source": {
+              "kind": "catalog",
+              "leg": {
+                "id": "bbg:brent",
+                "field": "valor"
+              }
+            },
+            "type": "line",
+            "color": "#8f1d1d",
+            "width": 2,
+            "dash": "dash",
+            "axis": "left",
+            "transform": "level",
+            "visible": true
+          }
         ],
         "annotations": []
       }

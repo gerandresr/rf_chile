@@ -40,6 +40,16 @@ const shift = (date: string, months: number) => { const d = new Date(`${date}T00
 const fmt = (v: number, d = 2) => new Intl.NumberFormat("es-CL", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
 const STORAGE = "rf-graficos-guardados";
 
+/**
+ * Textos dinámicos en título y subtítulo: {series} = nombres de las series visibles ("WTI y Brent")
+ * y {s} = "s" si hay más de una serie visible (para plurales: "Contrato{s} de {series}").
+ */
+function resolveText(text: string, series: { label: string; visible: boolean }[]) {
+  const names = series.filter(s => s.visible).map(s => s.label);
+  const list = names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}`;
+  return text.replace(/\{series\}/g, list).replace(/\{s\}/g, names.length > 1 ? "s" : "");
+}
+
 const DEFAULT_CONFIG: Config = {
   v: 1,
   series: [
@@ -309,6 +319,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
     window.history.replaceState(null, "", url);
     try { await navigator.clipboard.writeText(url); flash("Link copiado: abre este mismo gráfico."); } catch { flash("Link listo en la barra de direcciones."); }
   };
+  const title = resolveText(config.title, config.series), subtitle = resolveText(config.subtitle, config.series);
   const downloadPng = async () => {
     const svg = chartRef.current?.querySelector("svg.recharts-surface") as SVGSVGElement | null;
     if (!svg) return;
@@ -328,7 +339,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
     const img = new Image();
     img.onload = () => {
       const visible = config.series.filter(s => s.visible), scale = 2, pad = png.header ? 24 : 8;
-      const header = png.header ? (config.title ? 34 : 0) + (config.subtitle ? 22 : 0) + 8 : 0, legendH = !png.header || config.legend === "none" ? 0 : 26, footer = png.header ? 30 : 0;
+      const header = png.header ? (title ? 34 : 0) + (subtitle ? 22 : 0) + 8 : 0, legendH = !png.header || config.legend === "none" ? 0 : 26, footer = png.header ? 30 : 0;
       const ink = light ? { title: "#f8fafc", sub: "#cbd5e1", legend: "#e2e8f0", foot: "#94a3b8" } : { title: "#172033", sub: "#748096", legend: "#31405a", foot: "#8b96a8" };
       const W = width + pad * 2, H = header + legendH + height + footer + pad;
       const canvas = document.createElement("canvas"); canvas.width = W * scale; canvas.height = H * scale;
@@ -336,8 +347,8 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
       if (png.background === "white") { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H); }
       const font = "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
       let y = pad;
-      if (png.header && config.title) { ctx.fillStyle = ink.title; ctx.font = `700 20px ${font}`; ctx.fillText(config.title, pad, y + 16); y += 34; }
-      if (png.header && config.subtitle) { ctx.fillStyle = ink.sub; ctx.font = `13px ${font}`; ctx.fillText(config.subtitle, pad, y + 10); y += 22; }
+      if (png.header && title) { ctx.fillStyle = ink.title; ctx.font = `700 20px ${font}`; ctx.fillText(title, pad, y + 16); y += 34; }
+      if (png.header && subtitle) { ctx.fillStyle = ink.sub; ctx.font = `13px ${font}`; ctx.fillText(subtitle, pad, y + 10); y += 22; }
       if (png.header) y += 8;
       const drawLegend = () => {
         let x = pad; ctx.font = `12px ${font}`;
@@ -356,7 +367,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
         ctx.textAlign = "right"; ctx.fillText("rfchilena.cl", W - pad, H - 14);
       }
       URL.revokeObjectURL(url);
-      canvas.toBlob(b => { if (!b) return; const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `${(config.title || "grafico").replace(/[^\p{L}\p{N}]+/gu, "_").slice(0, 60)}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }, "image/png");
+      canvas.toBlob(b => { if (!b) return; const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `${(title || "grafico").replace(/[^\p{L}\p{N}]+/gu, "_").slice(0, 60)}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }, "image/png");
     };
     img.src = url;
   };
@@ -439,6 +450,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
           <h2>Formato</h2>
           <label className="cb-field">Título<input value={config.title} onChange={e => set({ title: e.target.value })} /></label>
           <label className="cb-field">Subtítulo<input value={config.subtitle} onChange={e => set({ subtitle: e.target.value })} /></label>
+          <p className="db-hint">Puedes usar {"{series}"} para los nombres de las series visibles y {"{s}"} para el plural. Ej.: “Contrato{"{s}"} de {"{series}"}”.</p>
           <label className="cb-field">Fuente / nota al pie<input value={config.source} onChange={e => set({ source: e.target.value })} /></label>
           <div className="cb-series-grid">
             <label>Leyenda<select value={config.legend} onChange={e => set({ legend: e.target.value as Config["legend"] })}><option value="bottom">Abajo</option><option value="top">Arriba</option><option value="none">Sin leyenda</option></select></label>
@@ -475,7 +487,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
           </div>
           {mode !== "none" && <div className="cb-mode">{mode === "farrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : mode === "text" ? "Haz clic donde quieres el texto." : `Haz clic en el gráfico para poner la ${mode === "vline" ? "línea vertical" : "flecha"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
           {notice && <div className="cb-notice">{notice}</div>}
-          <div className="cb-titles">{config.title && <h2>{config.title}</h2>}{config.subtitle && <p>{config.subtitle}</p>}</div>
+          <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
           <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }}>
             {!config.series.length ? <div className="loading">Agrega una serie para empezar.</div> : !ready ? <div className="loading">Cargando datos…</div> :
               <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: 12, bottom: 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
@@ -507,7 +519,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
           {recommended.length > 0 && <>
             <h2>Gráficos recomendados</h2>
             <div className="cb-recs">{recommended.map(r => <button key={r.nombre} className="cb-rec" onClick={() => { setConfig({ ...DEFAULT_CONFIG, annotations: [], ...r.config } as Config); window.history.replaceState(null, "", window.location.pathname); flash(`Abierto “${r.nombre}”.`); }}>
-              <strong>{r.nombre}</strong>{r.config.subtitle && <span>{r.config.subtitle}</span>}
+              <strong>{r.nombre}</strong>{r.config.subtitle && <span>{resolveText(r.config.subtitle, r.config.series ?? [])}</span>}
             </button>)}</div>
           </>}
           <h2>Guardar</h2>
