@@ -300,3 +300,22 @@ export function dashboardData(): DashboardData {
 
   return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg }, ticker, macro, benchmarks, benchmarkPapers: { BTP: benchmark.BTP ?? [], BTU: benchmark.BTU ?? [] }, curves, spreads, monitor };
 }
+
+/** Histórico diario de benchmarks a plazo constante; misma selección e interpolación
+ * que la tabla Tasas Benchmark del Dashboard (cierre oficial, no intradía). */
+export function benchmarkHistory(): { fecha: string; [code: string]: number | string | null }[] {
+  const papers = readJson("instrumentos-benchmark.json") as Record<"BTP" | "BTU", string[]>;
+  const allowed = { BTP: new Set(papers.BTP ?? []), BTU: new Set(papers.BTU ?? []) };
+  const bonds = loadBonds().filter(b => allowed[b.type].has(b.code) && (b.type !== "BTP" || b.coupon > 0));
+  const dates = [...new Set(bonds.flatMap(b => b.tir.dates))].sort();
+  // Buscar cotizaciones de ese mismo día; no arrastrar cotizaciones antiguas.
+  const values = new Map(bonds.map(b => [b.code, new Map(b.tir.dates.map((date, i) => [date, b.tir.values[i]]))]));
+  return dates.map(fecha => {
+    const row: { fecha: string; [code: string]: number | string | null } = { fecha };
+    for (const [prefix, type] of [["PESOS", "BTP"], ["UF", "BTU"]] as const) {
+      const pts = bonds.filter(b => b.type === type).map(b => ({ term: termOf(b, fecha), y: values.get(b.code)?.get(fecha) })).filter((p): p is { term: number; y: number } => p.term > 0 && typeof p.y === "number" && Number.isFinite(p.y));
+      for (const term of [2, 5, 10]) row[`${prefix}-${String(term).padStart(2, "0")}`] = interpolate(term, pts, true);
+    }
+    return row;
+  });
+}
