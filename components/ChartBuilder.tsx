@@ -31,7 +31,7 @@ type PngOptions = { background: "white" | "none"; text: "dark" | "light"; header
 type Period = "1m" | "3m" | "1y" | "5y" | "all" | "custom";
 type Config = {
   v: 1; series: PlotSeries[]; annotations: Annotation[]; period: Period; from: string; to: string;
-  title: string; subtitle: string; source: string; legend: "top" | "bottom" | "none"; grid: boolean; height: number;
+  title: string; subtitle: string; source: string; legend: "top" | "bottom" | "right" | "inside" | "none"; legendPos?: { x: number; y: number }; grid: boolean; height: number;
   /** grid = grilla horizontal (nombre antiguo); gridV = grilla vertical; yAxis = mostrar eje vertical izquierdo. */
   gridV?: boolean; yAxis?: boolean;
   /** Etiqueta con el último dato al final de cada línea. */
@@ -213,6 +213,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const allSeries = useMemo(() => catalog.groups.flatMap(g => g.series), [catalog]);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
   const [dragVLabel, setDragVLabel] = useState<string | null>(null);
+  const [dragLegend, setDragLegend] = useState(false);
   const set = (patch: Partial<Config>) => setConfig(c => ({ ...c, ...patch }));
   const setSeries = (u: string, patch: Partial<PlotSeries>) => setConfig(c => ({ ...c, series: c.series.map(s => s.uid === u ? { ...s, ...patch } : s) }));
   const [query, setQuery] = useState("");
@@ -235,6 +236,14 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     const y = e.clientY - svg.getBoundingClientRect().top;
     const labelY = Math.max(0.04, Math.min(0.96, (y - plot.top) / plot.height));
     setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === dragVLabel && a.kind === "vline" ? { ...a, labelY } : a) }));
+  };
+  const moveLegend = (e: React.MouseEvent<HTMLDivElement>) => {
+    const svg = chartRef.current?.querySelector("svg.recharts-surface");
+    if (!svg) return;
+    const box = svg.getBoundingClientRect();
+    const x = Math.max(0.02, Math.min(0.96, (e.clientX - box.left) / box.width));
+    const y = Math.max(0.02, Math.min(0.94, (e.clientY - box.top) / box.height));
+    setConfig(c => ({ ...c, legendPos: { x, y } }));
   };
   const onChartPointer = (e: React.MouseEvent<HTMLDivElement>, fix = false) => {
     if (mode !== "none" || !axisScales.current || !ready) return;
@@ -472,7 +481,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     const img = new Image();
     img.onload = () => {
       const visible = config.series.filter(s => s.visible), scale = 2, pad = png.header ? 24 : 8;
-      const header = png.header ? (title ? 34 : 0) + (subtitle ? 22 : 0) + 8 : 0, legendH = !png.header || config.legend === "none" ? 0 : 26, footer = png.header ? 30 : 0;
+      const header = png.header ? (title ? 34 : 0) + (subtitle ? 22 : 0) + 8 : 0, legendH = !png.header || config.legend === "none" || config.legend === "inside" || config.legend === "right" ? 0 : 26, footer = png.header ? 30 : 0;
       const ink = light ? { title: "#f8fafc", sub: "#cbd5e1", legend: "#e2e8f0", foot: "#94a3b8" } : { title: "#172033", sub: "#748096", legend: "#31405a", foot: "#8b96a8" };
       const W = width + pad * 2, H = header + legendH + height + footer + pad;
       const canvas = document.createElement("canvas"); canvas.width = W * scale; canvas.height = H * scale;
@@ -586,7 +595,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           <p className="db-hint">Puedes usar {"{series}"} para los nombres de las series visibles y {"{s}"} para el plural. Ej.: “Contrato{"{s}"} de {"{series}"}”.</p>
           <label className="cb-field">Fuente / nota al pie<input value={config.source} onChange={e => set({ source: e.target.value })} /></label>
           <div className="cb-series-grid">
-            <label>Leyenda<select value={config.legend} onChange={e => set({ legend: e.target.value as Config["legend"] })}><option value="bottom">Abajo</option><option value="top">Arriba</option><option value="none">Sin leyenda</option></select></label>
+            <label>Leyenda<select value={config.legend} onChange={e => set({ legend: e.target.value as Config["legend"] })}><option value="bottom">Abajo</option><option value="top">Arriba</option><option value="right">Derecha</option><option value="inside">Dentro del gráfico (movible)</option><option value="none">Sin leyenda</option></select></label>
             <label>Alto<input type="range" min={300} max={720} step={20} value={config.height} onChange={e => set({ height: Number(e.target.value) })} /></label>
             <label>Eje izq. mín<input value={config.left.min} placeholder="auto" onChange={e => set({ left: { ...config.left, min: e.target.value } })} /></label>
             <label>Eje izq. máx<input value={config.left.max} placeholder="auto" onChange={e => set({ left: { ...config.left, max: e.target.value } })} /></label>
@@ -620,15 +629,15 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           {mode !== "none" && <div className="cb-mode">{mode === "event" ? `Haz clic en la fecha donde va la ${ev.style === "line" ? "línea vertical" : "flecha"}.` : sh.tool === "text" ? "Haz clic donde quieres escribir." : sh.tool === "arrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : `Arrastra para dibujar el ${sh.tool === "rect" ? "cuadrado" : "círculo"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
           {notice && <div className="cb-notice">{notice}</div>}
           <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
-          <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }} onMouseMove={e => { if (dragVLabel) moveVerticalLabel(e); else onChartPointer(e); }} onMouseUp={() => setDragVLabel(null)} onMouseLeave={() => { setGhost(null); setDragVLabel(null); }} onClick={e => { if (dragVLabel) return; if (e.target instanceof SVGElement && e.target.closest(".recharts-surface")) onChartPointer(e, true); }}>
+          <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }} onMouseMove={e => { if (dragLegend) moveLegend(e); else if (dragVLabel) moveVerticalLabel(e); else onChartPointer(e); }} onMouseUp={() => { setDragVLabel(null); setDragLegend(false); }} onMouseLeave={() => { setGhost(null); setDragVLabel(null); setDragLegend(false); }} onClick={e => { if (dragVLabel) return; if (e.target instanceof SVGElement && e.target.closest(".recharts-surface")) onChartPointer(e, true); }}>
             {!config.series.length ? <div className="loading">Agrega una serie para empezar.</div> : !ready ? <div className="loading">Cargando datos…</div> :
-              <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: config.showXAxisTitle ? 24 : 4, left: config.showYAxisTitle ? 16 : 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
+              <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: config.showXAxisTitle ? 24 : 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
                 {(config.grid || config.gridV) && <CartesianGrid strokeDasharray="3 3" horizontal={config.grid} vertical={!!config.gridV} stroke="#e5eaf2" />}
                 <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 11 }} label={config.showXAxisTitle ? { value: config.xAxisTitle ?? "Fecha", position: "insideBottom", offset: -10, fontSize: 13, fill: "#334155", fontWeight: 600 } : undefined} />
-                <YAxis yAxisId="left" hide={config.yAxis === false} domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={config.showYAxisTitle ? 72 : 56} label={config.showYAxisTitle ? { value: config.yAxisTitle ?? "Tasa (%)", angle: -90, position: "insideLeft", fontSize: 13, fill: "#334155", fontWeight: 600 } : undefined} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
+                <YAxis yAxisId="left" hide={config.yAxis === false} domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={config.showYAxisTitle ? 64 : 56} label={config.showYAxisTitle ? { value: config.yAxisTitle ?? "Tasa (%)", angle: -90, position: "insideLeft", fontSize: 13, fill: "#334155", fontWeight: 600 } : undefined} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
                 <YAxis yAxisId="right" orientation="right" hide={!hasRight} domain={domain(config.right)} allowDataOverflow={config.right.min !== "" || config.right.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
                 <Tooltip formatter={(v, _n, item) => { const u = units[String(item.dataKey)] ?? ""; return [`${fmt(Number(v), u === "pb" ? 1 : 3)}${u === "%" ? "%" : u ? ` ${u}` : ""}`, config.series.find(s => s.uid === item.dataKey)?.label ?? ""]; }} />
-                {config.legend !== "none" && <Legend verticalAlign={config.legend} wrapperStyle={{ fontSize: 12 }} />}
+                {config.legend !== "none" && config.legend !== "inside" && <Legend verticalAlign={config.legend === "right" ? "middle" : config.legend} align={config.legend === "right" ? "right" : "center"} layout={config.legend === "right" ? "vertical" : "horizontal"} wrapperStyle={{ fontSize: 12 }} />}
                 {visible.map(s => {
                   const name = `${s.label}${units[s.uid] ? ` (${units[s.uid]})` : ""}`;
                   // Último punto con dato de la serie: ahí va la etiqueta con el valor.
@@ -659,6 +668,22 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                   : null)}
                 {arrows.length > 0 && <Customized component={(p: { xAxisMap?: AxisMap; yAxisMap?: AxisMap }) => <ArrowLayer xAxisMap={p.xAxisMap} yAxisMap={p.yAxisMap} arrows={arrows} rows={rows} series={config.series} />} />}
                 {rows.length > 30 && <Brush dataKey="date" height={22} stroke="#94a3b8" travellerWidth={8} />}
+                {config.legend === "inside" && <Customized component={(p: { width?: number; height?: number }) => {
+                  const list = visible;
+                  if (!list.length) return <g />;
+                  const pos = config.legendPos ?? { x: 0.72, y: 0.08 };
+                  const x = (p.width ?? 800) * pos.x, y = (p.height ?? 460) * pos.y;
+                  const w = Math.max(130, ...list.map(v => v.label.length * 7 + 48)), h = 16 + list.length * 21;
+                  return <g transform={`translate(${x} ${y})`} style={{ cursor: "move", userSelect: "none" }}
+                    onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setDragLegend(true); }}
+                    onClick={e => e.stopPropagation()}>
+                    <rect width={w} height={h} rx={7} fill="#fff" fillOpacity={0.97} stroke="#cbd5e1" strokeWidth={1} />
+                    {list.map((item, i) => <g key={item.uid} transform={`translate(12 ${19 + i * 21})`}>
+                      <line x1={0} x2={20} y1={-4} y2={-4} stroke={item.color} strokeWidth={3} />
+                      <text x={28} y={0} fontSize={12} fontWeight={600} fill="#172033">{item.label}</text>
+                    </g>)}
+                  </g>;
+                }} />}
                 <Customized component={(p: Pick<FreeLayerProps, "xAxisMap" | "yAxisMap" | "offset">) => <FreeLayer {...p} dates={rows.map(r => String(r.date))} items={config.annotations.filter((a): a is FreeAnnotation => a.kind === "farrow" || a.kind === "shape" || a.kind === "text")}
                   mode={mode} axis={freeAxis} preview={drag && sh.tool !== "text" ? { tool: sh.tool, ...drag, color: sh.color, width: sh.width, dash: sh.dash, fill: sh.fill } : null}
                   onPointer={onFreePointer} onGrab={onGrab} onEditText={onEditText} moving={!!move} axes={{ left: config.yAxis !== false, right: hasRight }} hlines={config.annotations.filter((a): a is Extract<Annotation, { kind: "hline" }> => a.kind === "hline")} ghost={ghost} onAxis={onAxis} onScaleReady={onScaleReady} />} />
@@ -744,6 +769,8 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
               <h2>Otros</h2>
               <p className="db-hint">Controla la visualización de los ejes, las cuadrículas y los últimos valores.</p>
               <div className="cb-series-grid">
+                <label className="cb-wide">Posición de la leyenda<select value={config.legend} onChange={e => set({ legend: e.target.value as Config["legend"] })}><option value="bottom">Abajo</option><option value="top">Arriba</option><option value="right">Derecha</option><option value="inside">Dentro del gráfico (movible)</option><option value="none">Oculta</option></select></label>
+                {config.legend === "inside" && <p className="db-hint cb-wide">Arrastra el recuadro blanco sobre el gráfico para mover la leyenda. Se guarda su posición.</p>}
                 <label className="cb-check"><input type="checkbox" checked={config.yAxis !== false} onChange={e => set({ yAxis: e.target.checked })} />Eje vertical</label>
                 <label className="cb-check"><input type="checkbox" checked={config.grid} onChange={e => set({ grid: e.target.checked })} />Grilla horizontal</label>
                 <label className="cb-check"><input type="checkbox" checked={!!config.gridV} onChange={e => set({ gridV: e.target.checked })} />Grilla vertical</label>
