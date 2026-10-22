@@ -359,7 +359,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     const legs = ids.map(id => ({ id, field: byId.get(id)!.fields[0].key }));
     const name = (id: string) => byId.get(id)!.fields.length > 1 ? id : byId.get(id)!.label;
     const label = calc.op === "diff" ? `${name(ids[0])} − ${name(ids[1])}` : `Fly 2×${name(ids[1])} − ${name(ids[0])} − ${name(ids[2])}`;
-    setConfig(c => ({ ...c, series: [...c.series, { uid: uid(), label, source: { kind: "calc", op: calc.op, legs }, type: "line", color: nextColor(c.series), width: 2, dash: "solid", axis: "right", transform: "level", visible: true }] }));
+    setConfig(c => ({ ...c, series: [...c.series, { uid: uid(), label, source: { kind: "calc", op: calc.op, legs }, type: "line", color: nextColor(c.series), width: 2, dash: "solid", axis: "left", transform: "level", visible: true }] }));
   };
   const add = (a: Annotation) => setConfig(c => ({ ...c, annotations: [...c.annotations, a] }));
   const setAnnotation = (id: string, patch: Partial<Annotation>) => setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === id ? { ...a, ...patch } as Annotation : a) }));
