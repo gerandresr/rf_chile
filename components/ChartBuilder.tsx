@@ -18,7 +18,7 @@ type PlotSeries = { uid: string; label: string; source: Source; type: ChartType;
 // Los campos opcionales mantienen compatibles los gráficos guardados antes de agregarlos.
 type Annotation =
   | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string; textColor?: string; width?: number; dash?: Dash; pos?: "left" | "right"; showValue?: boolean }
-  | { id: string; kind: "vline"; date: string; label: string; fullLabel?: string; color: string; width?: number; dash?: Dash; labelY?: number }
+  | { id: string; kind: "vline"; date: string; label: string; fullLabel?: string; color: string; width?: number; dash?: Dash; labelY?: number; fontSize?: number }
   | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up"; width?: number; dash?: Dash }
   | { id: string; kind: "farrow"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash?: Dash }
   | { id: string; kind: "shape"; shape: "ellipse" | "rect"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash: Dash; fill: boolean }
@@ -218,6 +218,8 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const setSeries = (u: string, patch: Partial<PlotSeries>) => setConfig(c => ({ ...c, series: c.series.map(s => s.uid === u ? { ...s, ...patch } : s) }));
   const [query, setQuery] = useState("");
   const [eventId, setEventId] = useState("");
+  const [eventFontSize, setEventFontSize] = useState(12);
+  const sortedHistoricalEvents = useMemo(() => [...historicalEvents].sort((a, b) => b.fecha.localeCompare(a.fecha)), [historicalEvents]);
   const [calc, setCalc] = useState<{ op: "diff" | "fly"; legs: string[] }>({ op: "diff", legs: ["", "", ""] });
   const [mode, setMode] = useState<Mode>("none");
   // Borradores de cada bloque de anotaciones.
@@ -362,7 +364,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const setAnnotation = (id: string, patch: Partial<Annotation>) => setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === id ? { ...a, ...patch } as Annotation : a) }));
   const addHistoricalEvent = () => {
     const event = historicalEvents.find(item => item.id === eventId);
-    if (!event) { flash("Selecciona un evento histórico."); return; }
+    if (!event) { flash("Selecciona un evento relevante."); return; }
     const dates = rows.map(row => String(row.date));
     const target = dates.find(date => date >= event.fecha);
     // Los mercados no siempre abren el día del evento; se utiliza la primera
@@ -371,7 +373,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
       flash("El evento está fuera del rango del gráfico. Amplía el período para agregarlo.");
       return;
     }
-    add({ id: uid(), kind: "vline", date: target, label: event.corto, fullLabel: event.nombre, color: ev.color, width: ev.width, dash: ev.dash });
+    add({ id: uid(), kind: "vline", date: target, label: event.corto, fullLabel: event.nombre, fontSize: eventFontSize, color: ev.color, width: ev.width, dash: ev.dash });
     flash(`Evento agregado: ${event.nombre}`);
   };
   const addHLine = (value: number, axis: Axis) => add({ id: uid(), kind: "hline", value, axis, label: hl.label, color: hl.color, textColor: hl.textColor, width: hl.width, dash: hl.dash, pos: hl.pos, showValue: hl.showValue });
@@ -660,7 +662,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                       if (!box) return <g />;
                       const y = Number(box.y ?? 0) + Number(box.height ?? 0) * (a.labelY ?? 0.06);
                       const x = Number(box.x ?? 0) + Number(box.width ?? 0) + 5;
-                      return <text x={x} y={y} fill={a.color} fontSize={12} fontWeight={700} dominantBaseline="middle"
+                      return <text x={x} y={y} fill={a.color} fontSize={a.fontSize ?? 12} fontWeight={700} dominantBaseline="middle"
                         stroke="#fff" strokeWidth={3} paintOrder="stroke" style={{ cursor: "ns-resize", userSelect: "none" }}
                         onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setDragVLabel(a.id); }}
                         onClick={e => e.stopPropagation()}><title>{a.fullLabel ?? a.label}</title>{a.label}</text>;
@@ -701,16 +703,16 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           <div className="cb-annotations-grid">
             <section className="panel cb-block">
               <h2>Líneas verticales</h2>
-              <p className="db-hint">Marca hechos relevantes con una línea vertical: selecciona un evento histórico o crea tu propia anotación.</p>
+              <p className="db-hint">Marca hechos relevantes con una línea vertical: selecciona un evento relevante o crea tu propia anotación.</p>
               {historicalEvents.length > 0 && <div className="cb-event-picker">
-                <label className="cb-field">Eventos históricos
+                <label className="cb-field">Eventos relevantes
                   <select value={eventId} onChange={e => setEventId(e.target.value)}>
                     <option value="">Selecciona un evento…</option>
-                    {historicalEvents.map(item => <option key={item.id} value={item.id}>{item.fecha.slice(8,10)}/{item.fecha.slice(5,7)}/{item.fecha.slice(0,4)} · {item.corto}</option>)}
+                    {sortedHistoricalEvents.map(item => <option key={item.id} value={item.id}>{item.fecha.slice(8,10)}/{item.fecha.slice(5,7)}/{item.fecha.slice(0,4)} · {item.corto}</option>)}
                   </select>
                 </label>
                 {eventId && <p className="db-hint">{historicalEvents.find(item => item.id === eventId)?.descripcion}</p>}
-                <button type="button" className="cb-btn" onClick={addHistoricalEvent}><Plus size={14} aria-hidden="true" />Agregar evento al gráfico</button>
+                <div className="cb-inline"><button type="button" className="cb-btn" onClick={addHistoricalEvent}><Plus size={14} aria-hidden="true" />Agregar evento al gráfico</button><label>Tamaño letra <select value={eventFontSize} onChange={e => setEventFontSize(Number(e.target.value))}>{[10, 12, 14, 16, 18, 20, 24].map(n => <option key={n} value={n}>{n} px</option>)}</select></label></div>
               </div>}
               <div className="cb-series-grid">
                 <label className="cb-wide">Texto<input value={ev.label} onChange={e => setEv(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: RPM, estallido social, COVID…" /></label>
