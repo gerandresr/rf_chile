@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, existsSync } from "fs";
 import path from "path";
+import { benchmarkHistory } from "./dashboard.server";
 
 /**
  * Catálogo de todas las series descargables, armado al construir el sitio. Para agregar una
@@ -51,7 +52,7 @@ const MACRO_MONTHLY: Record<string, { label: string; unit: string }> = {
   imacec_ind_des: { label: "IMACEC desestacionalizado", unit: "Índice" }, desempleo: { label: "Tasa de desempleo", unit: "%" },
   tc_real: { label: "Tipo de cambio real", unit: "Índice" }, posicion_os_teso: { label: "Posición OS Tesorería", unit: "—" }, posicion_os_bc: { label: "Posición OS Banco Central", unit: "—" },
 };
-const GROUP_ORDER = ["Bonos BTP (pesos)", "Bonos BTU (UF)", "Swap Cámara CLP", "Swap Cámara UF", "Depósitos a plazo (DPF)", "Macro Chile · diaria", "Macro Chile · mensual",
+const GROUP_ORDER = ["Benchmarks de mercado", "Bonos BTP (pesos)", "Bonos BTU (UF)", "Swap Cámara CLP", "Swap Cámara UF", "Depósitos a plazo (DPF)", "Macro Chile · diaria", "Macro Chile · mensual",
   "Monedas", "Tasas internacionales", "Riesgo y volatilidad", "Índices accionarios", "Commodities", "Criptomonedas", "Otros"];
 
 const tenorMonths = (t: string) => { const m = t.match(/^(\d+)(m|y)$/); return m ? Number(m[1]) * (m[2] === "y" ? 12 : 1) : 999; };
@@ -97,6 +98,15 @@ export function dataCatalog(): Catalog {
     all.push({ id: `bbg:${code}`, group, label, detail: code, source: "Bloomberg", frequency: "Diaria", ...r,
       file: `/data/historico_bloomberg/${file}`, format: "bloomberg", key: code, fields: [{ key: "valor", label: "Valor", unit }],
       search: `${code} ${label} ${group}`.toLowerCase() });
+  }
+  // Benchmarks calculados con la misma metodología del Dashboard de renta fija.
+  const benchmarkRows = benchmarkHistory();
+  for (const code of ["PESOS-02", "PESOS-05", "PESOS-10", "UF-02", "UF-05", "UF-10"]) {
+    const r = range(benchmarkRows.map(row => row.fecha), benchmarkRows.map(row => row[code]));
+    if (!r.count) continue;
+    all.push({ id: `benchmark:${code}`, group: "Benchmarks de mercado", label: code, detail: "Tasa a plazo constante", source: "Mercado", frequency: "Diaria", ...r,
+      file: "/api/benchmark-series", format: "rows", key: code, fields: [{ key: code, label: "Tasa", unit: "%" }],
+      search: `benchmark ${code}`.toLowerCase() });
   }
   // Banco Central
   const addRows = (rel: string, dict: Record<string, { label: string; unit: string }>, group: string, frequency: "Diaria" | "Mensual") => {
