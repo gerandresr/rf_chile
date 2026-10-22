@@ -24,6 +24,20 @@ Pestaña `/dashboard-rf` (`lib/dashboard.server.ts`, calculada al construir el s
 
 ## Modelos
 
+## Swap Spreads
+
+Pestaña independiente `/swap-spreads` para análisis de cartera propia: comparador CLP/UF, spread indicativo papel menos swap por vencimiento o duración, históricos de hasta 5 años, z-score/percentil, AR(1) con vida media e intervalo condicional, validación walk-forward diaria frente a paseo aleatorio, escenarios a 1/3/6 meses, carry, roll-down y bitácora local exportable/restaurable.
+
+Fuentes: `historico_riskamerica` (TIR y Macaulay) e `historico_bloomberg` (`clpcam_*`, `ufcam_*`). Solo cruza observaciones de la misma fecha y no extrapola; fecha y ausencias quedan visibles. Macaulay se transforma en modificada según la convención anual del proyecto. La comparación por duración usa una sensibilidad swap aproximada. No es un asset swap spread de flujos.
+
+Roll-down: curvas transversales por vencimiento de la fecha del papel, sin cambios, interpoladas entre instrumentos disponibles. Convergencia adicional = objetivo final menos spread neutral tras roll-down, evitando doble conteo. En modo duración se omite roll-down. UF y financiación son supuestos manuales explícitos; costos en pb del monto. La modalidad de cobertura solo muestra sensibilidad DV01, sin inventar carry neto del swap.
+
+AR(1) omite saltos de más de una rueda lunes–viernes. Su diagnóstico normal sobre phi es preliminar, no una prueba formal de raíz unitaria; validación de hasta 60 pronósticos diarios con ventanas pasadas de hasta 252 observaciones. No equivale a un backtest económico multimensual.
+
+Bitácora en `localStorage` de cada navegador, sin sincronización ni envío de posiciones al servidor. Preserva tesis y objetivos originales; admite respaldo JSON, restauración por identificador y cierre de seguimiento. Atribución de tasas/spread aproximada, no P&L contable.
+
+Validación: `node --experimental-strip-types --test tests/swap-spreads.test.mjs` y `npm run build`.
+
 ### Técnicos para BTP/BTU · Osciladores
 
 Los tres simuladores usan las tasas de `rf.json`: RSI 14 de Wilder, Slow Stochastic de 14 cierres con %K suavizado en 3 observaciones (las señales usan %K, sin datos intradía), y Z-score de 60 observaciones con desviación estándar poblacional. Compra el bono tras un cruce ascendente del umbral del oscilador (o su primer valor calculable si ya alcanza el umbral), con una sola posición y sin ventas cortas. Permite salir por el nivel del oscilador, por stop/take profit en pb desde la tasa de entrada, o por la primera condición de ambas reglas. Niveles iniciales: RSI 70/50, Slow Stochastic 80/50 y Z-score +2/0. Cada modelo inicia con salida por stop de 5 pb / take profit de 15 pb, y bid/ask spread de 0 pb por lado.

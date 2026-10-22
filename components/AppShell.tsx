@@ -13,6 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/dashboard-rf", label: "Dashboard RF", icon: LayoutDashboard },
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
     { href: "/graficos", label: "Gráficos", icon: LineChart },
+    { href: "/swap-spreads", label: "Swap Spreads", icon: Activity },
     { href: "/inflacion", label: "Inflación y TPM", icon: TrendingUp },
     { href: "/modelos", label: "Modelos", icon: FlaskConical },
     { href: "/recomendaciones", label: "Recomendaciones", icon: Lightbulb },
