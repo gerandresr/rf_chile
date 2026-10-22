@@ -1,13 +1,65 @@
 /** Spread indicativo: TIR del papel menos tasa par swap; no es un asset swap de flujos. */
 export type SpreadBasis = "maturity" | "duration";
-export type SpreadPoint = { date: string; yield: number; swap: number; spread: number; durationSpread: number | null; macaulay: number; term: number };
+export type SpreadPoint = { date: string; yield: number; swap: number; spread: number; durationSpread: number | null; macaulay: number; term: number;
+  referenceSpread?: number | null; residual?: number | null; durationReferenceSpread?: number | null; durationResidual?: number | null };
 export type SpreadBond = { code: string; currency: "CLP" | "UF"; maturity: string; points: SpreadPoint[]; missing: number };
-export type SpreadData = { asOf: string; bonds: SpreadBond[]; errors: string[] };
+export type ConstantSpread = { currency: "CLP" | "UF"; tenor: number; points: { date: string; spread: number }[] };
+export type SpreadData = { asOf: string; bonds: SpreadBond[]; errors: string[]; constantSpreads: ConstantSpread[] };
 export type CurvePoint = { x: number; y: number };
 export const DAY = 86400000;
 export const time = (date: string) => Date.parse(`${date}T00:00:00Z`);
 export const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 export const spreadValue = (p: SpreadPoint, basis: SpreadBasis) => basis === "duration" ? p.durationSpread : p.spread;
+export const residualValue = (p: SpreadPoint, basis: SpreadBasis) => (basis === "duration" ? p.durationResidual : p.residual) ?? null;
+export const referenceValue = (p: SpreadPoint, basis: SpreadBasis) => (basis === "duration" ? p.durationReferenceSpread : p.referenceSpread) ?? null;
+
+/** Réplicas de un mismo plazo se promedian antes de interpolar. */
+export function distinctCurve(points: CurvePoint[]) {
+  const groups = new Map<number, number[]>();
+  for (const p of points) if (Number.isFinite(p.x) && Number.isFinite(p.y)) groups.set(p.x, [...(groups.get(p.x) ?? []), p.y]);
+  return [...groups].map(([x, ys]) => ({ x, y: ys.reduce((a, b) => a + b, 0) / ys.length })).sort((a, b) => a.x - b.x);
+}
+
+/** Referencia diaria leave-one-out. Nunca usa otros días ni incorpora el propio papel. */
+export function relativeCurves(universe: SpreadBond[]) {
+  const dates = new Map<string, { code: string; currency: "CLP" | "UF"; point: SpreadPoint }[]>();
+  for (const b of universe) for (const point of b.points) {
+    if (point.term <= 0 || point.date >= b.maturity) continue;
+    const key = `${b.currency}:${point.date}`;
+    dates.set(key, [...(dates.get(key) ?? []), { code: b.code, currency: b.currency, point }]);
+  }
+  const constantSpreads: ConstantSpread[] = [];
+  for (const currency of ["CLP", "UF"] as const) for (const tenor of [1, 2, 3, 5, 10]) constantSpreads.push({ currency, tenor, points: [] });
+  const references = new Map<string, { referenceSpread: number | null; residual: number | null; durationReferenceSpread: number | null; durationResidual: number | null }>();
+  for (const [key, rows] of dates) {
+    const [currency, date] = key.split(":");
+    const curve = distinctCurve(rows.map(r => ({ x: r.point.term, y: r.point.spread })));
+    if (curve.length >= 2) for (const s of constantSpreads.filter(s => s.currency === currency)) {
+      const v = interpolate(s.tenor, curve);
+      if (v !== null) s.points.push({ date, spread: v });
+    }
+    for (const row of rows) {
+      const peers = rows.filter(r => r.code !== row.code);
+      const maturityCurve = distinctCurve(peers.map(r => ({ x: r.point.term, y: r.point.spread })));
+      const durationCurve = distinctCurve(peers.flatMap(r => r.point.durationSpread === null ? [] : [{ x: r.point.macaulay / (1 + r.point.yield / 100), y: r.point.durationSpread }]));
+      const referenceSpread = maturityCurve.length >= 2 ? interpolate(row.point.term, maturityCurve) : null;
+      const durationReferenceSpread = durationCurve.length >= 2 ? interpolate(row.point.macaulay / (1 + row.point.yield / 100), durationCurve) : null;
+      references.set(`${row.code}:${date}`, { referenceSpread, residual: referenceSpread === null ? null : row.point.spread - referenceSpread,
+        durationReferenceSpread, durationResidual: durationReferenceSpread === null || row.point.durationSpread === null ? null : row.point.durationSpread - durationReferenceSpread });
+    }
+  }
+  for (const s of constantSpreads) s.points.sort((a, b) => a.date.localeCompare(b.date));
+  return { bonds: universe.map(b => ({ ...b, points: b.points.map(p => ({ ...p, ...references.get(`${b.code}:${p.date}`) })) })), constantSpreads };
+}
+
+/** El envejecimiento conserva el residuo; la convergencia solo modifica ese residuo. */
+export function residualScenario(currentSpread: number, currentReference: number, futureReference: number, forecastResidual: number | null) {
+  const residual = currentSpread - currentReference;
+  const rollSpreadBp = currentReference - futureReference;
+  const neutralSpread = futureReference + residual;
+  const targetSpread = futureReference + (forecastResidual ?? residual);
+  return { residual, rollSpreadBp, neutralSpread, targetSpread, convergenceBp: targetSpread - neutralSpread };
+}
 
 /** No extrapola, no rellena puntos fuera de la curva. */
 export function interpolate(x: number, points: CurvePoint[]): number | null {
@@ -55,6 +107,10 @@ function fitAR(observations: Observation[]) {
 
 export function meanReversion(points: SpreadPoint[], basis: SpreadBasis, months: number) {
   const obs = points.flatMap(p => { const v = spreadValue(p, basis); return v === null ? [] : [{ date: p.date, value: v }]; });
+  return meanReversionSeries(obs, months);
+}
+
+export function meanReversionSeries(obs: Observation[], months: number) {
   const fit = fitAR(obs);
   if (!fit) return null;
   const stable = fit.phi > 0 && fit.phi < 1;

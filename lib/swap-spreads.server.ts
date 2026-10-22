@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from "fs";
 import path from "path";
 import { maturityFromCode } from "./carry";
-import { DAY, time, iso, interpolate, type SpreadData, type SpreadPoint } from "./swap-spreads";
+import { DAY, time, iso, interpolate, relativeCurves, type SpreadData, type SpreadPoint } from "./swap-spreads";
 
 const ROOT = path.join(process.cwd(), "public/data");
 const read = (file: string) => JSON.parse(readFileSync(path.join(ROOT, file), "utf8").replace(/^\uFEFF/, ""));
@@ -43,9 +43,10 @@ export function swapSpreadData(): SpreadData {
     } catch { errors.push(`No se pudo leer ${code}.`); return []; }
   });
   const asOf = loaded.flatMap(b => b.s.fecha.filter((_, i) => typeof b.s.tir[i] === "number")).sort().at(-1) ?? "";
-  if (!asOf) return { asOf, bonds: [], errors: [...errors, "No hay tasas de bonos disponibles."] };
+  if (!asOf) return { asOf, bonds: [], constantSpreads: [], errors: [...errors, "No hay tasas de bonos disponibles."] };
   const cutoff = iso(time(asOf) - 5 * 366 * DAY);
-  const bonds = loaded.filter(b => b.maturity > asOf).map(({ code, maturity, s }) => {
+  // Incluye papeles hoy vencidos en las curvas de las fechas en que estaban vigentes.
+  const bonds = loaded.map(({ code, maturity, s }) => {
     const currency = code.startsWith("BTP") ? "CLP" as const : "UF" as const;
     const points: SpreadPoint[] = []; let missing = 0;
     s.fecha.forEach((date, i) => {
@@ -53,6 +54,7 @@ export function swapSpreadData(): SpreadData {
       const y = s.tir[i], macaulay = s.duracion[i], curve = curves[currency].get(date);
       if (typeof y !== "number" || typeof macaulay !== "number" || !Number.isFinite(y) || !Number.isFinite(macaulay) || macaulay <= 0 || !curve) { missing++; return; }
       const term = (time(maturity) - time(date)) / DAY / 365;
+      if (term <= 0) return;
       const swap = interpolate(term, curve);
       if (swap === null) { missing++; return; }
       const matched = interpolate(macaulay / (1 + y / 100), curve.map(p => ({ x: swapDuration(p.x, p.y), y: p.y })));
@@ -63,5 +65,6 @@ export function swapSpreadData(): SpreadData {
     const unique = [...new Map(points.map(p => [p.date, p])).values()].sort((a, b) => a.date.localeCompare(b.date));
     return { code, currency, maturity, points: unique, missing };
   });
-  return { asOf, bonds: bonds.filter(b => b.points.length).sort((a, b) => a.currency.localeCompare(b.currency) || a.maturity.localeCompare(b.maturity)), errors };
+  const adjusted = relativeCurves(bonds.filter(b => b.points.length));
+  return { asOf, bonds: adjusted.bonds.filter(b => b.maturity > asOf).sort((a, b) => a.currency.localeCompare(b.currency) || a.maturity.localeCompare(b.maturity)), constantSpreads: adjusted.constantSpreads, errors };
 }
