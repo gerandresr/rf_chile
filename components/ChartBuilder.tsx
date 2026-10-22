@@ -28,7 +28,7 @@ type ShapeTool = "arrow" | "ellipse" | "rect" | "text";
 /** event = línea vertical o flecha al punto; hline = clic fija el nivel; shape = herramienta de Formas. */
 type Mode = "none" | "event" | "hline" | "shape";
 type PngOptions = { background: "white" | "none"; text: "dark" | "light"; header: boolean };
-type Period = "1m" | "3m" | "1y" | "5y" | "all" | "custom";
+type Period = "1m" | "3m" | "ytd" | "1y" | "5y" | "all" | "custom";
 type Config = {
   v: 1; series: PlotSeries[]; annotations: Annotation[]; period: Period; from: string; to: string;
   title: string; subtitle: string; source: string; legend: "top" | "bottom" | "right" | "inside" | "none"; legendPos?: { x: number; y: number }; grid: boolean; height: number;
@@ -47,7 +47,7 @@ const DASH_OPTIONS = <><option value="solid">Continua</option><option value="das
 const WIDTH_OPTIONS = <><option value={1}>Fina</option><option value={1.5}>Normal</option><option value={2.5}>Media</option><option value={3.5}>Gruesa</option></>;
 /** Redondeo "limpio" para niveles elegidos con el mouse (según el rango del eje). */
 const niceRound = (v: number, span: number) => { const step = Math.pow(10, Math.floor(Math.log10(Math.abs(span) || 1)) - 2); return Number((Math.round(v / step) * step).toFixed(6)); };
-const PERIODS: [Period, string][] = [["1m", "1M"], ["3m", "3M"], ["1y", "1A"], ["5y", "5A"], ["all", "Todo"]];
+const PERIODS: [Period, string][] = [["1m", "1M"], ["ytd", "YTD"], ["1y", "1A"], ["5y", "5A"], ["all", "Todo"]];
 const TRANSFORMS: [Transform, string][] = [["level", "Nivel"], ["d1", "Cambio diario"], ["fromStart", "Cambio desde inicio"], ["base100", "Base 100"]];
 const uid = () => Math.random().toString(36).slice(2, 9);
 const shift = (date: string, months: number) => { const d = new Date(`${date}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() + months); return d.toISOString().slice(0, 10); };
@@ -317,7 +317,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
       }
     }
     const lastDate = [...raw.values()].reduce((m, x) => { for (const d of x.keys()) if (d > m) m = d; return m; }, "");
-    const from = config.period === "custom" ? config.from || "0000" : config.period === "all" || !lastDate ? "0000" : shift(lastDate, config.period === "1m" ? -1 : config.period === "3m" ? -3 : config.period === "1y" ? -12 : -60);
+    const from = config.period === "custom" ? config.from || "0000" : config.period === "all" || !lastDate ? "0000" : config.period === "ytd" ? `${lastDate.slice(0, 4)}-01-01` : shift(lastDate, config.period === "1m" ? -1 : config.period === "1y" ? -12 : -60);
     const to = config.period === "custom" && config.to ? config.to : "9999";
     // Transformaciones dentro del rango visible.
     const shown = new Map<string, Map<string, number>>();
