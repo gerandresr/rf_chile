@@ -205,13 +205,15 @@ function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, previ
 
 // ---------------- Componente principal ----------------
 export type RecommendedChart = { nombre: string; config: Partial<Config> };
-export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; recommended?: RecommendedChart[] }) {
+export type HistoricalEvent = { id: string; fecha: string; nombre: string; categoria: string; descripcion: string; fuente: string };
+export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] }: { catalog: Catalog; recommended?: RecommendedChart[]; historicalEvents?: HistoricalEvent[] }) {
   const byId = useMemo(() => new Map(catalog.groups.flatMap(g => g.series.map(s => [s.id, s] as const))), [catalog]);
   const allSeries = useMemo(() => catalog.groups.flatMap(g => g.series), [catalog]);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
   const set = (patch: Partial<Config>) => setConfig(c => ({ ...c, ...patch }));
   const setSeries = (u: string, patch: Partial<PlotSeries>) => setConfig(c => ({ ...c, series: c.series.map(s => s.uid === u ? { ...s, ...patch } : s) }));
   const [query, setQuery] = useState("");
+  const [eventId, setEventId] = useState("");
   const [calc, setCalc] = useState<{ op: "diff" | "fly"; legs: string[] }>({ op: "diff", legs: ["", "", ""] });
   const [mode, setMode] = useState<Mode>("none");
   // Borradores de cada bloque de anotaciones.
@@ -337,6 +339,20 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
   };
   const add = (a: Annotation) => setConfig(c => ({ ...c, annotations: [...c.annotations, a] }));
   const setAnnotation = (id: string, patch: Partial<Annotation>) => setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === id ? { ...a, ...patch } as Annotation : a) }));
+  const addHistoricalEvent = () => {
+    const event = historicalEvents.find(item => item.id === eventId);
+    if (!event) { flash("Selecciona un evento histórico."); return; }
+    const dates = rows.map(row => String(row.date));
+    const target = dates.find(date => date >= event.fecha);
+    // Los mercados no siempre abren el día del evento; se utiliza la primera
+    // observación disponible durante la semana siguiente.
+    if (!target || (new Date(target + "T00:00:00Z").getTime() - new Date(event.fecha + "T00:00:00Z").getTime()) > 7 * 86400000) {
+      flash("El evento está fuera del rango del gráfico. Amplía el período para agregarlo.");
+      return;
+    }
+    add({ id: uid(), kind: "vline", date: target, label: event.nombre, color: ev.color, width: ev.width, dash: ev.dash });
+    flash(`Evento agregado: ${event.nombre}`);
+  };
   const addHLine = (value: number, axis: Axis) => add({ id: uid(), kind: "hline", value, axis, label: hl.label, color: hl.color, textColor: hl.textColor, width: hl.width, dash: hl.dash, pos: hl.pos, showValue: hl.showValue });
   const addHLineTyped = () => {
     const value = Number(hl.value.replace(",", "."));
@@ -639,7 +655,17 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
           <div className="cb-annotations-grid">
             <section className="panel cb-block">
               <h2>Líneas verticales</h2>
-              <p className="db-hint">Destaca acontecimientos importantes: agrega tus propios eventos o utiliza referencias de la lista cuando estén disponibles.</p>
+              <p className="db-hint">Marca hechos relevantes con una línea vertical: selecciona un evento histórico o crea tu propia anotación.</p>
+              {historicalEvents.length > 0 && <div className="cb-event-picker">
+                <label className="cb-field">Eventos históricos
+                  <select value={eventId} onChange={e => setEventId(e.target.value)}>
+                    <option value="">Selecciona un evento…</option>
+                    {historicalEvents.map(item => <option key={item.id} value={item.id}>{item.fecha.slice(8,10)}/{item.fecha.slice(5,7)}/{item.fecha.slice(0,4)} · {item.nombre}</option>)}
+                  </select>
+                </label>
+                {eventId && <p className="db-hint">{historicalEvents.find(item => item.id === eventId)?.descripcion}</p>}
+                <button type="button" className="cb-btn" onClick={addHistoricalEvent}><Plus size={14} aria-hidden="true" />Agregar evento al gráfico</button>
+              </div>}
               <div className="cb-series-grid">
                 <label className="cb-wide">Texto<input value={ev.label} onChange={e => setEv(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: RPM, estallido social, COVID…" /></label>
                 <label>Marca<select value={ev.style} onChange={e => setEv(d => ({ ...d, style: e.target.value as "line" | "arrow" }))}><option value="line">Línea vertical</option><option value="arrow">Flecha al punto</option></select></label>
