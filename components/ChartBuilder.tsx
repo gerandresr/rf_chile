@@ -18,7 +18,7 @@ type PlotSeries = { uid: string; label: string; source: Source; type: ChartType;
 // Los campos opcionales mantienen compatibles los gráficos guardados antes de agregarlos.
 type Annotation =
   | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string; textColor?: string; width?: number; dash?: Dash; pos?: "left" | "right"; showValue?: boolean }
-  | { id: string; kind: "vline"; date: string; label: string; color: string; width?: number; dash?: Dash }
+  | { id: string; kind: "vline"; date: string; label: string; color: string; width?: number; dash?: Dash; labelY?: number }
   | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up"; width?: number; dash?: Dash }
   | { id: string; kind: "farrow"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash?: Dash }
   | { id: string; kind: "shape"; shape: "ellipse" | "rect"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash: Dash; fill: boolean }
@@ -210,6 +210,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const byId = useMemo(() => new Map(catalog.groups.flatMap(g => g.series.map(s => [s.id, s] as const))), [catalog]);
   const allSeries = useMemo(() => catalog.groups.flatMap(g => g.series), [catalog]);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
+  const [dragVLabel, setDragVLabel] = useState<string | null>(null);
   const set = (patch: Partial<Config>) => setConfig(c => ({ ...c, ...patch }));
   const setSeries = (u: string, patch: Partial<PlotSeries>) => setConfig(c => ({ ...c, series: c.series.map(s => s.uid === u ? { ...s, ...patch } : s) }));
   const [query, setQuery] = useState("");
@@ -224,6 +225,15 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const [ghost, setGhost] = useState<{ axis: Axis; value: number } | null>(null);
   const axisScales = useRef<{ left?: (y: number) => number; right?: (y: number) => number; offset: { left: number; top: number; width: number; height: number } } | null>(null);
   const onScaleReady = useCallback((scales: NonNullable<typeof axisScales.current>) => { axisScales.current = scales; }, []);
+  const moveVerticalLabel = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragVLabel || !axisScales.current) return;
+    const svg = chartRef.current?.querySelector("svg.recharts-surface");
+    if (!svg) return;
+    const plot = axisScales.current.offset;
+    const y = e.clientY - svg.getBoundingClientRect().top;
+    const labelY = Math.max(0.04, Math.min(0.96, (y - plot.top) / plot.height));
+    setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === dragVLabel && a.kind === "vline" ? { ...a, labelY } : a) }));
+  };
   const onChartPointer = (e: React.MouseEvent<HTMLDivElement>, fix = false) => {
     if (mode !== "none" || !axisScales.current || !ready) return;
     const svg = chartRef.current?.querySelector("svg.recharts-surface");
@@ -608,7 +618,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           {mode !== "none" && <div className="cb-mode">{mode === "event" ? `Haz clic en la fecha donde va la ${ev.style === "line" ? "línea vertical" : "flecha"}.` : sh.tool === "text" ? "Haz clic donde quieres escribir." : sh.tool === "arrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : `Arrastra para dibujar el ${sh.tool === "rect" ? "cuadrado" : "círculo"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
           {notice && <div className="cb-notice">{notice}</div>}
           <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
-          <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }} onMouseMove={e => onChartPointer(e)} onMouseLeave={() => setGhost(null)} onClick={e => { if (e.target instanceof SVGElement && e.target.closest(".recharts-surface")) onChartPointer(e, true); }}>
+          <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }} onMouseMove={e => { if (dragVLabel) moveVerticalLabel(e); else onChartPointer(e); }} onMouseUp={() => setDragVLabel(null)} onMouseLeave={() => { setGhost(null); setDragVLabel(null); }} onClick={e => { if (dragVLabel) return; if (e.target instanceof SVGElement && e.target.closest(".recharts-surface")) onChartPointer(e, true); }}>
             {!config.series.length ? <div className="loading">Agrega una serie para empezar.</div> : !ready ? <div className="loading">Cargando datos…</div> :
               <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
                 {(config.grid || config.gridV) && <CartesianGrid strokeDasharray="3 3" horizontal={config.grid} vertical={!!config.gridV} stroke="#e5eaf2" />}
@@ -634,7 +644,16 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                 })}
                 {config.annotations.map(a => a.kind === "hline"
                   ? <ReferenceLine key={a.id} yAxisId={a.axis === "right" && hasRight ? "right" : "left"} y={a.value} stroke={a.color} strokeDasharray={DASH[a.dash ?? "dash"]} strokeWidth={a.width ?? 1.5} label={a.label ? { value: a.label, position: a.pos === "right" ? "insideTopRight" : "insideTopLeft", fill: a.textColor ?? a.color, fontSize: 12, fontWeight: 700 } : undefined} />
-                  : a.kind === "vline" ? <ReferenceLine key={a.id} yAxisId="left" x={a.date} stroke={a.color} strokeDasharray={DASH[a.dash ?? "dash"]} strokeWidth={a.width ?? 1.5} label={a.label ? { value: a.label, position: "insideTopRight", fill: a.color, fontSize: 12, fontWeight: 700 } : undefined} />
+                  : a.kind === "vline" ? <ReferenceLine key={a.id} yAxisId="left" x={a.date} stroke={a.color} strokeDasharray={DASH[a.dash ?? "dash"]} strokeWidth={a.width ?? 1.5} label={a.label ? (p: { viewBox?: { x?: number; y?: number; width?: number; height?: number } }) => {
+                      const box = p.viewBox;
+                      if (!box) return <g />;
+                      const y = Number(box.y ?? 0) + Number(box.height ?? 0) * (a.labelY ?? 0.06);
+                      const x = Number(box.x ?? 0) + Number(box.width ?? 0) + 5;
+                      return <text x={x} y={y} fill={a.color} fontSize={12} fontWeight={700} dominantBaseline="middle"
+                        stroke="#fff" strokeWidth={3} paintOrder="stroke" style={{ cursor: "ns-resize", userSelect: "none" }}
+                        onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setDragVLabel(a.id); }}
+                        onClick={e => e.stopPropagation()}>{a.label}</text>;
+                    } : undefined} />
                   : null)}
                 {arrows.length > 0 && <Customized component={(p: { xAxisMap?: AxisMap; yAxisMap?: AxisMap }) => <ArrowLayer xAxisMap={p.xAxisMap} yAxisMap={p.yAxisMap} arrows={arrows} rows={rows} series={config.series} />} />}
                 {rows.length > 30 && <Brush dataKey="date" height={22} stroke="#94a3b8" travellerWidth={8} />}
