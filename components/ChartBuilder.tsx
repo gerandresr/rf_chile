@@ -36,6 +36,8 @@ type Config = {
   gridV?: boolean; yAxis?: boolean;
   /** Etiqueta con el último dato al final de cada línea. */
   lastValue?: boolean;
+  showXAxisTitle?: boolean; xAxisTitle?: string;
+  showYAxisTitle?: boolean; yAxisTitle?: string;
   left: { min: string; max: string }; right: { min: string; max: string };
 };
 
@@ -71,7 +73,7 @@ const DEFAULT_CONFIG: Config = {
   ],
   annotations: [], period: "1y", from: "", to: "",
   title: "BTP 2034 versus swap Cámara 10 años", subtitle: "TIR y swap en %, diferencia en pb (eje derecho)", source: "Fuente: Mercado, Bloomberg.",
-  legend: "bottom", grid: true, height: 460, left: { min: "", max: "" }, right: { min: "", max: "" },
+  legend: "bottom", grid: true, height: 460, showXAxisTitle: false, xAxisTitle: "Fecha", showYAxisTitle: false, yAxisTitle: "Tasa (%)", left: { min: "", max: "" }, right: { min: "", max: "" },
 };
 
 const encode = (c: Config) => btoa(unescape(encodeURIComponent(JSON.stringify(c)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -620,10 +622,10 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
           <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }} onMouseMove={e => { if (dragVLabel) moveVerticalLabel(e); else onChartPointer(e); }} onMouseUp={() => setDragVLabel(null)} onMouseLeave={() => { setGhost(null); setDragVLabel(null); }} onClick={e => { if (dragVLabel) return; if (e.target instanceof SVGElement && e.target.closest(".recharts-surface")) onChartPointer(e, true); }}>
             {!config.series.length ? <div className="loading">Agrega una serie para empezar.</div> : !ready ? <div className="loading">Cargando datos…</div> :
-              <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
+              <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: config.showXAxisTitle ? 24 : 4, left: config.showYAxisTitle ? 16 : 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
                 {(config.grid || config.gridV) && <CartesianGrid strokeDasharray="3 3" horizontal={config.grid} vertical={!!config.gridV} stroke="#e5eaf2" />}
-                <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="left" hide={config.yAxis === false} domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
+                <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 11 }} label={config.showXAxisTitle ? { value: config.xAxisTitle ?? "Fecha", position: "insideBottom", offset: -10, fontSize: 13, fill: "#334155", fontWeight: 600 } : undefined} />
+                <YAxis yAxisId="left" hide={config.yAxis === false} domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={config.showYAxisTitle ? 72 : 56} label={config.showYAxisTitle ? { value: config.yAxisTitle ?? "Tasa (%)", angle: -90, position: "insideLeft", fontSize: 13, fill: "#334155", fontWeight: 600 } : undefined} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
                 <YAxis yAxisId="right" orientation="right" hide={!hasRight} domain={domain(config.right)} allowDataOverflow={config.right.min !== "" || config.right.max !== ""} tick={{ fontSize: 11 }} width={56} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
                 <Tooltip formatter={(v, _n, item) => { const u = units[String(item.dataKey)] ?? ""; return [`${fmt(Number(v), u === "pb" ? 1 : 3)}${u === "%" ? "%" : u ? ` ${u}` : ""}`, config.series.find(s => s.uid === item.dataKey)?.label ?? ""]; }} />
                 {config.legend !== "none" && <Legend verticalAlign={config.legend} wrapperStyle={{ fontSize: 12 }} />}
@@ -746,6 +748,10 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                 <label className="cb-check"><input type="checkbox" checked={config.grid} onChange={e => set({ grid: e.target.checked })} />Grilla horizontal</label>
                 <label className="cb-check"><input type="checkbox" checked={!!config.gridV} onChange={e => set({ gridV: e.target.checked })} />Grilla vertical</label>
                 <label className="cb-check"><input type="checkbox" checked={!!config.lastValue} onChange={e => set({ lastValue: e.target.checked })} />Último dato al final</label>
+                <label className="cb-check"><input type="checkbox" checked={!!config.showXAxisTitle} onChange={e => set({ showXAxisTitle: e.target.checked })} />Título eje X</label>
+                {config.showXAxisTitle && <label className="cb-wide">Texto del eje X<input value={config.xAxisTitle ?? "Fecha"} onChange={e => set({ xAxisTitle: e.target.value })} placeholder="Fecha" /></label>}
+                <label className="cb-check"><input type="checkbox" checked={!!config.showYAxisTitle} onChange={e => set({ showYAxisTitle: e.target.checked })} />Título eje Y</label>
+                {config.showYAxisTitle && <label className="cb-wide">Texto del eje Y<input value={config.yAxisTitle ?? "Tasa (%)"} onChange={e => set({ yAxisTitle: e.target.value })} placeholder="Tasa (%)" /></label>}
               </div>
             </section>
 
