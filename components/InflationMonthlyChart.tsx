@@ -75,11 +75,14 @@ export function InflationMonthlyChart({
                   <ReferenceLine y={0} stroke="#94a3b8" />
                   <Bar dataKey="ipc" maxBarSize={52} radius={[4, 4, 0, 0]}>
                     {chartData.map((point) => <Cell key={point.fecha} fill={point.tipo === "observado" ? OBSERVED : EXPECTED} />)}
-                    <LabelList dataKey="ipc" position="top" content={(props: { x?: number | string; y?: number | string; width?: number | string; value?: number | string }) => {
-                      if (props.value == null || props.x == null || props.y == null || props.width == null) return null;
+                    <LabelList dataKey="ipc" position="top" content={(props: { x?: number | string; y?: number | string; width?: number | string; height?: number | string; value?: number | string }) => {
+                      if (props.value == null || props.x == null || props.y == null || props.width == null || props.height == null) return null;
+                      const value = Number(props.value);
+                      if (!Number.isFinite(value)) return null;
                       const x = Number(props.x) + Number(props.width) / 2;
-                      const y = Number(props.y) - 6;
-                      return <text x={x} y={y} transform={`rotate(90 ${x} ${y})`} textAnchor="end" fontSize={12} fontWeight={700} fill="#334155">{numberFormat.format(Number(props.value))}</text>;
+                      // Positivos y cero sobre el extremo superior; negativos bajo el extremo inferior.
+                      const y = value < 0 ? Number(props.y) + Number(props.height) + 10 : Number(props.y) - 10;
+                      return <text x={x} y={y} transform={`rotate(-90 ${x} ${y})`} textAnchor={value < 0 ? "end" : "start"} dominantBaseline="central" fontSize={15} fontWeight={700} fill="#334155">{numberFormat.format(value)}</text>;
                     }} />
                   </Bar>
                 </BarChart>
