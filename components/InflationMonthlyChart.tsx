@@ -67,7 +67,7 @@ export function InflationMonthlyChart({
           <div className="table-wrap">
             <div role="img" aria-label="Gráfico de barras del IPC observado y expectativas de mercado" style={{ height: 380, minWidth: showAll ? Math.max(780, chartData.length * 24) : 600 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 24, right: 18, left: 8, bottom: 4 }}>
+                <BarChart data={chartData} margin={{ top: 58, right: 18, left: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="mes" angle={-40} textAnchor="end" height={62} interval={showAll ? Math.max(0, Math.ceil(chartData.length / 24) - 1) : 0} tick={{ fontSize: 11 }} />
                   <YAxis domain={domain} tickFormatter={fmt} tick={{ fontSize: 12 }} width={58} />
@@ -75,7 +75,12 @@ export function InflationMonthlyChart({
                   <ReferenceLine y={0} stroke="#94a3b8" />
                   <Bar dataKey="ipc" maxBarSize={52} radius={[4, 4, 0, 0]}>
                     {chartData.map((point) => <Cell key={point.fecha} fill={point.tipo === "observado" ? OBSERVED : EXPECTED} />)}
-                    <LabelList dataKey="ipc" position="top" formatter={(value: number | string) => fmt(Number(value))} style={{ fontSize: 10, fontWeight: 650, fill: "#334155" }} />
+                    <LabelList dataKey="ipc" position="top" content={(props: { x?: number | string; y?: number | string; width?: number | string; value?: number | string }) => {
+                      if (props.value == null || props.x == null || props.y == null || props.width == null) return null;
+                      const x = Number(props.x) + Number(props.width) / 2;
+                      const y = Number(props.y) - 6;
+                      return <text x={x} y={y} transform={`rotate(90 ${x} ${y})`} textAnchor="end" fontSize={12} fontWeight={700} fill="#334155">{numberFormat.format(Number(props.value))}</text>;
+                    }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
