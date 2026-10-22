@@ -18,7 +18,7 @@ type PlotSeries = { uid: string; label: string; source: Source; type: ChartType;
 // Los campos opcionales mantienen compatibles los gráficos guardados antes de agregarlos.
 type Annotation =
   | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string; textColor?: string; width?: number; dash?: Dash; pos?: "left" | "right"; showValue?: boolean }
-  | { id: string; kind: "vline"; date: string; label: string; fullLabel?: string; color: string; width?: number; dash?: Dash; labelY?: number; fontSize?: number }
+  | { id: string; kind: "vline"; date: string; label: string; fullLabel?: string; color: string; width?: number; dash?: Dash; labelY?: number; fontSize?: number; labelSide?: "left" | "right" }
   | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up"; width?: number; dash?: Dash }
   | { id: string; kind: "farrow"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash?: Dash }
   | { id: string; kind: "shape"; shape: "ellipse" | "rect"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash: Dash; fill: boolean }
@@ -219,6 +219,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const [query, setQuery] = useState("");
   const [eventId, setEventId] = useState("");
   const [eventFontSize, setEventFontSize] = useState(12);
+  const [eventLabelSide, setEventLabelSide] = useState<"left" | "right">("right");
   const sortedHistoricalEvents = useMemo(() => [...historicalEvents].sort((a, b) => b.fecha.localeCompare(a.fecha)), [historicalEvents]);
   const [calc, setCalc] = useState<{ op: "diff" | "fly"; legs: string[] }>({ op: "diff", legs: ["", "", ""] });
   const [mode, setMode] = useState<Mode>("none");
@@ -373,7 +374,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
       flash("El evento está fuera del rango del gráfico. Amplía el período para agregarlo.");
       return;
     }
-    add({ id: uid(), kind: "vline", date: target, label: event.corto, fullLabel: event.nombre, fontSize: eventFontSize, color: ev.color, width: ev.width, dash: ev.dash });
+    add({ id: uid(), kind: "vline", date: target, label: event.corto, fullLabel: event.nombre, fontSize: eventFontSize, labelSide: eventLabelSide, color: ev.color, width: ev.width, dash: ev.dash });
     flash(`Evento agregado: ${event.nombre}`);
   };
   const addHLine = (value: number, axis: Axis) => add({ id: uid(), kind: "hline", value, axis, label: hl.label, color: hl.color, textColor: hl.textColor, width: hl.width, dash: hl.dash, pos: hl.pos, showValue: hl.showValue });
@@ -661,8 +662,9 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                       const box = p.viewBox;
                       if (!box) return <g />;
                       const y = Number(box.y ?? 0) + Number(box.height ?? 0) * (a.labelY ?? 0.06);
-                      const x = Number(box.x ?? 0) + Number(box.width ?? 0) + 5;
-                      return <text x={x} y={y} fill={a.color} fontSize={a.fontSize ?? 12} fontWeight={700} dominantBaseline="middle"
+                      const isLeft = a.labelSide === "left";
+                      const x = Number(box.x ?? 0) + (isLeft ? -5 : Number(box.width ?? 0) + 5);
+                      return <text x={x} y={y} textAnchor={isLeft ? "end" : "start"} fill={a.color} fontSize={a.fontSize ?? 12} fontWeight={700} dominantBaseline="middle"
                         stroke="#fff" strokeWidth={3} paintOrder="stroke" style={{ cursor: "ns-resize", userSelect: "none" }}
                         onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setDragVLabel(a.id); }}
                         onClick={e => e.stopPropagation()}><title>{a.fullLabel ?? a.label}</title>{a.label}</text>;
@@ -712,7 +714,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                   </select>
                 </label>
                 {eventId && <p className="db-hint">{historicalEvents.find(item => item.id === eventId)?.descripcion}</p>}
-                <div className="cb-inline"><button type="button" className="cb-btn" onClick={addHistoricalEvent}><Plus size={14} aria-hidden="true" />Agregar evento al gráfico</button><label>Tamaño letra <select value={eventFontSize} onChange={e => setEventFontSize(Number(e.target.value))}>{[10, 12, 14, 16, 18, 20, 24].map(n => <option key={n} value={n}>{n} px</option>)}</select></label></div>
+                <div className="cb-inline"><button type="button" className="cb-btn" onClick={addHistoricalEvent}><Plus size={14} aria-hidden="true" />Agregar evento al gráfico</button><label>Tamaño letra <select value={eventFontSize} onChange={e => setEventFontSize(Number(e.target.value))}>{[10, 12, 14, 16, 18, 20, 24].map(n => <option key={n} value={n}>{n} px</option>)}</select></label><label>Posición <select value={eventLabelSide} onChange={e => setEventLabelSide(e.target.value as "left" | "right")}><option value="right">Derecha</option><option value="left">Izquierda</option></select></label></div>
               </div>}
               <div className="cb-series-grid">
                 <label className="cb-wide">Texto<input value={ev.label} onChange={e => setEv(d => ({ ...d, label: e.target.value }))} placeholder="Ej.: RPM, estallido social, COVID…" /></label>
