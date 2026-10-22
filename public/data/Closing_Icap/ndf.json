@@ -1,66 +1,66 @@
 {
-  "fecha": "2026-10-20",
+  "fecha": "2026-10-22",
   "instrumento": "ndf",
   "datos": [
     {
       "Tenor": "1w",
-      "Mid": -0.05,
+      "Mid": -0.02,
       "Dias": 7
     },
     {
       "Tenor": "2w",
-      "Mid": -0.01,
+      "Mid": -0.07,
       "Dias": 14
     },
     {
       "Tenor": "1m",
-      "Mid": -0.13,
-      "Dias": 31
+      "Mid": -0.05,
+      "Dias": 34
     },
     {
       "Tenor": "2m",
-      "Mid": -0.44,
-      "Dias": 62
+      "Mid": -0.25,
+      "Dias": 63
     },
     {
       "Tenor": "3m",
-      "Mid": -0.78,
-      "Dias": 93
+      "Mid": -0.65,
+      "Dias": 95
     },
     {
       "Tenor": "4m",
-      "Mid": -1.1,
-      "Dias": 122
+      "Mid": -0.9,
+      "Dias": 126
     },
     {
       "Tenor": "5m",
-      "Mid": -1.5,
-      "Dias": 150
+      "Mid": -1.26,
+      "Dias": 154
     },
     {
       "Tenor": "6m",
-      "Mid": -1.95,
+      "Mid": -1.65,
       "Dias": 183
     },
     {
       "Tenor": "9m",
-      "Mid": -3.03,
+      "Mid": -2.38,
       "Dias": 274
     },
     {
       "Tenor": "12m",
-      "Mid": -3.65,
-      "Dias": 366
+      "Mid": -3.33,
+      "Dias": 368
     },
     {
       "Tenor": "18m",
-      "Mid": -4.75,
-      "Dias": 549
+      "Mid": -4.25,
+      "Dias": 551
     },
     {
       "Tenor": "24m",
-      "Mid": -3.15,
-      "Dias": 731
+      "Mid": -3.5,
+      "Dias": 734
     }
   ]
 }
