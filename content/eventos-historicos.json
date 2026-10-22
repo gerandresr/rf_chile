@@ -1,44 +1,400 @@
 {
   "eventos": [
     {
-      "id": "liberation-day-2025",
+      "id": "evento-2025-01-20-01",
+      "fecha": "2025-01-20",
+      "corto": "Trump asume",
+      "nombre": "Asume Donald Trump su segundo mandato en Estados Unidos.",
+      "categoria": "Política EE. UU.",
+      "descripcion": "Asume Donald Trump su segundo mandato en Estados Unidos.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-01-27-02",
+      "fecha": "2025-01-27",
+      "corto": "Shock DeepSeek",
+      "nombre": "Shock DeepSeek: Nvidia pierde cerca de US$590 mil millones de capitalización bursátil en un día.",
+      "categoria": "Mercados",
+      "descripcion": "Shock DeepSeek: Nvidia pierde cerca de US$590 mil millones de capitalización bursátil en un día.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-02-01-03",
+      "fecha": "2025-02-01",
+      "corto": "Aranceles Trump",
+      "nombre": "Trump anuncia aranceles a Canadá, México y China.",
+      "categoria": "Comercio internacional",
+      "descripcion": "Trump anuncia aranceles a Canadá, México y China.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-03-04-04",
+      "fecha": "2025-03-04",
+      "corto": "Aranceles en vigor",
+      "nombre": "Entran en vigor aranceles a Canadá y México; el arancel adicional sobre China sube a 20%.",
+      "categoria": "Comercio internacional",
+      "descripcion": "Entran en vigor aranceles a Canadá y México; el arancel adicional sobre China sube a 20%.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-03-12-05",
+      "fecha": "2025-03-12",
+      "corto": "Acero y aluminio",
+      "nombre": "Entra en vigor un arancel estadounidense del 25% al acero y aluminio.",
+      "categoria": "Comercio internacional",
+      "descripcion": "Entra en vigor un arancel estadounidense del 25% al acero y aluminio.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-04-02-06",
       "fecha": "2025-04-02",
-      "nombre": "Liberation Day — anuncio de aranceles de EE. UU.",
+      "corto": "Liberation Day",
+      "nombre": "«Liberation Day»: EE. UU. anuncia aranceles recíprocos globales.",
       "categoria": "Comercio internacional",
-      "descripcion": "Estados Unidos anuncia nuevos aranceles generalizados y recíprocos bajo el denominado Liberation Day.",
-      "fuente": "https://www.whitehouse.gov/fact-sheets/2025/04/fact-sheet-president-donald-j-trump-declares-national-emergency-to-increase-our-competitive-edge-protect-our-sovereignty-and-strengthen-our-national-and-economic-security/"
+      "descripcion": "«Liberation Day»: EE. UU. anuncia aranceles recíprocos globales.",
+      "fuente": ""
     },
     {
-      "id": "pausa-arancelaria-2025",
+      "id": "evento-2025-04-03-07",
+      "fecha": "2025-04-03",
+      "corto": "Caída S&P 500",
+      "nombre": "El S&P 500 comienza una caída de cerca del 10% acumulada durante las sesiones del 3 y 4 de abril.",
+      "categoria": "Mercados",
+      "descripcion": "El S&P 500 comienza una caída de cerca del 10% acumulada durante las sesiones del 3 y 4 de abril.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-04-09-08",
       "fecha": "2025-04-09",
-      "nombre": "EE. UU. anuncia pausa parcial de aranceles",
+      "corto": "Pausa arancelaria",
+      "nombre": "EE. UU. anuncia una pausa de 90 días de parte de los aranceles recíprocos; el S&P 500 sube alrededor de 9,5%. Las tarifas entre EE. UU. y China escalan hasta 145% y 125%.",
       "categoria": "Comercio internacional",
-      "descripcion": "Se anuncia una pausa de 90 días para mayores aranceles recíprocos a numerosos países, manteniendo una tarifa base del 10%; China queda exceptuada.",
-      "fuente": "https://www.presidency.ucsb.edu/documents/statement-united-states-tariff-adjustments"
+      "descripcion": "EE. UU. anuncia una pausa de 90 días de parte de los aranceles recíprocos; el S&P 500 sube alrededor de 9,5%. Las tarifas entre EE. UU. y China escalan hasta 145% y 125%.",
+      "fuente": ""
     },
     {
-      "id": "israel-iran-2025",
+      "id": "evento-2025-05-12-09",
+      "fecha": "2025-05-12",
+      "corto": "Tregua EE. UU.–China",
+      "nombre": "Tregua comercial negociada en Ginebra: los aranceles adicionales entre EE. UU. y China se reducen temporalmente a 30% y 10%.",
+      "categoria": "Comercio internacional",
+      "descripcion": "Tregua comercial negociada en Ginebra: los aranceles adicionales entre EE. UU. y China se reducen temporalmente a 30% y 10%.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-05-16-10",
+      "fecha": "2025-05-16",
+      "corto": "Moody's baja a EE. UU.",
+      "nombre": "Moody's rebaja la calificación soberana de EE. UU. de Aaa a Aa1.",
+      "categoria": "Riesgo soberano",
+      "descripcion": "Moody's rebaja la calificación soberana de EE. UU. de Aaa a Aa1.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-06-13-11",
       "fecha": "2025-06-13",
-      "nombre": "Inicio de ataques entre Israel e Irán",
+      "corto": "Israel ataca Irán",
+      "nombre": "Israel inicia ataques contra Irán; el petróleo sube ante los riesgos de suministro.",
       "categoria": "Geopolítica",
-      "descripcion": "Israel inicia una operación militar contra Irán; Irán responde con ataques de misiles.",
-      "fuente": "https://www.everycrsreport.com/reports/IF13032.html"
+      "descripcion": "Israel inicia ataques contra Irán; el petróleo sube ante los riesgos de suministro.",
+      "fuente": ""
     },
     {
-      "id": "eeuu-iran-2025",
+      "id": "evento-2025-06-22-12",
       "fecha": "2025-06-22",
-      "nombre": "Ataques de EE. UU. contra instalaciones nucleares de Irán",
+      "corto": "EE. UU. ataca Irán",
+      "nombre": "EE. UU. bombardea instalaciones nucleares iraníes; se anuncia un alto el fuego el 24 de junio.",
       "categoria": "Geopolítica",
-      "descripcion": "Estados Unidos ataca instalaciones nucleares iraníes, incluida Fordow.",
-      "fuente": "https://www.everycrsreport.com/reports/IF13032.html"
+      "descripcion": "EE. UU. bombardea instalaciones nucleares iraníes; se anuncia un alto el fuego el 24 de junio.",
+      "fuente": ""
     },
     {
-      "id": "escalada-eeuu-iran-2026",
-      "fecha": "2026-02-28",
-      "nombre": "Nueva escalada militar de EE. UU. e Israel contra Irán",
+      "id": "evento-2025-07-04-13",
+      "fecha": "2025-07-04",
+      "corto": "Ley fiscal EE. UU.",
+      "nombre": "Se promulga la ley fiscal estadounidense conocida como «One Big Beautiful Bill».",
+      "categoria": "Política fiscal",
+      "descripcion": "Se promulga la ley fiscal estadounidense conocida como «One Big Beautiful Bill».",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-08-01-14",
+      "fecha": "2025-08-01",
+      "corto": "Empleo débil EE. UU.",
+      "nombre": "Un informe de empleo débil en EE. UU. coincide con la destitución anunciada por Trump de la comisionada del BLS.",
+      "categoria": "Macroeconomía",
+      "descripcion": "Un informe de empleo débil en EE. UU. coincide con la destitución anunciada por Trump de la comisionada del BLS.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-08-25-15",
+      "fecha": "2025-08-25",
+      "corto": "Caso Lisa Cook",
+      "nombre": "Trump intenta remover de su cargo a la gobernadora de la Reserva Federal Lisa Cook.",
+      "categoria": "Política monetaria",
+      "descripcion": "Trump intenta remover de su cargo a la gobernadora de la Reserva Federal Lisa Cook.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-09-17-16",
+      "fecha": "2025-09-17",
+      "corto": "Fed recorta 25 pb",
+      "nombre": "La Reserva Federal recorta la tasa en 25 pb, al rango 4,00%–4,25%.",
+      "categoria": "Política monetaria",
+      "descripcion": "La Reserva Federal recorta la tasa en 25 pb, al rango 4,00%–4,25%.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-10-01-17",
+      "fecha": "2025-10-01",
+      "corto": "Shutdown EE. UU.",
+      "nombre": "Comienza el cierre del Gobierno federal estadounidense; dura 43 días y termina el 12 de noviembre.",
+      "categoria": "Política fiscal",
+      "descripcion": "Comienza el cierre del Gobierno federal estadounidense; dura 43 días y termina el 12 de noviembre.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-10-08-18",
+      "fecha": "2025-10-08",
+      "corto": "Oro sobre US$4.000",
+      "nombre": "El oro supera el nivel de US$4.000 por onza.",
+      "categoria": "Commodities",
+      "descripcion": "El oro supera el nivel de US$4.000 por onza.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-10-29-19",
+      "fecha": "2025-10-29",
+      "corto": "Fed recorta / Nvidia",
+      "nombre": "La Fed recorta la tasa a 3,75%–4,00% y anuncia el fin del ajuste cuantitativo (QT); Nvidia alcanza una capitalización de US$5 billones.",
+      "categoria": "Política monetaria",
+      "descripcion": "La Fed recorta la tasa a 3,75%–4,00% y anuncia el fin del ajuste cuantitativo (QT); Nvidia alcanza una capitalización de US$5 billones.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-10-30-20",
+      "fecha": "2025-10-30",
+      "corto": "Trump–Xi en Busan",
+      "nombre": "Donald Trump y Xi Jinping se reúnen en Busan y avanzan en una tregua comercial.",
+      "categoria": "Comercio internacional",
+      "descripcion": "Donald Trump y Xi Jinping se reúnen en Busan y avanzan en una tregua comercial.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-12-10-21",
+      "fecha": "2025-12-10",
+      "corto": "Fed recorta tasas",
+      "nombre": "La Fed recorta el rango de tasas a 3,50%–3,75%.",
+      "categoria": "Política monetaria",
+      "descripcion": "La Fed recorta el rango de tasas a 3,50%–3,75%.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-12-14-22",
+      "fecha": "2025-12-14",
+      "corto": "Kast gana elección",
+      "nombre": "José Antonio Kast gana la segunda vuelta de la elección presidencial de Chile.",
+      "categoria": "Chile",
+      "descripcion": "José Antonio Kast gana la segunda vuelta de la elección presidencial de Chile.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2025-12-16-23",
+      "fecha": "2025-12-16",
+      "corto": "BCCh: TPM 4,50%",
+      "nombre": "El Banco Central de Chile fija la TPM en 4,50%, nivel que se mantuvo en las reuniones posteriores mencionadas en esta cronología.",
+      "categoria": "Chile",
+      "descripcion": "El Banco Central de Chile fija la TPM en 4,50%, nivel que se mantuvo en las reuniones posteriores mencionadas en esta cronología.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-01-03-24",
+      "fecha": "2026-01-03",
+      "corto": "Operación Venezuela",
+      "nombre": "Operación estadounidense en Venezuela y captura de Nicolás Maduro.",
       "categoria": "Geopolítica",
-      "descripcion": "Estados Unidos e Israel inician una nueva campaña de ataques contra objetivos en Irán.",
-      "fuente": "https://www.everycrsreport.com/reports/R48887.html"
+      "descripcion": "Operación estadounidense en Venezuela y captura de Nicolás Maduro.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-01-27-25",
+      "fecha": "2026-01-27",
+      "corto": "BCCh mantiene TPM",
+      "nombre": "El Consejo del Banco Central de Chile mantiene por unanimidad la TPM en 4,50%.",
+      "categoria": "Chile",
+      "descripcion": "El Consejo del Banco Central de Chile mantiene por unanimidad la TPM en 4,50%.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-01-30-26",
+      "fecha": "2026-01-30",
+      "corto": "Warsh nominado",
+      "nombre": "Trump anuncia su elección de Kevin Warsh para presidir la Fed; se registran fuertes caídas en el oro y la plata.",
+      "categoria": "Política monetaria",
+      "descripcion": "Trump anuncia su elección de Kevin Warsh para presidir la Fed; se registran fuertes caídas en el oro y la plata.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-02-14-27",
+      "fecha": "2026-02-14",
+      "corto": "Cierre parcial DHS",
+      "nombre": "Comienza un cierre parcial del Departamento de Seguridad Nacional de EE. UU., prolongado hasta el 30 de abril.",
+      "categoria": "Política fiscal",
+      "descripcion": "Comienza un cierre parcial del Departamento de Seguridad Nacional de EE. UU., prolongado hasta el 30 de abril.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-02-20-28",
+      "fecha": "2026-02-20",
+      "corto": "Fallo sobre aranceles",
+      "nombre": "La Corte Suprema de EE. UU. determina, por seis votos contra tres, que la IEEPA no autoriza los aranceles impuestos bajo esa ley.",
+      "categoria": "Comercio internacional",
+      "descripcion": "La Corte Suprema de EE. UU. determina, por seis votos contra tres, que la IEEPA no autoriza los aranceles impuestos bajo esa ley.",
+      "fuente": "https://www.everycrsreport.com/files/2026-04-09_IF13199_b63fa21e9bf985ab52dcc0a4973f7a19e3d4ce86.html"
+    },
+    {
+      "id": "evento-2026-02-24-29",
+      "fecha": "2026-02-24",
+      "corto": "Arancel Sección 122",
+      "nombre": "Entra en vigor un recargo arancelario temporal global bajo la Sección 122, anunciado inicialmente al 10%; se anuncia posteriormente un aumento al 15%.",
+      "categoria": "Comercio internacional",
+      "descripcion": "Entra en vigor un recargo arancelario temporal global bajo la Sección 122, anunciado inicialmente al 10%; se anuncia posteriormente un aumento al 15%.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-02-28-30",
+      "fecha": "2026-02-28",
+      "corto": "Guerra con Irán",
+      "nombre": "Comienza una campaña militar de EE. UU. e Israel contra Irán; se interrumpe gravemente el tránsito por el estrecho de Ormuz.",
+      "categoria": "Geopolítica",
+      "descripcion": "Comienza una campaña militar de EE. UU. e Israel contra Irán; se interrumpe gravemente el tránsito por el estrecho de Ormuz.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-03-11-31",
+      "fecha": "2026-03-11",
+      "corto": "Kast asume",
+      "nombre": "José Antonio Kast asume la presidencia de Chile.",
+      "categoria": "Chile",
+      "descripcion": "José Antonio Kast asume la presidencia de Chile.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-03-26-32",
+      "fecha": "2026-03-26",
+      "corto": "Nasdaq en corrección",
+      "nombre": "El Nasdaq entra en territorio de corrección, cerca de un 11% por debajo de su máximo de octubre, en medio de la guerra con Irán.",
+      "categoria": "Mercados",
+      "descripcion": "El Nasdaq entra en territorio de corrección, cerca de un 11% por debajo de su máximo de octubre, en medio de la guerra con Irán.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-04-08-33",
+      "fecha": "2026-04-08",
+      "corto": "Alto el fuego Irán",
+      "nombre": "EE. UU. e Irán anuncian un alto el fuego de dos semanas; el petróleo cae y los mercados bursátiles repuntan.",
+      "categoria": "Geopolítica",
+      "descripcion": "EE. UU. e Irán anuncian un alto el fuego de dos semanas; el petróleo cae y los mercados bursátiles repuntan.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-04-30-34",
+      "fecha": "2026-04-30",
+      "corto": "Brent US$126",
+      "nombre": "El crudo Brent alcanza alrededor de US$126 por barril antes de cerrar cerca de US$116; antes de la guerra cotizaba cerca de US$72.",
+      "categoria": "Commodities",
+      "descripcion": "El crudo Brent alcanza alrededor de US$126 por barril antes de cerrar cerca de US$116; antes de la guerra cotizaba cerca de US$72.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-05-13-35",
+      "fecha": "2026-05-13",
+      "corto": "Senado confirma Warsh",
+      "nombre": "El Senado de EE. UU. confirma a Kevin Warsh como presidente de la Fed por 54 votos contra 45.",
+      "categoria": "Política monetaria",
+      "descripcion": "El Senado de EE. UU. confirma a Kevin Warsh como presidente de la Fed por 54 votos contra 45.",
+      "fuente": "https://www.senate.gov/legislative/LIS/roll_call_votes/vote1192/vote_119_2_00120.htm"
+    },
+    {
+      "id": "evento-2026-05-22-36",
+      "fecha": "2026-05-22",
+      "corto": "Warsh preside la Fed",
+      "nombre": "Kevin Warsh asume como presidente de la Reserva Federal, sucediendo a Jerome Powell.",
+      "categoria": "Política monetaria",
+      "descripcion": "Kevin Warsh asume como presidente de la Reserva Federal, sucediendo a Jerome Powell.",
+      "fuente": "https://www.federalreserve.gov/newsevents/pressreleases/other20260522a.htm"
+    },
+    {
+      "id": "evento-2026-06-16-37",
+      "fecha": "2026-06-16",
+      "corto": "BCCh mantiene 4,50%",
+      "nombre": "El Banco Central de Chile mantiene la TPM en 4,50%.",
+      "categoria": "Chile",
+      "descripcion": "El Banco Central de Chile mantiene la TPM en 4,50%.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-06-23-38",
+      "fecha": "2026-06-23",
+      "corto": "Venta de tecnológicas",
+      "nombre": "Una fuerte venta de acciones tecnológicas provoca una caída diaria de 2,21% en el Nasdaq.",
+      "categoria": "Mercados",
+      "descripcion": "Una fuerte venta de acciones tecnológicas provoca una caída diaria de 2,21% en el Nasdaq.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-07-24-39",
+      "fecha": "2026-07-24",
+      "corto": "Plazo Sección 122",
+      "nombre": "Fecha de vencimiento inicialmente prevista para los aranceles temporales estadounidenses de la Sección 122, sujeta a cambios legales o legislativos.",
+      "categoria": "Comercio internacional",
+      "descripcion": "Fecha de vencimiento inicialmente prevista para los aranceles temporales estadounidenses de la Sección 122, sujeta a cambios legales o legislativos.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-08-14-40",
+      "fecha": "2026-08-14",
+      "corto": "AIE recorta oferta",
+      "nombre": "La Agencia Internacional de Energía recorta su previsión de oferta mundial de petróleo para 2026 por la interrupción prolongada del estrecho de Ormuz.",
+      "categoria": "Commodities",
+      "descripcion": "La Agencia Internacional de Energía recorta su previsión de oferta mundial de petróleo para 2026 por la interrupción prolongada del estrecho de Ormuz.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-09-08-41",
+      "fecha": "2026-09-08",
+      "corto": "BCCh mantiene TPM",
+      "nombre": "El Banco Central de Chile mantiene la TPM en 4,50%, en un contexto de mayores tasas largas y destrucción de empleo.",
+      "categoria": "Chile",
+      "descripcion": "El Banco Central de Chile mantiene la TPM en 4,50%, en un contexto de mayores tasas largas y destrucción de empleo.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-09-16-42",
+      "fecha": "2026-09-16",
+      "corto": "Fed sube 25 pb",
+      "nombre": "La Fed aumenta su rango de tasas en 25 pb, a 3,75%–4,00%, por primera vez desde julio de 2023.",
+      "categoria": "Política monetaria",
+      "descripcion": "La Fed aumenta su rango de tasas en 25 pb, a 3,75%–4,00%, por primera vez desde julio de 2023.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-10-02-43",
+      "fecha": "2026-10-02",
+      "corto": "S&P 500: 7.722",
+      "nombre": "El índice S&P 500 cierra en 7.722,72 puntos, acumulando cerca de 12,6% en el año.",
+      "categoria": "Mercados",
+      "descripcion": "El índice S&P 500 cierra en 7.722,72 puntos, acumulando cerca de 12,6% en el año.",
+      "fuente": ""
+    },
+    {
+      "id": "evento-2026-10-16-44",
+      "fecha": "2026-10-16",
+      "corto": "Caída Nasdaq semanal",
+      "nombre": "El Nasdaq cae alrededor de 4,5% durante la semana, afectado por ventas en fabricantes de chips y preocupación por las valoraciones de la inteligencia artificial.",
+      "categoria": "Mercados",
+      "descripcion": "El Nasdaq cae alrededor de 4,5% durante la semana, afectado por ventas en fabricantes de chips y preocupación por las valoraciones de la inteligencia artificial.",
+      "fuente": ""
     }
   ]
 }
