@@ -17,7 +17,7 @@ type Source = { kind: "catalog"; leg: Leg } | { kind: "calc"; op: "diff" | "fly"
 type PlotSeries = { uid: string; label: string; source: Source; type: ChartType; color: string; width: number; dash: Dash; axis: Axis; transform: Transform; visible: boolean };
 // Los campos opcionales mantienen compatibles los gráficos guardados antes de agregarlos.
 type Annotation =
-  | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string; textColor?: string; width?: number; dash?: Dash; pos?: "left" | "right" }
+  | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string; textColor?: string; width?: number; dash?: Dash; pos?: "left" | "right"; showValue?: boolean }
   | { id: string; kind: "vline"; date: string; label: string; color: string; width?: number; dash?: Dash }
   | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up"; width?: number; dash?: Dash }
   | { id: string; kind: "farrow"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash?: Dash }
@@ -112,10 +112,10 @@ type FreeLayerProps = {
   dates: string[]; items: FreeAnnotation[]; mode: Mode; axis: Axis; preview: ShapePreview | null;
   onPointer: (kind: "down" | "move" | "up", pt: Pt, px: Px) => void; onGrab: (id: string, pt: Pt) => void; onEditText: (id: string, px: Px) => void; moving: boolean;
   /** Franjas sobre los ejes Y: clic agrega una línea horizontal en ese nivel (como Bloomberg). */
-  axes: { left: boolean; right: boolean }; ghost: { axis: Axis; value: number } | null;
+  axes: { left: boolean; right: boolean }; hlines: Extract<Annotation, { kind: "hline" }>[]; ghost: { axis: Axis; value: number } | null;
   onAxis: (kind: "hover" | "leave" | "click", axis: Axis, value: number) => void;
 };
-function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, preview, onPointer, onGrab, onEditText, moving, axes, ghost, onAxis }: FreeLayerProps) {
+function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, preview, onPointer, onGrab, onEditText, moving, axes, hlines, ghost, onAxis }: FreeLayerProps) {
   const xAxis = xAxisMap ? Object.values(xAxisMap)[0] : undefined;
   if (!xAxis || !yAxisMap || !offset) return null;
   const band = xAxis.scale.bandwidth ? xAxis.scale.bandwidth() / 2 : 0;
@@ -160,7 +160,7 @@ function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, previ
     const common = { fill: a.fill ? a.color : "transparent", fillOpacity: a.fill ? 0.14 : 1, stroke: a.color, strokeWidth: a.width, strokeDasharray: DASH[a.dash], onMouseDown: grab, style: { cursor: grab ? "move" : undefined, pointerEvents: grab ? undefined : "none" } as React.CSSProperties };
     return a.shape === "rect" ? <rect key={key} x={x} y={y} width={w} height={h} rx={3} {...common} /> : <ellipse key={key} cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} {...common} />;
   };
-  const capture = mode === "shape" || mode === "hline" || moving;
+  const capture = mode === "shape" || moving;
   const axisValue = (a: Axis, py: number) => { const sc = yScale(a), d = sc?.domain?.() ?? [0, 1]; return sc?.invert ? niceRound(sc.invert(py), d[1] - d[0]) : null; };
   const strip = (a: Axis) => {
     const x = a === "left" ? offset.left - 56 : offset.left + offset.width;
@@ -184,6 +184,7 @@ function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, previ
     {preview && (preview.tool === "arrow"
       ? arrow("preview", { x1: preview.from.date, y1: preview.from.value, x2: preview.to.date, y2: preview.to.value, axis, color: preview.color, width: preview.width, dash: preview.dash })
       : shape("preview", { shape: preview.tool, x1: preview.from.date, y1: preview.from.value, x2: preview.to.date, y2: preview.to.value, axis, color: preview.color, width: preview.width, dash: preview.dash, fill: preview.fill }))}
+    {hlines.filter(h => h.showValue).map(h => { const y = yScale(h.axis)?.(h.value); if (typeof y !== "number" || !Number.isFinite(y) || y < offset.top || y > offset.top + offset.height) return null; const x = h.axis === "left" ? offset.left - 54 : offset.left + offset.width + 2; return <g key={`level-${h.id}`} style={{ pointerEvents: "none" }}><rect x={x} y={y - 9} width={52} height={18} rx={3} fill="#172033" /><text x={x + 26} y={y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{fmt(h.value, Math.abs(h.value) >= 100 ? 1 : 2)}</text></g>; })}
     {ghost && typeof ghostY === "number" && Number.isFinite(ghostY) && <g style={{ pointerEvents: "none" }}>
       <line x1={offset.left} x2={offset.left + offset.width} y1={ghostY} y2={ghostY} stroke="#64748b" strokeDasharray="4 4" />
       <rect x={ghost.axis === "left" ? offset.left - 54 : offset.left + offset.width + 2} y={ghostY - 9} width={52} height={18} rx={3} fill="#172033" />
@@ -194,7 +195,7 @@ function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, previ
       onMouseMove={e => { const p = local(e), pt = toData(p.x, p.y, axis); if (pt) onPointer("move", pt, p); }}
       onMouseUp={e => { const p = local(e), pt = toData(p.x, p.y, axis); if (pt) onPointer("up", pt, p); }}
       onMouseLeave={e => { const p = local(e), pt = toData(p.x, p.y, axis); if (pt) onPointer("up", pt, p); }} />}
-    {!moving && (mode === "none" || mode === "hline") && <>{axes.left && strip("left")}{axes.right && strip("right")}</>}
+    {!moving && (mode === "none") && <>{axes.left && strip("left")}{axes.right && strip("right")}</>}
   </g>;
 }
 
@@ -211,7 +212,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
   const [mode, setMode] = useState<Mode>("none");
   // Borradores de cada bloque de anotaciones.
   const [ev, setEv] = useState({ label: "", color: "#d94b4b", dash: "dash" as Dash, width: 1.5, style: "line" as "line" | "arrow", seriesUid: "", dir: "down" as "down" | "up" });
-  const [hl, setHl] = useState({ label: "", value: "", axis: "left" as Axis, color: "#d94b4b", textColor: "#d94b4b", width: 1.5, dash: "dash" as Dash, pos: "left" as "left" | "right" });
+  const [hl, setHl] = useState({ label: "", value: "", axis: "left" as Axis, color: "#d94b4b", textColor: "#d94b4b", width: 1.5, dash: "dash" as Dash, pos: "left" as "left" | "right", showValue: true });
   const [sh, setSh] = useState({ tool: "arrow" as ShapeTool, color: "#d94b4b", width: 2, dash: "solid" as Dash, fill: false, size: 13, bold: true });
   const [drag, setDrag] = useState<{ from: Pt; to: Pt } | null>(null);
   const [ghost, setGhost] = useState<{ axis: Axis; value: number } | null>(null);
@@ -316,7 +317,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
   };
   const add = (a: Annotation) => setConfig(c => ({ ...c, annotations: [...c.annotations, a] }));
   const setAnnotation = (id: string, patch: Partial<Annotation>) => setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === id ? { ...a, ...patch } as Annotation : a) }));
-  const addHLine = (value: number, axis: Axis) => add({ id: uid(), kind: "hline", value, axis, label: hl.label, color: hl.color, textColor: hl.textColor, width: hl.width, dash: hl.dash, pos: hl.pos });
+  const addHLine = (value: number, axis: Axis) => add({ id: uid(), kind: "hline", value, axis, label: hl.label, color: hl.color, textColor: hl.textColor, width: hl.width, dash: hl.dash, pos: hl.pos, showValue: hl.showValue });
   const addHLineTyped = () => {
     const value = Number(hl.value.replace(",", "."));
     if (hl.value.trim() === "" || !Number.isFinite(value)) { flash("Ingresa un valor numérico o haz clic en el eje Y."); return; }
@@ -352,7 +353,6 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
       if (kind === "up") setMove(null);
       return;
     }
-    if (mode === "hline" && kind === "down") { addHLine(pt.value, hl.axis); setMode("none"); return; }
     if (mode !== "shape") return;
     if (sh.tool === "text") {
       if (kind === "down") { setEditing({ pt, x: px.x, y: px.y, text: "" }); setMode("none"); }
@@ -569,7 +569,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
               <button className="cb-btn" onClick={shareLink}><Copy size={14} aria-hidden="true" />Link</button>
             </div>
           </div>
-          {mode !== "none" && <div className="cb-mode">{mode === "event" ? `Haz clic en la fecha donde va la ${ev.style === "line" ? "línea vertical" : "flecha"}.` : mode === "hline" ? "Haz clic en el nivel de la línea horizontal (o sobre el eje Y)." : sh.tool === "text" ? "Haz clic donde quieres escribir." : sh.tool === "arrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : `Arrastra para dibujar el ${sh.tool === "rect" ? "cuadrado" : "círculo"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
+          {mode !== "none" && <div className="cb-mode">{mode === "event" ? `Haz clic en la fecha donde va la ${ev.style === "line" ? "línea vertical" : "flecha"}.` : sh.tool === "text" ? "Haz clic donde quieres escribir." : sh.tool === "arrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : `Arrastra para dibujar el ${sh.tool === "rect" ? "cuadrado" : "círculo"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
           {notice && <div className="cb-notice">{notice}</div>}
           <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
           <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }}>
@@ -603,8 +603,8 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
                 {arrows.length > 0 && <Customized component={(p: { xAxisMap?: AxisMap; yAxisMap?: AxisMap }) => <ArrowLayer xAxisMap={p.xAxisMap} yAxisMap={p.yAxisMap} arrows={arrows} rows={rows} series={config.series} />} />}
                 {rows.length > 30 && <Brush dataKey="date" height={22} stroke="#94a3b8" travellerWidth={8} />}
                 <Customized component={(p: Pick<FreeLayerProps, "xAxisMap" | "yAxisMap" | "offset">) => <FreeLayer {...p} dates={rows.map(r => String(r.date))} items={config.annotations.filter((a): a is FreeAnnotation => a.kind === "farrow" || a.kind === "shape" || a.kind === "text")}
-                  mode={mode} axis={mode === "hline" ? (hl.axis === "right" && hasRight ? "right" : "left") : freeAxis} preview={drag && sh.tool !== "text" ? { tool: sh.tool, ...drag, color: sh.color, width: sh.width, dash: sh.dash, fill: sh.fill } : null}
-                  onPointer={onFreePointer} onGrab={onGrab} onEditText={onEditText} moving={!!move} axes={{ left: config.yAxis !== false, right: hasRight }} ghost={ghost} onAxis={onAxis} />} />
+                  mode={mode} axis={freeAxis} preview={drag && sh.tool !== "text" ? { tool: sh.tool, ...drag, color: sh.color, width: sh.width, dash: sh.dash, fill: sh.fill } : null}
+                  onPointer={onFreePointer} onGrab={onGrab} onEditText={onEditText} moving={!!move} axes={{ left: config.yAxis !== false, right: hasRight }} hlines={config.annotations.filter((a): a is Extract<Annotation, { kind: "hline" }> => a.kind === "hline")} ghost={ghost} onAxis={onAxis} />} />
               </ComposedChart></ResponsiveContainer>}
             {editing && <input className="cb-text-editor" autoFocus value={editing.text} placeholder="Escribe y presiona Enter"
               style={{ left: editing.x, top: editing.y, color: sh.color, fontSize: sh.size, fontWeight: sh.bold ? 700 : 400 }}
@@ -645,11 +645,11 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
                 <label>Color línea<input type="color" value={hl.color} onChange={e => setHl(d => ({ ...d, color: e.target.value }))} /></label>
                 <label>Color texto<input type="color" value={hl.textColor} onChange={e => setHl(d => ({ ...d, textColor: e.target.value }))} /></label>
                 <label>Tipo de línea<select value={hl.dash} onChange={e => setHl(d => ({ ...d, dash: e.target.value as Dash }))}>{DASH_OPTIONS}</select></label>
+                <label className="cb-check"><input type="checkbox" checked={hl.showValue} onChange={e => setHl(d => ({ ...d, showValue: e.target.checked }))} />Mostrar valor en el eje</label>
                 <label>Grosor<select value={hl.width} onChange={e => setHl(d => ({ ...d, width: Number(e.target.value) }))}>{WIDTH_OPTIONS}</select></label>
               </div>
               <div className="cb-inline"><input value={hl.value} onChange={e => setHl(d => ({ ...d, value: e.target.value }))} placeholder="Nivel, ej. 4,5" aria-label="Nivel de la línea horizontal" onKeyDown={e => { if (e.key === "Enter") addHLineTyped(); }} /><button className="cb-btn" onClick={addHLineTyped}><Plus size={14} aria-hidden="true" />Agregar</button></div>
-              <button className={`cb-btn ${mode === "hline" ? "cb-armed" : ""}`} onClick={() => setMode(m => m === "hline" ? "none" : "hline")}><MousePointerClick size={14} aria-hidden="true" />{mode === "hline" ? "Haz clic en el nivel…" : "Marcar con clic en el gráfico"}</button>
-              <p className="db-hint">Atajo: haz clic directamente sobre el eje Y en el nivel que quieras.</p>
+              <p className="db-hint">Mueve el cursor sobre el eje Y para previsualizar el nivel y haz clic para fijarlo. La guía desaparece al salir del eje.</p>
               {annotationList(a => a.kind === "hline")}
             </section>
 
