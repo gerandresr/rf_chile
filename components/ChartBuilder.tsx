@@ -18,7 +18,7 @@ type PlotSeries = { uid: string; label: string; source: Source; type: ChartType;
 // Los campos opcionales mantienen compatibles los gráficos guardados antes de agregarlos.
 type Annotation =
   | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string; textColor?: string; width?: number; dash?: Dash; pos?: "left" | "right"; showValue?: boolean }
-  | { id: string; kind: "vline"; date: string; label: string; color: string; width?: number; dash?: Dash; labelY?: number }
+  | { id: string; kind: "vline"; date: string; label: string; fullLabel?: string; color: string; width?: number; dash?: Dash; labelY?: number }
   | { id: string; kind: "arrow"; date: string; seriesUid: string; label: string; color: string; dir: "down" | "up"; width?: number; dash?: Dash }
   | { id: string; kind: "farrow"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash?: Dash }
   | { id: string; kind: "shape"; shape: "ellipse" | "rect"; x1: string; y1: number; x2: string; y2: number; axis: Axis; color: string; width: number; dash: Dash; fill: boolean }
@@ -98,7 +98,7 @@ function ArrowLayer({ xAxisMap, yAxisMap, arrows, rows, series }: { xAxisMap?: A
     return <g key={a.id}>
       <line x1={x} x2={x} y1={tailY} y2={up ? tipY + 8 : tipY - 8} stroke={a.color} strokeWidth={a.width ?? 1.8} strokeDasharray={DASH[a.dash ?? "solid"]} />
       <polygon points={head} fill={a.color} />
-      {a.label && <text x={x} y={up ? tailY + 14 : tailY - 6} textAnchor="middle" fontSize={12} fontWeight={700} fill={a.color} stroke="#fff" strokeWidth={3} paintOrder="stroke">{a.label}</text>}
+      {a.label && <text x={x} y={up ? tailY + 14 : tailY - 6} textAnchor="middle" fontSize={12} fontWeight={700} fill={a.color} stroke="#fff" strokeWidth={3} paintOrder="stroke"><title>{a.fullLabel ?? a.label}</title>{a.label}</text>}
     </g>;
   })}</g>;
 }
@@ -205,7 +205,7 @@ function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, previ
 
 // ---------------- Componente principal ----------------
 export type RecommendedChart = { nombre: string; config: Partial<Config> };
-export type HistoricalEvent = { id: string; fecha: string; nombre: string; categoria: string; descripcion: string; fuente: string };
+export type HistoricalEvent = { id: string; fecha: string; corto: string; nombre: string; categoria: string; descripcion: string; fuente: string };
 export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] }: { catalog: Catalog; recommended?: RecommendedChart[]; historicalEvents?: HistoricalEvent[] }) {
   const byId = useMemo(() => new Map(catalog.groups.flatMap(g => g.series.map(s => [s.id, s] as const))), [catalog]);
   const allSeries = useMemo(() => catalog.groups.flatMap(g => g.series), [catalog]);
@@ -360,7 +360,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
       flash("El evento está fuera del rango del gráfico. Amplía el período para agregarlo.");
       return;
     }
-    add({ id: uid(), kind: "vline", date: target, label: event.nombre, color: ev.color, width: ev.width, dash: ev.dash });
+    add({ id: uid(), kind: "vline", date: target, label: event.corto, fullLabel: event.nombre, color: ev.color, width: ev.width, dash: ev.dash });
     flash(`Evento agregado: ${event.nombre}`);
   };
   const addHLine = (value: number, axis: Axis) => add({ id: uid(), kind: "hline", value, axis, label: hl.label, color: hl.color, textColor: hl.textColor, width: hl.width, dash: hl.dash, pos: hl.pos, showValue: hl.showValue });
@@ -519,7 +519,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const shownFrom = config.period === "custom" ? config.from : String(rows[0]?.date ?? ""), shownTo = config.period === "custom" ? config.to : lastDate;
   const optionGroups = catalog.groups.map(g => <optgroup key={g.name} label={g.name}>{g.series.map(s => <option key={s.id} value={s.id}>{s.fields.length > 1 ? `${s.id} · ${s.label}` : s.label}</option>)}</optgroup>);
 
-  const describe = (a: Annotation) => a.kind === "hline" ? `${fmt(a.value, Math.abs(a.value) >= 100 ? 1 : 2)}${a.label ? ` · ${a.label}` : ""}` : a.kind === "vline" ? `Línea ${a.date}${a.label ? ` · ${a.label}` : ""}`
+  const describe = (a: Annotation) => a.kind === "hline" ? `${fmt(a.value, Math.abs(a.value) >= 100 ? 1 : 2)}${a.label ? ` · ${a.label}` : ""}` : a.kind === "vline" ? `Línea ${a.date}${a.label ? ` · ${a.fullLabel ?? a.label}` : ""}`
     : a.kind === "arrow" ? `Flecha ${a.date}${a.label ? ` · ${a.label}` : ""}` : a.kind === "farrow" ? "Flecha" : a.kind === "shape" ? (a.shape === "rect" ? "Cuadrado" : "Círculo") : `Texto “${a.text}”`;
   const annotationList = (filter: (a: Annotation) => boolean) => {
     const list = config.annotations.filter(filter);
@@ -679,7 +679,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                 <label className="cb-field">Eventos históricos
                   <select value={eventId} onChange={e => setEventId(e.target.value)}>
                     <option value="">Selecciona un evento…</option>
-                    {historicalEvents.map(item => <option key={item.id} value={item.id}>{item.fecha.slice(8,10)}/{item.fecha.slice(5,7)}/{item.fecha.slice(0,4)} · {item.nombre}</option>)}
+                    {historicalEvents.map(item => <option key={item.id} value={item.id}>{item.fecha.slice(8,10)}/{item.fecha.slice(5,7)}/{item.fecha.slice(0,4)} · {item.corto}</option>)}
                   </select>
                 </label>
                 {eventId && <p className="db-hint">{historicalEvents.find(item => item.id === eventId)?.descripcion}</p>}
