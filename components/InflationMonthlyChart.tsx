@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import {
-  Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip,
+  Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip,
   XAxis, YAxis, ReferenceLine
 } from "recharts";
 
 export type InflationPoint = { fecha: string; ipc: number; tipo: "observado" | "esperado" };
 
 const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-const numberFormat = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+const numberFormat = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt = (n: number) => `${numberFormat.format(n)}%`;
 const label = (fecha: string) => {
   const [year, month] = fecha.split("-");
@@ -32,10 +32,11 @@ export function InflationMonthlyChart({
     .sort((a, b) => a.fecha.localeCompare(b.fecha))
     .map((row) => ({ ...row, mes: label(row.fecha) }));
 
+  const nextIpc = expected[0];
   const vals = chartData.map((point) => point.ipc);
   const min = Math.min(0, ...vals);
   const max = Math.max(0, ...vals);
-  const pad = Math.max(0.15, (max - min) * 0.12);
+  const pad = Math.max(0.2, (max - min) * 0.2);
   const domain: [number, number] = [Math.min(0, min - pad), Math.max(0, max + pad)];
 
   return (
@@ -59,11 +60,14 @@ export function InflationMonthlyChart({
           <span className="pill"><span aria-hidden="true" style={{ display: "inline-block", height: 8, width: 8, borderRadius: 2, background: OBSERVED, marginRight: 6 }} />IPC observado ({selectedObserved.length})</span>
           <span className="pill"><span aria-hidden="true" style={{ display: "inline-block", height: 8, width: 8, borderRadius: 2, background: EXPECTED, marginRight: 6 }} />Expectativas de mercado ({selectedExpected.length})</span>
         </div>
+        {nextIpc && <p style={{ margin: "0 0 12px", fontSize: 13, color: "#92400e", fontWeight: 650 }}>
+          Próximo IPC esperado: {label(nextIpc.fecha)} · {fmt(nextIpc.ipc)} (primera barra naranja)
+        </p>}
         {chartData.length === 0 ? <div className="loading">No hay datos de IPC disponibles.</div> : (
           <div className="table-wrap">
             <div role="img" aria-label="Gráfico de barras del IPC observado y expectativas de mercado" style={{ height: 380, minWidth: showAll ? Math.max(780, chartData.length * 24) : 600 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 10, right: 18, left: 8, bottom: 4 }}>
+                <BarChart data={chartData} margin={{ top: 24, right: 18, left: 8, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="mes" angle={-40} textAnchor="end" height={62} interval={showAll ? Math.max(0, Math.ceil(chartData.length / 24) - 1) : 0} tick={{ fontSize: 11 }} />
                   <YAxis domain={domain} tickFormatter={fmt} tick={{ fontSize: 12 }} width={58} />
@@ -71,6 +75,7 @@ export function InflationMonthlyChart({
                   <ReferenceLine y={0} stroke="#94a3b8" />
                   <Bar dataKey="ipc" maxBarSize={52} radius={[4, 4, 0, 0]}>
                     {chartData.map((point) => <Cell key={point.fecha} fill={point.tipo === "observado" ? OBSERVED : EXPECTED} />)}
+                    <LabelList dataKey="ipc" position="top" formatter={(value: number | string) => fmt(Number(value))} style={{ fontSize: 10, fontWeight: 650, fill: "#334155" }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
