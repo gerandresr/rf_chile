@@ -98,7 +98,7 @@ function ArrowLayer({ xAxisMap, yAxisMap, arrows, rows, series }: { xAxisMap?: A
     return <g key={a.id}>
       <line x1={x} x2={x} y1={tailY} y2={up ? tipY + 8 : tipY - 8} stroke={a.color} strokeWidth={a.width ?? 1.8} strokeDasharray={DASH[a.dash ?? "solid"]} />
       <polygon points={head} fill={a.color} />
-      {a.label && <text x={x} y={up ? tailY + 14 : tailY - 6} textAnchor="middle" fontSize={12} fontWeight={700} fill={a.color} stroke="#fff" strokeWidth={3} paintOrder="stroke"><title>{a.fullLabel ?? a.label}</title>{a.label}</text>}
+      {a.label && <text x={x} y={up ? tailY + 14 : tailY - 6} textAnchor="middle" fontSize={12} fontWeight={700} fill={a.color} stroke="#fff" strokeWidth={3} paintOrder="stroke">{a.label}</text>}
     </g>;
   })}</g>;
 }
@@ -652,7 +652,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                       return <text x={x} y={y} fill={a.color} fontSize={12} fontWeight={700} dominantBaseline="middle"
                         stroke="#fff" strokeWidth={3} paintOrder="stroke" style={{ cursor: "ns-resize", userSelect: "none" }}
                         onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setDragVLabel(a.id); }}
-                        onClick={e => e.stopPropagation()}>{a.label}</text>;
+                        onClick={e => e.stopPropagation()}><title>{a.fullLabel ?? a.label}</title>{a.label}</text>;
                     } : undefined} />
                   : null)}
                 {arrows.length > 0 && <Customized component={(p: { xAxisMap?: AxisMap; yAxisMap?: AxisMap }) => <ArrowLayer xAxisMap={p.xAxisMap} yAxisMap={p.yAxisMap} arrows={arrows} rows={rows} series={config.series} />} />}
