@@ -11,6 +11,12 @@ function recommended(): RecommendedChart[] {
   catch { return []; }
 }
 
+type HistoricalEvent = { id: string; fecha: string; nombre: string; categoria: string; descripcion: string; fuente: string };
+function historicalEvents(): HistoricalEvent[] {
+  try { return JSON.parse(readFileSync(path.join(process.cwd(), "content", "eventos-historicos.json"), "utf8")).eventos ?? []; }
+  catch { return []; }
+}
+
 export default function Page() {
-  return <ChartBuilder catalog={dataCatalog()} recommended={recommended()} />;
+  return <ChartBuilder catalog={dataCatalog()} recommended={recommended()} historicalEvents={historicalEvents()} />;
 }

@@ -1,0 +1,44 @@
+{
+  "eventos": [
+    {
+      "id": "liberation-day-2025",
+      "fecha": "2025-04-02",
+      "nombre": "Liberation Day — anuncio de aranceles de EE. UU.",
+      "categoria": "Comercio internacional",
+      "descripcion": "Estados Unidos anuncia nuevos aranceles generalizados y recíprocos bajo el denominado Liberation Day.",
+      "fuente": "https://www.whitehouse.gov/fact-sheets/2025/04/fact-sheet-president-donald-j-trump-declares-national-emergency-to-increase-our-competitive-edge-protect-our-sovereignty-and-strengthen-our-national-and-economic-security/"
+    },
+    {
+      "id": "pausa-arancelaria-2025",
+      "fecha": "2025-04-09",
+      "nombre": "EE. UU. anuncia pausa parcial de aranceles",
+      "categoria": "Comercio internacional",
+      "descripcion": "Se anuncia una pausa de 90 días para mayores aranceles recíprocos a numerosos países, manteniendo una tarifa base del 10%; China queda exceptuada.",
+      "fuente": "https://www.presidency.ucsb.edu/documents/statement-united-states-tariff-adjustments"
+    },
+    {
+      "id": "israel-iran-2025",
+      "fecha": "2025-06-13",
+      "nombre": "Inicio de ataques entre Israel e Irán",
+      "categoria": "Geopolítica",
+      "descripcion": "Israel inicia una operación militar contra Irán; Irán responde con ataques de misiles.",
+      "fuente": "https://www.everycrsreport.com/reports/IF13032.html"
+    },
+    {
+      "id": "eeuu-iran-2025",
+      "fecha": "2025-06-22",
+      "nombre": "Ataques de EE. UU. contra instalaciones nucleares de Irán",
+      "categoria": "Geopolítica",
+      "descripcion": "Estados Unidos ataca instalaciones nucleares iraníes, incluida Fordow.",
+      "fuente": "https://www.everycrsreport.com/reports/IF13032.html"
+    },
+    {
+      "id": "escalada-eeuu-iran-2026",
+      "fecha": "2026-02-28",
+      "nombre": "Nueva escalada militar de EE. UU. e Israel contra Irán",
+      "categoria": "Geopolítica",
+      "descripcion": "Estados Unidos e Israel inician una nueva campaña de ataques contra objetivos en Irán.",
+      "fuente": "https://www.everycrsreport.com/reports/R48887.html"
+    }
+  ]
+}
