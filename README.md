@@ -26,7 +26,7 @@ Pestaña `/dashboard-rf` (`lib/dashboard.server.ts`, calculada al construir el s
 
 ## Swap Spreads
 
-Pestaña independiente `/swap-spreads` para análisis de cartera propia: comparador CLP/UF, spread indicativo papel menos swap por vencimiento o duración, históricos de hasta 5 años, spreads a vencimiento constante (1/2/3/5/10 años), z-score/percentil ajustados, AR(1) con vida media e intervalo condicional, validación walk-forward diaria frente a paseo aleatorio, escenarios a 1/3/6 meses, carry, roll-down y bitácora local exportable/restaurable.
+Pestaña independiente `/swap-spreads` para análisis de cartera propia: comparador CLP/UF, spread indicativo papel menos swap por vencimiento o duración, históricos de hasta 5 años, spreads a vencimiento constante (1/2/3/5/10 años), z-score/percentil ajustados, AR(1) con vida media e intervalo condicional, validación walk-forward diaria frente a paseo aleatorio, simulador bono + swap a 1/3 meses, carry, roll-down y bitácora local exportable/restaurable.
 
 Fuentes: `historico_riskamerica` (TIR y Macaulay) e `historico_bloomberg` (`clpcam_*`, `ufcam_*`). Solo cruza observaciones de la misma fecha y no extrapola; fecha y ausencias quedan visibles. Macaulay se transforma en modificada según la convención anual del proyecto. La comparación por duración usa una sensibilidad swap aproximada. No es un asset swap spread de flujos.
 
@@ -34,13 +34,19 @@ El spread bruto del mismo bono es descriptivo: no genera señales contra su medi
 
 Los spreads a plazo constante se interpolan de la curva diaria por vencimiento, siempre con plazo fijo, independientemente de la comparación seleccionada en la ficha. Sus z-scores son del tramo de mercado, no del papel.
 
-Roll-down: curva de pares por vencimiento de la fecha del papel, sin cambios y sin incluirlo. Mantiene constante el desajuste particular. Spread neutral = referencia al plazo futuro más desajuste actual; objetivo automático = referencia al plazo futuro más desajuste AR proyectado. Convergencia adicional = cambio del desajuste, evitando doble conteo. Sin referencia de roll-down no se genera un objetivo automático por AR; en modo duración se omite roll-down. UF y financiación son supuestos manuales explícitos; costos en pb del monto. La modalidad de cobertura solo muestra sensibilidad DV01, sin inventar carry neto del swap.
+Roll-down: curva de pares por vencimiento de la fecha del papel, sin cambios y sin incluirlo. Mantiene constante el desajuste particular. Spread neutral = referencia al plazo futuro más desajuste actual; objetivo automático = referencia al plazo futuro más desajuste AR proyectado. Convergencia adicional = cambio del desajuste, evitando doble conteo. El simulador conjunto utiliza siempre curvas por vencimiento y separa el roll-down del bono y el swap elegido. La ficha y su registro de tesis mantienen la comparación seleccionada por plazo o duración.
 
 AR(1) omite saltos de más de una rueda lunes–viernes. Su diagnóstico normal sobre phi es preliminar, no una prueba formal de raíz unitaria; validación de hasta 60 pronósticos diarios con ventanas pasadas de hasta 252 observaciones. No equivale a un backtest económico multimensual.
 
 Bitácora en `localStorage` de cada navegador, sin sincronización ni envío de posiciones al servidor. Preserva tesis y objetivos originales; admite respaldo JSON, restauración por identificador y cierre de seguimiento. Atribución de tasas/spread aproximada, no P&L contable.
 
-Validación: `node --experimental-strip-types --test tests/swap-spreads.test.mjs` y `npm run build`.
+Simulador `lib/bond-swap.ts` / `components/BondSwapStrategy.tsx`: objetivo DV01 USD/pb, USD/CLP y TPM desde el último dato BCCh (editables), duración modificada editable, selector del tenor swap y porcentaje de cobertura. VM del bono = DV01 CLP / (Dmod × 1e-4); nominal estimado con factor VM/nominal inicialmente a par. Nocional swap = DV01 cubierto / (anualidad × 1e-4), con posible sustitución manual de la sensibilidad. En UF se muestran equivalentes CLP y conversión opcional a nominal UF si se ingresa UF spot.
+
+Curva única swap bootstrapeada de tasas par, descuentos log-lineales, pago único hasta 1a y semestral después, base ACT/360 aproximada sin ajustes de calendario. El swap paga fijo y recibe Cámara: sensibilidad positiva ante subidas de tasa, opuesta a la del bono. Resultados económicos indicativos a 1/3 meses con días reales: devengo efectivo del bono, fondeo de su VM por TPM editable, Cámara nominal compuesta diaria, fija simple, ambos roll-down, shocks comunes/adicionales, convergencia residual AR opcional y costos totales CLP. Para UF se convierte Cámara a real mediante factor UF del horizonte, con fondeo CLP. La sensibilidad inicial permanece constante y el roll del swap usa un instrumento par al plazo restante; no es una valorización contractual con calendarios residuales completos. El porcentaje de resultado se expresa sobre VM del bono, no capital aportado. Muestra compensación por shock paralelo, riesgo de base y breakeven en pb. No suma nocional swap al monto a fondear ni inventa un costo de garantías.
+
+La bitácora existente sigue registrando tesis del bono, no operaciones reales completas de swap. El simulador actualiza el monto de referencia del bono sin alterar registros anteriores.
+
+Validación: `node --experimental-strip-types --test tests/bond-swap.test.mjs tests/swap-spreads.test.mjs tests/carry.test.mjs` y `npm run build`.
 
 ### Técnicos para BTP/BTU · Osciladores
 

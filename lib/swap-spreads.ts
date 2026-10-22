@@ -4,7 +4,9 @@ export type SpreadPoint = { date: string; yield: number; swap: number; spread: n
   referenceSpread?: number | null; residual?: number | null; durationReferenceSpread?: number | null; durationResidual?: number | null };
 export type SpreadBond = { code: string; currency: "CLP" | "UF"; maturity: string; points: SpreadPoint[]; missing: number };
 export type ConstantSpread = { currency: "CLP" | "UF"; tenor: number; points: { date: string; spread: number }[] };
-export type SpreadData = { asOf: string; bonds: SpreadBond[]; errors: string[]; constantSpreads: ConstantSpread[] };
+export type StrategyMarket = { fx: { value: number; date: string } | null; tpm: { value: number; date: string } | null;
+  curves: { date: string; currency: "CLP" | "UF"; quotes: CurvePoint[] }[] };
+export type SpreadData = { asOf: string; bonds: SpreadBond[]; errors: string[]; constantSpreads: ConstantSpread[]; strategyMarket: StrategyMarket };
 export type CurvePoint = { x: number; y: number };
 export const DAY = 86400000;
 export const time = (date: string) => Date.parse(`${date}T00:00:00Z`);
