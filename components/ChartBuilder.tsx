@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Area, Bar, Brush, CartesianGrid, ComposedChart, Customized, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Circle, Copy, Download, Eye, EyeOff, MousePointerClick, MoveUpRight, Plus, Save, Search, Square, Trash2, Type, X } from "lucide-react";
 import { AppShell } from "./AppShell";
@@ -114,14 +114,18 @@ type FreeLayerProps = {
   /** Franjas sobre los ejes Y: clic agrega una línea horizontal en ese nivel (como Bloomberg). */
   axes: { left: boolean; right: boolean }; hlines: Extract<Annotation, { kind: "hline" }>[]; ghost: { axis: Axis; value: number } | null;
   onAxis: (kind: "hover" | "leave" | "click", axis: Axis, value: number) => void;
+  onScaleReady: (scales: { left?: (y: number) => number; right?: (y: number) => number; offset: { left: number; top: number; width: number; height: number } }) => void;
 };
-function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, preview, onPointer, onGrab, onEditText, moving, axes, hlines, ghost, onAxis }: FreeLayerProps) {
+function FreeLayer({ xAxisMap, yAxisMap, offset, dates, items, mode, axis, preview, onPointer, onGrab, onEditText, moving, axes, hlines, ghost, onAxis, onScaleReady }: FreeLayerProps) {
   const xAxis = xAxisMap ? Object.values(xAxisMap)[0] : undefined;
   if (!xAxis || !yAxisMap || !offset) return null;
   const band = xAxis.scale.bandwidth ? xAxis.scale.bandwidth() / 2 : 0;
   const xOf = (d: string) => { const v = xAxis.scale(d); return typeof v === "number" && !Number.isNaN(v) ? v + band : null; };
   type YScale = ((v: number) => number) & { invert?: (v: number) => number; domain?: () => number[] };
   const yScale = (a: Axis) => (yAxisMap[a] ?? yAxisMap.left)?.scale as unknown as YScale;
+  useEffect(() => {
+    onScaleReady({ left: yScale("left")?.invert, right: yScale("right")?.invert, offset });
+  }, [xAxisMap, yAxisMap, offset?.left, offset?.top, offset?.width, offset?.height, onScaleReady]);
   const visibleDates = dates.filter(d => xOf(d) !== null);
   // Píxel → fecha más cercana y valor del eje.
   const toData = (px: number, py: number, a: Axis): Pt | null => {
@@ -216,6 +220,22 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
   const [sh, setSh] = useState({ tool: "arrow" as ShapeTool, color: "#d94b4b", width: 2, dash: "solid" as Dash, fill: false, size: 13, bold: true });
   const [drag, setDrag] = useState<{ from: Pt; to: Pt } | null>(null);
   const [ghost, setGhost] = useState<{ axis: Axis; value: number } | null>(null);
+  const axisScales = useRef<{ left?: (y: number) => number; right?: (y: number) => number; offset: { left: number; top: number; width: number; height: number } } | null>(null);
+  const onScaleReady = useCallback((scales: NonNullable<typeof axisScales.current>) => { axisScales.current = scales; }, []);
+  const onChartPointer = (e: React.MouseEvent<HTMLDivElement>, fix = false) => {
+    if (mode !== "none" || !axisScales.current || !ready) return;
+    const svg = chartRef.current?.querySelector("svg.recharts-surface");
+    if (!svg) return;
+    const bounds = svg.getBoundingClientRect(), x = e.clientX - bounds.left, y = e.clientY - bounds.top;
+    const { offset, left, right } = axisScales.current;
+    if (y < offset.top || y > offset.top + offset.height || x < offset.left - 56 || x > offset.left + offset.width + (hasRight ? 56 : 0)) { setGhost(null); return; }
+    const axis: Axis = x > offset.left + offset.width && hasRight ? "right" : "left";
+    const invert = axis === "right" ? right : left;
+    if (!invert) return;
+    const value = niceRound(invert(y), Math.abs(invert(offset.top) - invert(offset.top + offset.height)));
+    if (!Number.isFinite(value)) return;
+    if (fix) { addHLine(value, axis); } else { setGhost({ axis, value }); }
+  };
   const [editing, setEditing] = useState<{ id?: string; pt?: Pt; x: number; y: number; text: string } | null>(null);
   const [move, setMove] = useState<{ id: string; start: Pt; original: FreeAnnotation } | null>(null);
   const [png, setPng] = useState<PngOptions>({ background: "white", text: "dark", header: true });
@@ -572,7 +592,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
           {mode !== "none" && <div className="cb-mode">{mode === "event" ? `Haz clic en la fecha donde va la ${ev.style === "line" ? "línea vertical" : "flecha"}.` : sh.tool === "text" ? "Haz clic donde quieres escribir." : sh.tool === "arrow" ? "Haz clic donde nace la flecha y arrastra hasta donde apunta." : `Arrastra para dibujar el ${sh.tool === "rect" ? "cuadrado" : "círculo"}.`} <button className="db-link" onClick={() => setMode("none")}>Cancelar</button></div>}
           {notice && <div className="cb-notice">{notice}</div>}
           <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
-          <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }}>
+          <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }} onMouseMove={e => onChartPointer(e)} onMouseLeave={() => setGhost(null)} onClick={e => { if (e.target instanceof SVGElement && e.target.closest(".recharts-surface")) onChartPointer(e, true); }}>
             {!config.series.length ? <div className="loading">Agrega una serie para empezar.</div> : !ready ? <div className="loading">Cargando datos…</div> :
               <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
                 {(config.grid || config.gridV) && <CartesianGrid strokeDasharray="3 3" horizontal={config.grid} vertical={!!config.gridV} stroke="#e5eaf2" />}
@@ -604,7 +624,7 @@ export function ChartBuilder({ catalog, recommended = [] }: { catalog: Catalog; 
                 {rows.length > 30 && <Brush dataKey="date" height={22} stroke="#94a3b8" travellerWidth={8} />}
                 <Customized component={(p: Pick<FreeLayerProps, "xAxisMap" | "yAxisMap" | "offset">) => <FreeLayer {...p} dates={rows.map(r => String(r.date))} items={config.annotations.filter((a): a is FreeAnnotation => a.kind === "farrow" || a.kind === "shape" || a.kind === "text")}
                   mode={mode} axis={freeAxis} preview={drag && sh.tool !== "text" ? { tool: sh.tool, ...drag, color: sh.color, width: sh.width, dash: sh.dash, fill: sh.fill } : null}
-                  onPointer={onFreePointer} onGrab={onGrab} onEditText={onEditText} moving={!!move} axes={{ left: config.yAxis !== false, right: hasRight }} hlines={config.annotations.filter((a): a is Extract<Annotation, { kind: "hline" }> => a.kind === "hline")} ghost={ghost} onAxis={onAxis} />} />
+                  onPointer={onFreePointer} onGrab={onGrab} onEditText={onEditText} moving={!!move} axes={{ left: config.yAxis !== false, right: hasRight }} hlines={config.annotations.filter((a): a is Extract<Annotation, { kind: "hline" }> => a.kind === "hline")} ghost={ghost} onAxis={onAxis} onScaleReady={onScaleReady} />} />
               </ComposedChart></ResponsiveContainer>}
             {editing && <input className="cb-text-editor" autoFocus value={editing.text} placeholder="Escribe y presiona Enter"
               style={{ left: editing.x, top: editing.y, color: sh.color, fontSize: sh.size, fontWeight: sh.bold ? 700 : 400 }}
