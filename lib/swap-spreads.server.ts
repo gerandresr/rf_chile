@@ -42,8 +42,13 @@ export function swapSpreadData(): SpreadData {
       return [{ code, maturity, s }];
     } catch { errors.push(`No se pudo leer ${code}.`); return []; }
   });
+  const daily = read("historico_bcentral/datos-diarios.json") as { fecha: string; tpm: number | null; usdclp_obs: number | null }[];
+  const latestTpm = daily.filter(r => typeof r.tpm === "number" && Number.isFinite(r.tpm)).sort((a,b) => a.fecha.localeCompare(b.fecha)).at(-1);
+  const latestFx = daily.filter(r => typeof r.usdclp_obs === "number" && Number.isFinite(r.usdclp_obs) && r.usdclp_obs > 0).sort((a,b) => a.fecha.localeCompare(b.fecha)).at(-1);
+  const strategyMarket: SpreadData["strategyMarket"] = { fx: latestFx ? { value: latestFx.usdclp_obs!, date: latestFx.fecha } : null,
+    tpm: latestTpm ? { value: latestTpm.tpm!, date: latestTpm.fecha } : null, curves: [] };
   const asOf = loaded.flatMap(b => b.s.fecha.filter((_, i) => typeof b.s.tir[i] === "number")).sort().at(-1) ?? "";
-  if (!asOf) return { asOf, bonds: [], constantSpreads: [], errors: [...errors, "No hay tasas de bonos disponibles."] };
+  if (!asOf) return { asOf, bonds: [], constantSpreads: [], strategyMarket, errors: [...errors, "No hay tasas de bonos disponibles."] };
   const cutoff = iso(time(asOf) - 5 * 366 * DAY);
   // Incluye papeles hoy vencidos en las curvas de las fechas en que estaban vigentes.
   const bonds = loaded.map(({ code, maturity, s }) => {
@@ -66,5 +71,10 @@ export function swapSpreadData(): SpreadData {
     return { code, currency, maturity, points: unique, missing };
   });
   const adjusted = relativeCurves(bonds.filter(b => b.points.length));
-  return { asOf, bonds: adjusted.bonds.filter(b => b.maturity > asOf).sort((a, b) => a.currency.localeCompare(b.currency) || a.maturity.localeCompare(b.maturity)), constantSpreads: adjusted.constantSpreads, errors };
+  const active = adjusted.bonds.filter(b => b.maturity > asOf);
+  for (const currency of ["CLP", "UF"] as const) for (const date of new Set(active.filter(b => b.currency === currency).flatMap(b => b.points.at(-1)?.date ?? []))) {
+    const quotes = curves[currency].get(date);
+    if (quotes) strategyMarket.curves.push({ currency, date, quotes: quotes.slice().sort((a,b) => a.x - b.x) });
+  }
+  return { asOf, bonds: active.sort((a, b) => a.currency.localeCompare(b.currency) || a.maturity.localeCompare(b.maturity)), constantSpreads: adjusted.constantSpreads, strategyMarket, errors };
 }
