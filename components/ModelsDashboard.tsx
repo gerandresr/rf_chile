@@ -11,15 +11,16 @@ import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
 import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import { CarryModel } from "./CarryModel";
-import type { CarryModelData, FairValueModelData } from "@/lib/market-models.server";
+import type { CarryModelData, FairValueModelData, MacroFairValueData } from "@/lib/market-models.server";
 import { NssFairValueModel } from "./NssFairValueModel";
+import { MacroFairValueModel } from "./MacroFairValueModel";
 import { NairuPhillipsModel } from "./NairuPhillipsModel";
 import type { PhillipsModelData } from "@/lib/nairu-phillips.server";
 
 // GARCH y Técnicos para BTP/BTU están ocultos; cambiar a true para mostrarlos de nuevo.
 const SHOW_MARKET_MODELS = false;
 
-export function ModelsDashboard({ carry, phillips, fairValue }: { carry: CarryModelData; phillips: PhillipsModelData; fairValue: FairValueModelData }) {
+export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue }: { carry: CarryModelData; phillips: PhillipsModelData; fairValue: FairValueModelData; macroFairValue: MacroFairValueData }) {
   const [nairu, setNairu] = useState(8.16);
   const [okun, setOkun] = useState(2);
   const gaps = useMemo(() => ({
@@ -29,6 +30,7 @@ export function ModelsDashboard({ carry, phillips, fairValue }: { carry: CarryMo
   const recent = [...monthlyData].reverse().find(r => typeof r.desempleo === "number");
   const [carryOpen, setCarryOpen] = useState(false);
   const [fairOpen, setFairOpen] = useState(false);
+  const [macroFairOpen, setMacroFairOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [taylorOpen, setTaylorOpen] = useState(false);
   const [garchOpen, setGarchOpen] = useState(false);
@@ -52,8 +54,12 @@ export function ModelsDashboard({ carry, phillips, fairValue }: { carry: CarryMo
       {carryOpen && <CarryModel data={carry} />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setFairOpen(event.currentTarget.open)}>
-      <summary><span>Valor relativo BTP/BTU (curva Nelson-Siegel-Svensson)</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      <summary><span>Modelo Fair Value · Valor relativo (curva Nelson-Siegel-Svensson)</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {fairOpen && <NssFairValueModel data={fairValue} />}
+    </details>
+    <details className="panel model-disclosure" onToggle={(event) => setMacroFairOpen(event.currentTarget.open)}>
+      <summary><span>Modelo Fair Value · Valor direccional (fundamentales macro)</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      {macroFairOpen && <MacroFairValueModel data={macroFairValue} />}
     </details>
     <RealExchangeRateChart />
     {SHOW_MARKET_MODELS && <>
