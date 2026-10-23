@@ -557,8 +557,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
         <strong>{r.nombre}</strong>{r.config.subtitle && <span>{resolveText(r.config.subtitle, r.config.series ?? [])}</span>}
       </button>)}</div>
     </section>}
-    <div className="panel cb-block"><div className="segmented" role="group" aria-label="Modo de gráfico"><button className={chartMode === "normal" ? "selected" : ""} onClick={() => setChartMode("normal")}>Gráfico normal</button><button className={chartMode === "comparative" ? "selected" : ""} onClick={() => setChartMode("comparative")}>Comparativo histórico</button></div></div>
-    {chartMode === "comparative" ? <ComparativeChart catalog={catalog} candidates={config.series} /> : <div className="cb-layout">
+    <div className="cb-layout">
       <aside className="cb-side">
         <section className="panel cb-block">
           <h2>Series</h2>
@@ -612,7 +611,8 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
       </aside>
 
       <div className="cb-main">
-        <section className="panel">
+        <div className="panel cb-block"><div className="segmented" role="group" aria-label="Modo de gráfico"><button className={chartMode === "normal" ? "selected" : ""} onClick={() => setChartMode("normal")}>Gráfico normal</button><button className={chartMode === "comparative" ? "selected" : ""} onClick={() => setChartMode("comparative")}>Gráfico comparativo</button></div></div>
+        {chartMode === "comparative" ? <ComparativeChart catalog={catalog} candidates={config.series} /> : <section className="panel">
           <div className="cb-toolbar">
             <div className="segmented">{PERIODS.map(([k, l]) => <button key={k} className={config.period === k ? "selected" : ""} onClick={() => set({ period: k })}>{l}</button>)}</div>
             <div className="db-dates cb-dates">
@@ -703,6 +703,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           {config.source && <p className="dash-note">{config.source}</p>}
         </section>
 
+        }
         <section className="cb-annotations-section" aria-label="Herramientas de anotación">
           <div className="cb-annotations-head"><h2>Anotaciones</h2><p>Personaliza tu gráfico con eventos, referencias y elementos visuales.</p></div>
           <div className="cb-annotations-grid">
@@ -800,6 +801,6 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           <button className="db-link" onClick={() => { setConfig({ ...DEFAULT_CONFIG, series: [], annotations: [], title: "", subtitle: "", source: "Fuente: Mercado, Bloomberg, Banco Central." }); window.history.replaceState(null, "", window.location.pathname); }}>Empezar un gráfico en blanco</button>
         </section>
       </div>
-    </div>}
+    </div>
   </AppShell>;
 }
