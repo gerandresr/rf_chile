@@ -105,7 +105,7 @@ export type MonitorRow = { code: string; detail: string; duration: number | null
   aswDuration?: number | null; aswMaturity?: number | null; carry1d?: number | null };
 export type CurveSet = { key: string; label: string; tenors: number[]; lines: { label: string; date: string; values: (number | null)[] }[]; points: { term: number; y: number; code: string }[] };
 export type DashboardData = {
-  asOf: { bonds: string; bloomberg: string };
+  asOf: { bonds: string; bloomberg: string; bcentral: string };
   ticker: TickerItem[];
   macro: { label: string; value: string; detail: string }[];
   benchmarks: BenchmarkRow[];
@@ -298,7 +298,7 @@ export function dashboardData(): DashboardData {
     { key: "DPF", label: "DPF", unit: "% mensual" as const, rows: dpfRows },
   ];
 
-  return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg }, ticker, macro, benchmarks, benchmarkPapers: { BTP: benchmark.BTP ?? [], BTU: benchmark.BTU ?? [] }, curves, spreads, monitor };
+  return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg, bcentral: lastDate(tpm) }, ticker, macro, benchmarks, benchmarkPapers: { BTP: benchmark.BTP ?? [], BTU: benchmark.BTU ?? [] }, curves, spreads, monitor };
 }
 
 /** Histórico diario de benchmarks a plazo constante; misma selección e interpolación
