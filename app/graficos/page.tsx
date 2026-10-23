@@ -24,7 +24,7 @@ export default function Page() {
   const seriesIds = new Set(catalog.groups.flatMap(g => g.series.map(s => s.id)));
   const chart = (nombre: string, ids: string[], fuente: string) => ({
     nombre, config: {
-      title: nombre, subtitle: "", source: fuente, period: "5y" as const, legend: "bottom" as const,
+      title: nombre, subtitle: "", source: fuente, period: "1y" as const, legend: "bottom" as const,
       lastValue: true, annotations: [],
       series: ids.filter(id => seriesIds.has(id)).map((id, i) => ({
         uid: `r${i + 1}`, label: id.startsWith("benchmark:") ? id.slice(10) : id,
