@@ -21,7 +21,7 @@ const controls: { key: keyof TaylorParameters; label: string; min: number; max: 
 
 export function TaylorModel({ gaps }: { gaps: ActivityGaps }) {
   const [parameters, setParameters] = useState(DEFAULT_TAYLOR_PARAMETERS);
-  const [gapView, setGapView] = useState<"smoothed" | "filtered">("smoothed");
+  const [gapView, setGapView] = useState<"smoothed" | "filtered">("filtered");
   const estimation = useMemo(() => {
     if (!gaps) return { result: null, error: "No se pudo estimar la brecha de actividad (modelo de tasa natural)." };
     try { return { result: estimateTaylor(monthlyData, dailyData, gaps[gapView], parameters), error: null }; }
@@ -30,7 +30,10 @@ export function TaylorModel({ gaps }: { gaps: ActivityGaps }) {
   const result = estimation.result;
   const latest = result?.points.at(-1);
   const rows = result?.points.map(p => ({ ...p, band: [p.taylorLow, p.taylorHigh] as [number, number] })) ?? [];
+  const currentTpm = [...dailyData].reverse().find(row => typeof row.tpm === "number" && Number.isFinite(row.tpm));
   const nextMonth = latest ? parameters.smoothing * latest.tpm + (1 - parameters.smoothing) * latest.taylor : null;
+  const latestInflation = [...monthlyData].reverse().find(row => typeof row.ipc_yoy === "number" && Number.isFinite(row.ipc_yoy));
+  const isLagged = !!latestInflation && latestInflation.fecha > latest?.date!;
   const inflationPart = latest ? (1 + parameters.inflationWeight) * (latest.inflation - parameters.inflationTarget) : 0;
   const activityPart = latest ? parameters.activityWeight * latest.gap : 0;
 
@@ -49,13 +52,23 @@ export function TaylorModel({ gaps }: { gaps: ActivityGaps }) {
     </div>
     {!result || !latest ? <div className="model-notice" role="alert">{estimation.error}</div> : <>
       <div className="kpi-grid">
-        <div className="kpi"><div className="kpi-label">Tasa Taylor</div><div className="kpi-value">{number(latest.taylor)}%</div><div className="kpi-foot kpi-foot-static">Rango neutral: {number(latest.taylorLow)}% – {number(latest.taylorHigh)}%</div></div>
-        <div className="kpi"><div className="kpi-label">TPM observada</div><div className="kpi-value">{number(latest.tpm)}%</div><div className="kpi-foot kpi-foot-static">Cierre {month(latest.date, true)}</div></div>
-        <div className="kpi"><div className="kpi-label">Taylor − TPM</div><div className="kpi-value">{signed(latest.difference)} pp</div><div className="kpi-foot kpi-foot-static">{Math.abs(latest.difference) <= NEUTRAL_RANGE_HALF_WIDTH ? "Dentro del rango de incertidumbre" : latest.difference > 0 ? "La regla pide una TPM más alta" : "La regla pide una TPM más baja"}</div></div>
-        <div className="kpi"><div className="kpi-label">Próximo paso con inercia</div><div className="kpi-value">{number(nextMonth!)}%</div><div className="kpi-foot kpi-foot-static">{signed((nextMonth! - latest.tpm) * 100, 0)} pb desde la TPM actual</div></div>
+        <div className="kpi"><div className="kpi-label">Taylor sin inercia · {month(latest.date)}</div><div className="kpi-value">{number(latest.taylor)}%</div><div className="kpi-foot kpi-foot-static">Rango neutral: {number(latest.taylorLow)}% – {number(latest.taylorHigh)}%</div></div>
+        <div className="kpi"><div className="kpi-label">TPM observada · mes del modelo</div><div className="kpi-value">{number(latest.tpm)}%</div><div className="kpi-foot kpi-foot-static">Cierre {latest.tpmDate}</div></div>
+        <div className="kpi"><div className="kpi-label">Taylor − TPM · {month(latest.date)}</div><div className="kpi-value">{signed(latest.difference)} pp</div><div className="kpi-foot kpi-foot-static">{Math.abs(latest.difference) <= NEUTRAL_RANGE_HALF_WIDTH ? "Dentro del rango de incertidumbre" : latest.difference > 0 ? "La regla pide una TPM más alta" : "La regla pide una TPM más baja"}</div></div>
+        <div className="kpi"><div className="kpi-label">Taylor con inercia · escenario siguiente mes</div><div className="kpi-value">{number(nextMonth!)}%</div><div className="kpi-foot kpi-foot-static">{signed((nextMonth! - latest.tpm) * 100, 0)} pb respecto del cierre de {month(latest.date)}</div></div>
+      </div>
+      <div className="model-notice">
+        <strong>Fecha de referencia: {month(latest.date, true)}.</strong>
+        <p>La tasa Taylor, su diferencia y el escenario con inercia utilizan inflación, brecha de actividad y cierre de TPM de ese mes. {isLagged ? `La inflación publicada llega hasta ${month(latestInflation!.fecha, true)}, pero aún faltan variables de actividad para ese mes.` : ""}
+        {currentTpm ? ` TPM más reciente en los datos: ${number(currentTpm.tpm!)}% (${currentTpm.fecha}); es una referencia posterior y no se mezcla en la comparación histórica.` : ""}
+        La brecha es una estimación estadística, no una cifra observada del Banco Central.</p>
       </div>
       <p className="model-caption">
         Descomposición {month(latest.date, true)}: neutral {number(parameters.neutralNominal)}% {inflationPart >= 0 ? "+" : "−"} inflación {number(Math.abs(inflationPart))} pp (IPC {number(latest.inflation, 1)}% vs meta {number(parameters.inflationTarget, 1)}%) {activityPart >= 0 ? "+" : "−"} actividad {number(Math.abs(activityPart))} pp (brecha {signed(latest.gap, 1)}%) = {number(latest.taylor)}%.
+      </p>
+      <p className="model-caption">
+        <strong>Verificación:</strong> {number(parameters.neutralNominal)} + (1 + {number(parameters.inflationWeight)}) × ({number(latest.inflation)} − {number(parameters.inflationTarget)}) + {number(parameters.activityWeight)} × ({signed(latest.gap)}) = <strong>{number(latest.taylor)}%</strong>.
+        <br /> <strong>Con inercia (escenario, no pronóstico):</strong> {number(parameters.smoothing)} × {number(latest.tpm)} + {number(1 - parameters.smoothing)} × {number(latest.taylor)} = <strong>{number(nextMonth!)}%</strong>.
       </p>
       <section className="model-chart-section" aria-label="Gráfico de regla de Taylor y TPM">
         <div className="panel-head" style={{ flexWrap: "wrap" }}><h2>Regla de Taylor y TPM</h2>
@@ -85,7 +98,7 @@ export function TaylorModel({ gaps }: { gaps: ActivityGaps }) {
       <div className="model-notice">
         <strong>Cómo leerlo.</strong>
         <p>La regla usa inflación efectiva (IPC 12 meses), no proyectada, por lo que reacciona tarde a los shocks y exagera su tamaño: en 2021–2022 llegó a pedir una TPM sobre 20%, mientras el Banco Central subió de forma gradual hasta 11,25%; en 2023–2024 la TPM quedó sobre la regla porque los recortes esperaron confirmar la convergencia de la inflación.
-          La brecha de actividad viene del modelo de tasa natural (ley de Okun); la versión en tiempo real usa solo información disponible a cada mes. La línea con inercia muestra un ajuste gradual hacia la regla, que es como opera en la práctica la política monetaria.</p>
+          La brecha de actividad viene del modelo de tasa natural (ley de Okun); la versión filtrada evita usar observaciones posteriores en los estados del modelo, aunque sus parámetros se estiman con la muestra completa. La línea con inercia muestra un ajuste gradual hacia la regla, que es como opera en la práctica la política monetaria.</p>
       </div>
     </>}
   </div>;
