@@ -8,7 +8,7 @@ import { extractSeries } from "@/lib/series-data";
 type Leg = { id: string; field: string };
 export type ComparableSeries = { uid: string; label: string; source: { kind: "catalog"; leg: Leg } | { kind: "calc"; op: "diff" | "fly"; legs: Leg[] } };
 type Span = 1 | 3 | 6 | 12;
-type Reference = "previous" | "year" | "custom";
+type Reference = "month" | "ytd" | "year" | "custom";
 const fmt = (n: number, digits = 2) => new Intl.NumberFormat("es-CL", { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(n);
 const dateOffset = (date: string, months: number) => {
   const [y, m, d] = date.split("-").map(Number);
@@ -18,10 +18,9 @@ const dateOffset = (date: string, months: number) => {
 };
 const days = (date: string) => Date.parse(date + "T00:00:00Z") / 86400000;
 
-export function ComparativeChart({ catalog, candidates }: { catalog: Catalog; candidates: ComparableSeries[] }) {
+export function ComparativeChart({ catalog, candidates, period }: { catalog: Catalog; candidates: ComparableSeries[]; period: string }) {
   const [uid, setUid] = useState("");
-  const [span, setSpan] = useState<Span>(12);
-  const [reference, setReference] = useState<Reference>("previous");
+  const [reference, setReference] = useState<Reference>("year");
   const [customStart, setCustomStart] = useState("");
   const [view, setView] = useState<"change" | "level">("change");
   const [cache, setCache] = useState<Record<string, unknown>>({});
@@ -56,9 +55,10 @@ export function ComparativeChart({ catalog, candidates }: { catalog: Catalog; ca
     const ordered = [...values].sort(([a], [b]) => a.localeCompare(b));
     if (!ordered.length) return { rows: [], message: "La serie seleccionada no tiene observaciones disponibles." };
     const end = ordered[ordered.length - 1][0];
-    const start = dateOffset(end, -span);
-    const historicalEnd = reference === "previous" ? start : reference === "year" ? dateOffset(end, -12) : customStart ? dateOffset(customStart, span) : "";
-    const historicalStart = reference === "previous" ? dateOffset(start, -span) : reference === "year" ? dateOffset(start, -12) : customStart;
+    const start = period === "ytd" ? end.slice(0, 4) + "-01-01" : dateOffset(end, period === "1m" ? -1 : period === "5y" ? -60 : -12);
+    const durationDays = days(end) - days(start);
+    const historicalStart = reference === "month" ? dateOffset(start, -1) : reference === "ytd" ? String(Number(start.slice(0,4)) - 1) + "-01-01" : reference === "year" ? dateOffset(start, -12) : customStart;
+    const historicalEnd = reference === "month" ? dateOffset(end, -1) : reference === "ytd" ? new Date((days(historicalStart) + durationDays) * 86400000).toISOString().slice(0, 10) : reference === "year" ? dateOffset(end, -12) : customStart ? new Date((days(customStart) + durationDays) * 86400000).toISOString().slice(0,10) : "";
     if (!historicalStart || !historicalEnd) return { rows: [], message: "Selecciona la fecha de inicio del período histórico." };
     const current = ordered.filter(([date]) => date >= start && date <= end);
     const past = ordered.filter(([date]) => date >= historicalStart && date <= historicalEnd);
@@ -82,16 +82,15 @@ export function ComparativeChart({ catalog, candidates }: { catalog: Catalog; ca
     const lastPast = past[past.length - 1][1] - past[0][1];
     const factor = isRate && selected.source.kind === "catalog" ? 100 : 1;
     return { rows, message: "", start, end, historicalStart, historicalEnd, currentChange: lastCurrent * factor, pastChange: lastPast * factor, unit: view === "change" ? isRate ? "pb" : "unidades" : selected.source.kind === "calc" && isRate ? "pb" : isRate ? "%" : "unidades" };
-  }, [selected, cache, files.join("|"), span, reference, customStart, view, catalogItems]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected, cache, files.join("|"), period, reference, customStart, view, catalogItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <section className="panel cb-block">
     <h2>Comparativo histórico</h2>
     <p className="db-hint">Superpone una sola serie en dos períodos, alineados por los días transcurridos desde el primer dato de cada ventana. Las fechas originales se muestran al pasar el cursor.</p>
     <div className="cb-series-grid">
-      <label>Serie (solo una)<select value={selected?.uid ?? ""} onChange={e => setUid(e.target.value)}>{candidates.map(s => <option key={s.uid} value={s.uid}>{s.label}</option>)}</select></label>
-      <label>Duración<select value={span} onChange={e => setSpan(Number(e.target.value) as Span)}><option value={1}>1M</option><option value={3}>3M</option><option value={6}>6M</option><option value={12}>1A</option></select></label>
-      <label>Comparar con<select value={reference} onChange={e => setReference(e.target.value as Reference)}><option value="previous">Período anterior</option><option value="year">Mismo período del año anterior</option><option value="custom">Fecha histórica personalizada</option></select></label>
-      {reference === "custom" && <label>Inicio histórico<input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} /></label>}
+      <p className="db-hint">Serie: {selected?.label ?? "Selecciona una serie desde el panel Series"}. Elige el período actual en la barra superior.</p>
+      <label>Comparar con<select value={reference} onChange={e => setReference(e.target.value as Reference)}><option value="month">1M antes</option><option value="ytd">YTD del año anterior</option><option value="year">1A antes</option><option value="custom">Fecha específica</option></select></label>
+      {reference === "custom" && <label>Fecha histórica (calendario)<input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} /></label>}
       <label>Escala<select value={view} onChange={e => setView(e.target.value as "change" | "level")}><option value="change">Variación acumulada (pb en tasas)</option><option value="level">Niveles originales</option></select></label>
     </div>
     {result?.message ? <p className="db-hint">{result.message}</p> : !result ? <p className="db-hint">Cargando datos…</p> : "currentChange" in result && typeof result.currentChange === "number" && typeof result.pastChange === "number" ? <>
