@@ -19,9 +19,9 @@ const controls: { key: keyof TaylorParameters; label: string; min: number; max: 
   { key: "smoothing", label: "Inercia mensual (ρ)", min: 0, max: 0.99, step: 0.05 },
 ];
 
-export function TaylorModel({ gaps }: { gaps: ActivityGaps }) {
+export function TaylorModel({ gaps, nairu, okun }: { gaps: ActivityGaps; nairu: number; okun: number }) {
   const [parameters, setParameters] = useState(DEFAULT_TAYLOR_PARAMETERS);
-  const [gapView, setGapView] = useState<"smoothed" | "filtered">("filtered");
+  const gapView = "filtered" as const;
   const estimation = useMemo(() => {
     if (!gaps) return { result: null, error: "No se pudo estimar la brecha de actividad (modelo de tasa natural)." };
     try { return { result: estimateTaylor(monthlyData, dailyData, gaps[gapView], parameters), error: null }; }
@@ -61,7 +61,7 @@ export function TaylorModel({ gaps }: { gaps: ActivityGaps }) {
         <strong>Fecha de referencia: {month(latest.date, true)}.</strong>
         <p>La tasa Taylor, su diferencia y el escenario con inercia utilizan inflación, brecha de actividad y cierre de TPM de ese mes. {isLagged ? `La inflación publicada llega hasta ${month(latestInflation!.fecha, true)}, pero aún faltan variables de actividad para ese mes.` : ""}
         {currentTpm ? ` TPM más reciente en los datos: ${number(currentTpm.tpm!)}% (${currentTpm.fecha}); es una referencia posterior y no se mezcla en la comparación histórica.` : ""}
-        La brecha es una estimación estadística, no una cifra observada del Banco Central.</p>
+        La brecha de actividad es una aproximación calculada con NAIRU manual y ley de Okun; no corresponde a una estimación oficial.</p>
       </div>
       <p className="model-caption">
         Descomposición {month(latest.date, true)}: neutral {number(parameters.neutralNominal)}% {inflationPart >= 0 ? "+" : "−"} inflación {number(Math.abs(inflationPart))} pp (IPC {number(latest.inflation, 1)}% vs meta {number(parameters.inflationTarget, 1)}%) {activityPart >= 0 ? "+" : "−"} actividad {number(Math.abs(activityPart))} pp (brecha {signed(latest.gap, 1)}%) = {number(latest.taylor)}%.
@@ -72,10 +72,7 @@ export function TaylorModel({ gaps }: { gaps: ActivityGaps }) {
       </p>
       <section className="model-chart-section" aria-label="Gráfico de regla de Taylor y TPM">
         <div className="panel-head" style={{ flexWrap: "wrap" }}><h2>Regla de Taylor y TPM</h2>
-          <div className="segmented" role="group" aria-label="Brecha de actividad">
-            <button className={gapView === "smoothed" ? "selected" : ""} aria-pressed={gapView === "smoothed"} onClick={() => setGapView("smoothed")}>Brecha suavizada</button>
-            <button className={gapView === "filtered" ? "selected" : ""} aria-pressed={gapView === "filtered"} onClick={() => setGapView("filtered")}>Brecha en tiempo real</button>
-          </div>
+          <span className="pill">Brecha aproximada · Okun y NAIRU manual</span>
         </div>
         <div className="model-chart"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 12, right: 12, bottom: 8, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5eaf2" />
@@ -98,7 +95,7 @@ export function TaylorModel({ gaps }: { gaps: ActivityGaps }) {
       <div className="model-notice">
         <strong>Cómo leerlo.</strong>
         <p>La regla usa inflación efectiva (IPC 12 meses), no proyectada, por lo que reacciona tarde a los shocks y exagera su tamaño: en 2021–2022 llegó a pedir una TPM sobre 20%, mientras el Banco Central subió de forma gradual hasta 11,25%; en 2023–2024 la TPM quedó sobre la regla porque los recortes esperaron confirmar la convergencia de la inflación.
-          La brecha de actividad viene del modelo de tasa natural (ley de Okun); la versión filtrada evita usar observaciones posteriores en los estados del modelo, aunque sus parámetros se estiman con la muestra completa. La línea con inercia muestra un ajuste gradual hacia la regla, que es como opera en la práctica la política monetaria.</p>
+          La brecha de actividad es una aproximación mecánica: −Okun × (desempleo publicado − NAIRU manual). No se estiman la NAIRU ni el producto potencial, y no equivale a una estimación oficial. La línea con inercia muestra un ajuste gradual hacia la regla, que es como opera en la práctica la política monetaria.</p>
       </div>
     </>}
   </div>;
