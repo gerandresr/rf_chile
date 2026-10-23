@@ -6,7 +6,7 @@
         "title": "Futuros de Petróleo",
         "subtitle": "Contrato{s} de {series}",
         "source": "Fuente: Bloomberg.",
-        "period": "5y",
+        "period": "1y",
         "legend": "bottom",
         "lastValue": true,
         "series": [
