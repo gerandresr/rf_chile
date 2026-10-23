@@ -35,7 +35,7 @@ export function ModelsDashboard({ carry, phillips }: { carry: CarryModelData; ph
   return <AppShell>
     <header className="page-head"><div><div className="eyebrow">Trading Propietario</div><h1>Modelos</h1><p>Selecciona un modelo para consultar sus resultados.</p></div></header>
     <details className="panel model-disclosure" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary><span>NAIRU · curva de Phillips{"error" in phillips ? "" : ` · ${phillips.ml.points.filter(p => typeof p.u === "number").at(-1)!.nairu.toFixed(2).replace(".", ",")}%`}</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      <summary><span>Nairu con Curva de Phillips (Estimación Propia)</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {open && <NairuPhillipsModel data={phillips} />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setTaylorOpen(event.currentTarget.open)}>
