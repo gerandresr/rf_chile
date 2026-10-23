@@ -800,6 +800,6 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           <button className="db-link" onClick={() => { setConfig({ ...DEFAULT_CONFIG, series: [], annotations: [], title: "", subtitle: "", source: "Fuente: Mercado, Bloomberg, Banco Central." }); window.history.replaceState(null, "", window.location.pathname); }}>Empezar un gráfico en blanco</button>
         </section>
       </div>
-    </div>
+    </div>}
   </AppShell>;
 }
