@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "fs";
 import path from "path";
 import { impliedTpmPath, estimateSpreadBp, forwardHistory, type TpmPathResult, type ForwardHistory, type SwapQuote } from "./tpm-path";
 import { carryRolldown, maturityFromCode, type BondInput } from "./carry";
+import { fairValue, type FvBond, type FvResult } from "./nss";
 
 // Lectura en el servidor (al construir el sitio). Los archivos de Bloomberg vienen con BOM.
 const DATA = path.join(process.cwd(), "public", "data");
@@ -91,5 +92,24 @@ export function carryModelData(): CarryModelData {
     return { results };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "No fue posible calcular el carry." };
+  }
+}
+
+export type FairValueModelData = FvResult | { error: string };
+
+/** Curva NSS diaria BTP/BTU, valor relativo por bono y breakevens (≈2 años de historia). */
+export function fairValueModelData(): FairValueModelData {
+  try {
+    const dir = path.join(DATA, "historico_riskamerica");
+    const bonds: FvBond[] = [];
+    for (const file of readdirSync(dir).filter(f => /^BT[PU]\d{7}\.json$/.test(f))) {
+      const code = file.slice(0, -5), maturity = maturityFromCode(code);
+      if (!maturity) continue;
+      const s = readJson(`historico_riskamerica/${file}`)[code] as { fecha: string[]; tir: (number | null)[] };
+      bonds.push({ code, type: code.slice(0, 3) as "BTP" | "BTU", maturity, dates: s.fecha, tir: s.tir });
+    }
+    return fairValue(bonds);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "No fue posible ajustar las curvas." };
   }
 }

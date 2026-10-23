@@ -24,6 +24,14 @@ Pestaña `/dashboard-rf` (`lib/dashboard.server.ts`, calculada al construir el s
 
 ## Modelos
 
+## Valor relativo BTP/BTU (curva NSS)
+
+Desplegable en `/modelos` (`lib/nss.ts`, `components/NssFairValueModel.tsx`, calculado al construir el sitio con `historico_riskamerica`). Cada fecha de los últimos ~2 años ajusta una curva Nelson-Siegel-Svensson a los BTP y otra a los BTU sobre TIR: grilla de (τ1, τ2) con τ2 ≥ 1,5·τ1, mínimos cuadrados en β y una segunda pasada con pesos de Huber. Ajustan solo bonos con cupón y más de 1 año al vencimiento; los cero cupón se comparan pero no definen la curva y los menores a 1 año se omiten (estacionalidad del IPC en BTU).
+
+Residuo = TIR observada − TIR de la curva al mismo plazo (pb, + barato). Como cada papel tiene un residuo estructural (cupón, liquidez), la señal es el z-score del residuo sobre 252 días (mínimo 60); |z| ≥ 1,5 se marca barato/caro. Incluye residuo medio, cambio 1M y breakeven de inflación compuesto (BTP vs BTU de las curvas) a 2/5/10/20 años con cambio 1M, percentil de 1 año e historia.
+
+Validación: `node --experimental-strip-types --test tests/nss.test.mjs`.
+
 ## Swap Spreads
 
 Pestaña independiente `/swap-spreads` para análisis de cartera propia: comparador CLP/UF, spread indicativo papel menos swap por vencimiento o duración, históricos de hasta 5 años, spreads a vencimiento constante (1/2/3/5/10 años), z-score/percentil ajustados, AR(1) con vida media e intervalo condicional, validación walk-forward diaria frente a paseo aleatorio, simulador bono + swap a 1/3 meses, carry, roll-down y bitácora local exportable/restaurable.
