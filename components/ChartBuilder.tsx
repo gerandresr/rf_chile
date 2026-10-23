@@ -214,6 +214,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const allSeries = useMemo(() => catalog.groups.flatMap(g => g.series), [catalog]);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
   const [chartMode, setChartMode] = useState<"normal" | "comparative">("normal");
+  const [comparativeUid, setComparativeUid] = useState("");
   const [dragVLabel, setDragVLabel] = useState<string | null>(null);
   const [dragLegend, setDragLegend] = useState(false);
   const set = (patch: Partial<Config>) => setConfig(c => ({ ...c, ...patch }));
@@ -352,7 +353,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   // ---------------- Acciones ----------------
   const addCatalog = (s: CatalogSeries) => {
     const field = s.fields[0].key;
-    setConfig(c => ({ ...c, series: [...c.series, { uid: uid(), label: s.fields.length > 1 ? `${s.label}` : s.label, source: { kind: "catalog", leg: { id: s.id, field } }, type: "line", color: nextColor(c.series), width: 2, dash: "solid", axis: "left", transform: "level", visible: true }] }));
+    setConfig(c => ({ ...c, series: [...(chartMode === "comparative" ? [] : c.series), { uid: uid(), label: s.fields.length > 1 ? `${s.label}` : s.label, source: { kind: "catalog", leg: { id: s.id, field } }, type: "line", color: nextColor(c.series), width: 2, dash: "solid", axis: "left", transform: "level", visible: true }] }));
     setQuery("");
   };
   const addCalc = () => {
@@ -361,7 +362,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     const legs = ids.map(id => ({ id, field: byId.get(id)!.fields[0].key }));
     const name = (id: string) => byId.get(id)!.fields.length > 1 ? id : byId.get(id)!.label;
     const label = calc.op === "diff" ? `${name(ids[0])} − ${name(ids[1])}` : `Fly 2×${name(ids[1])} − ${name(ids[0])} − ${name(ids[2])}`;
-    setConfig(c => ({ ...c, series: [...c.series, { uid: uid(), label, source: { kind: "calc", op: calc.op, legs }, type: "line", color: nextColor(c.series), width: 2, dash: "solid", axis: "left", transform: "level", visible: true }] }));
+    setConfig(c => ({ ...c, series: [...(chartMode === "comparative" ? [] : c.series), { uid: uid(), label, source: { kind: "calc", op: calc.op, legs }, type: "line", color: nextColor(c.series), width: 2, dash: "solid", axis: "left", transform: "level", visible: true }] }));
   };
   const add = (a: Annotation) => setConfig(c => ({ ...c, annotations: [...c.annotations, a] }));
   const setAnnotation = (id: string, patch: Partial<Annotation>) => setConfig(c => ({ ...c, annotations: c.annotations.map(a => a.id === id ? { ...a, ...patch } as Annotation : a) }));
@@ -560,7 +561,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     <div className="cb-layout">
       <aside className="cb-side">
         <section className="panel cb-block">
-          <h2>Series</h2>
+          <h2>Series</h2>{chartMode === "comparative" && <p className="db-hint">Modo comparativo: una sola serie. Al agregar otra, reemplazará la anterior.</p>}
           <div className="db-search"><Search size={16} aria-hidden="true" /><input type="search" placeholder="Agregar: 0600134, swap 10, usd…" value={query} onChange={e => setQuery(e.target.value)} aria-label="Buscar series" /></div>
           {results.length > 0 && <ul className="cb-results">{results.map(s => <li key={s.id}><button onClick={() => addCatalog(s)}><Plus size={13} aria-hidden="true" /><span>{s.label}</span><em>{s.group}</em></button></li>)}</ul>}
           <details className="cb-calc">
@@ -570,7 +571,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
             <button className="cb-btn" onClick={addCalc}><Plus size={14} aria-hidden="true" />Agregar serie calculada</button>
             <p className="db-hint">Tasas en pb. Ej.: BTP 10 − BTP 2 (pendiente) o fly 2×5a − 2a − 10a.</p>
           </details>
-          <div className="cb-series-list">{config.series.map(s => {
+          <div className="cb-series-list">{(chartMode === "comparative" ? config.series.filter(x => x.uid === comparativeUid || (!config.series.some(k => k.uid === comparativeUid) && x.uid === config.series[0]?.uid)) : config.series).map(s => {
             const cat = s.source.kind === "catalog" ? byId.get(s.source.leg.id) : undefined;
             return <div key={s.uid} className="cb-series" style={{ borderLeftColor: s.color }}>
               <div className="cb-series-head">
@@ -611,8 +612,9 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
       </aside>
 
       <div className="cb-main">
-        <div className="panel cb-block"><div className="segmented" role="group" aria-label="Modo de gráfico"><button className={chartMode === "normal" ? "selected" : ""} onClick={() => setChartMode("normal")}>Gráfico normal</button><button className={chartMode === "comparative" ? "selected" : ""} onClick={() => setChartMode("comparative")}>Gráfico comparativo</button></div></div>
-        {chartMode === "comparative" ? <ComparativeChart catalog={catalog} candidates={config.series} /> : <section className="panel">
+        <div className="panel cb-block"><div className="segmented" role="group" aria-label="Modo de gráfico"><button className={chartMode === "normal" ? "selected" : ""} onClick={() => setChartMode("normal")}>Gráfico normal</button><button className={chartMode === "comparative" ? "selected" : ""} onClick={() => { setChartMode("comparative"); setComparativeUid(config.series[0]?.uid ?? ""); }}>Gráfico comparativo</button></div></div>
+        {chartMode === "comparative" && <div className="panel cb-block"><div className="segmented">{PERIODS.map(([k,l]) => <button key={k} className={config.period === k ? "selected" : ""} onClick={() => set({ period: k })}>{l}</button>)}</div></div>}
+        {chartMode === "comparative" ? <ComparativeChart catalog={catalog} candidates={config.series.filter(x => x.uid === comparativeUid || (!config.series.some(k => k.uid === comparativeUid) && x.uid === config.series[0]?.uid))} period={config.period} /> : <section className="panel">
           <div className="cb-toolbar">
             <div className="segmented">{PERIODS.map(([k, l]) => <button key={k} className={config.period === k ? "selected" : ""} onClick={() => set({ period: k })}>{l}</button>)}</div>
             <div className="db-dates cb-dates">
