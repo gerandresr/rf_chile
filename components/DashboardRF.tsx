@@ -189,7 +189,7 @@ export function DashboardRF({ data }: { data: DashboardData }) {
   return <AppShell>
     <header className="page-head">
       <div><div className="eyebrow">Trading Propietario</div><h1>Mercado RF</h1><p>Monitor de renta fija chilena: niveles, movimientos y valor relativo.</p></div>
-      <div className="asof"><span>RF Chile · {day(data.asOf.bonds)}</span><strong>Bloomberg · {day(data.asOf.bloomberg)}</strong><span>BCentral · {day(data.asOf.bcentral)}</span></div>
+      <div className="asof"><span>RF Chile · {day(data.asOf.bonds)}</span><span>Bloomberg · {day(data.asOf.bloomberg)}</span><span>BCentral · {day(data.asOf.bcentral)}</span></div>
     </header>
     <div className="dash-ticker">{data.ticker.map(t => <Ticker key={t.label} item={t} />)}</div>
     <div className="dash-macro">{data.macro.map(m => <div key={m.label}><span>{m.label}</span><strong>{m.value}</strong><em>{m.detail}</em></div>)}</div>
