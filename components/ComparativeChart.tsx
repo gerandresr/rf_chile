@@ -94,7 +94,7 @@ export function ComparativeChart({ catalog, candidates }: { catalog: Catalog; ca
       {reference === "custom" && <label>Inicio histórico<input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} /></label>}
       <label>Escala<select value={view} onChange={e => setView(e.target.value as "change" | "level")}><option value="change">Variación acumulada (pb en tasas)</option><option value="level">Niveles originales</option></select></label>
     </div>
-    {result?.message ? <p className="db-hint">{result.message}</p> : !result ? <p className="db-hint">Cargando datos…</p> : <>
+    {result?.message ? <p className="db-hint">{result.message}</p> : !result ? <p className="db-hint">Cargando datos…</p> : "start" in result ? <>
       <p className="model-caption">Actual: {result.start} a {result.end} · Histórico: {result.historicalStart} a {result.historicalEnd}</p>
       <div className="cb-chart" style={{ height: 440 }}><ResponsiveContainer width="100%" height="100%">
         <LineChart data={result.rows} margin={{ top: 18, left: 6, right: 20, bottom: 10 }}>
@@ -115,6 +115,6 @@ export function ComparativeChart({ catalog, candidates }: { catalog: Catalog; ca
         <div><strong>Variación período histórico</strong><p>{fmt(result.pastChange)} {result.unit === "%" || result.unit === "pb" ? "pb" : "unidades"}</p></div>
         <div><strong>Diferencia de variaciones</strong><p>{fmt(result.currentChange - result.pastChange)} {result.unit === "%" || result.unit === "pb" ? "pb" : "unidades"}</p></div>
       </div>
-    </>}
+    </> : null}
   </section>;
 }
