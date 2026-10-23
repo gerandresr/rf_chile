@@ -12,11 +12,13 @@ import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import { CarryModel } from "./CarryModel";
 import type { CarryModelData } from "@/lib/market-models.server";
+import { NairuPhillipsModel } from "./NairuPhillipsModel";
+import type { PhillipsModelData } from "@/lib/nairu-phillips.server";
 
 // GARCH y Técnicos para BTP/BTU están ocultos; cambiar a true para mostrarlos de nuevo.
 const SHOW_MARKET_MODELS = false;
 
-export function ModelsDashboard({ carry }: { carry: CarryModelData }) {
+export function ModelsDashboard({ carry, phillips }: { carry: CarryModelData; phillips: PhillipsModelData }) {
   const [nairu, setNairu] = useState(8.16);
   const [okun, setOkun] = useState(2);
   const gaps = useMemo(() => ({
@@ -33,12 +35,15 @@ export function ModelsDashboard({ carry }: { carry: CarryModelData }) {
   return <AppShell>
     <header className="page-head"><div><div className="eyebrow">Trading Propietario</div><h1>Modelos</h1><p>Selecciona un modelo para consultar sus resultados.</p></div></header>
     <details className="panel model-disclosure" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary><span>NAIRU manual · {nairu.toFixed(2).replace(".", ",")}%</span><ChevronDown size={20} aria-hidden="true" /></summary>
-      {open && <div className="model-content"><p>La NAIRU es un supuesto editable. No se estima automáticamente mediante el filtro de Kalman.</p><div className="taylor-controls"><label>NAIRU (%)<input type="number" min="0" max="30" step="0.01" value={nairu} onChange={e => { const v = e.currentTarget.valueAsNumber; if (Number.isFinite(v) && v >= 0 && v <= 30) setNairu(v); }} /></label><label>Coeficiente de Okun (% de actividad por pp de desempleo)<input type="number" min="0" max="10" step="0.1" value={okun} onChange={e => { const v = e.currentTarget.valueAsNumber; if (Number.isFinite(v) && v >= 0 && v <= 10) setOkun(v); }} /></label></div>{recent && <p className="model-caption">Último desempleo registrado: {recent.desempleo!.toFixed(2).replace(".", ",")}% ({recent.fecha}). Brecha de actividad aproximada: {(-okun * (recent.desempleo! - nairu)).toFixed(2).replace(".", ",")}%, calculada como −Okun × (desempleo − NAIRU). No es una estimación oficial de brecha del producto.</p>}</div>}
+      <summary><span>NAIRU · curva de Phillips{"error" in phillips ? "" : ` · ${phillips.ml.points.filter(p => typeof p.u === "number").at(-1)!.nairu.toFixed(2).replace(".", ",")}%`}</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      {open && <NairuPhillipsModel data={phillips} />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setTaylorOpen(event.currentTarget.open)}>
       <summary><span>Regla de Taylor</span><ChevronDown size={20} aria-hidden="true" /></summary>
-      {taylorOpen && <TaylorModel gaps={gaps} nairu={nairu} okun={okun} />}
+      {taylorOpen && <>
+        <div className="model-content"><p>Brecha de actividad de la regla: supuesto propio, independiente del modelo NAIRU de arriba.</p><div className="taylor-controls"><label>NAIRU supuesta (%)<input type="number" min="0" max="30" step="0.01" value={nairu} onChange={e => { const v = e.currentTarget.valueAsNumber; if (Number.isFinite(v) && v >= 0 && v <= 30) setNairu(v); }} /></label><label>Coeficiente de Okun (% de actividad por pp de desempleo)<input type="number" min="0" max="10" step="0.1" value={okun} onChange={e => { const v = e.currentTarget.valueAsNumber; if (Number.isFinite(v) && v >= 0 && v <= 10) setOkun(v); }} /></label></div>{recent && <p className="model-caption">Último desempleo registrado: {recent.desempleo!.toFixed(2).replace(".", ",")}% ({recent.fecha}). Brecha de actividad aproximada: {(-okun * (recent.desempleo! - nairu)).toFixed(2).replace(".", ",")}%, calculada como −Okun × (desempleo − NAIRU supuesta).</p>}</div>
+        <TaylorModel gaps={gaps} nairu={nairu} okun={okun} />
+      </>}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setCarryOpen(event.currentTarget.open)}>
       <summary><span>Carry y roll-down BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
