@@ -24,13 +24,21 @@ Pestaña `/dashboard-rf` (`lib/dashboard.server.ts`, calculada al construir el s
 
 ## Modelos
 
-## Valor relativo BTP/BTU (curva NSS)
+## Modelo Fair Value · Valor relativo (curva NSS)
 
-Desplegable en `/modelos` (`lib/nss.ts`, `components/NssFairValueModel.tsx`, calculado al construir el sitio con `historico_riskamerica`). Cada fecha de los últimos ~2 años ajusta una curva Nelson-Siegel-Svensson a los BTP y otra a los BTU sobre TIR: grilla de (τ1, τ2) con τ2 ≥ 1,5·τ1, mínimos cuadrados en β y una segunda pasada con pesos de Huber. Ajustan solo bonos con cupón y más de 1 año al vencimiento; los cero cupón se comparan pero no definen la curva y los menores a 1 año se omiten (estacionalidad del IPC en BTU).
+Responde qué bono tener dentro de la curva. Desplegable en `/modelos` (`lib/nss.ts`, `components/NssFairValueModel.tsx`, calculado al construir el sitio con `historico_riskamerica`). Cada fecha de los últimos ~2 años ajusta una curva Nelson-Siegel-Svensson a los BTP y otra a los BTU sobre TIR: grilla de (τ1, τ2) con τ2 ≥ 1,5·τ1, mínimos cuadrados en β y una segunda pasada con pesos de Huber. Ajustan solo bonos con cupón y más de 1 año al vencimiento; los cero cupón se comparan pero no definen la curva y los menores a 1 año se omiten (estacionalidad del IPC en BTU).
 
 Residuo = TIR observada − TIR de la curva al mismo plazo (pb, + barato). Como cada papel tiene un residuo estructural (cupón, liquidez), la señal es el z-score del residuo sobre 252 días (mínimo 60); |z| ≥ 1,5 se marca barato/caro. Incluye residuo medio, cambio 1M y breakeven de inflación compuesto (BTP vs BTU de las curvas) a 2/5/10/20 años con cambio 1M, percentil de 1 año e historia.
 
 Validación: `node --experimental-strip-types --test tests/nss.test.mjs`.
+
+## Modelo Fair Value · Valor direccional (fundamentales macro)
+
+Responde cuánta duración tener. Desplegable en `/modelos` (`lib/fair-value-macro.ts`, `components/MacroFairValueModel.tsx`). La tasa BTP 10 y BTU 10 de las curvas NSS (ajustadas en toda la muestra una sola vez por construcción y compartidas con el modelo de valor relativo) se explica con TPM (`datos-diarios.json`), Treasury 10 años, CDS Chile, cobre y USD/CLP (`historico_bloomberg`; cobre y USD/CLP en log escalado a 10%, CDS por 10 pb). Las series se alinean al último dato disponible con hasta 7 días corridos.
+
+OLS en ventana móvil de 504 días hábiles que termina en cada fecha, reestimada cada 5 días: el valor justo de cada día usa solo información de ese día. Desvío = observada − justa (+ barata); |z| ≥ 1 error típico se marca barata/cara. Vida media por AR(1) de los residuos de la ventana vigente; t de los coeficientes con Newey-West (21 rezagos). Descomposición del último mes = cambio de cada factor × sensibilidad vigente; el resto es desvío propio. Validación en tiempo real: señales semanales con |z| ≥ 1 y si la tasa se movió hacia el valor justo en 21 días hábiles. La historia empieza cuando hay 2 años con todos los factores (el cobre parte en 2021).
+
+Validación: `node --experimental-strip-types --test tests/fair-value-macro.test.mjs`.
 
 ## Swap Spreads
 

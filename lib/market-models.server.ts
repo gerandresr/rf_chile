@@ -3,6 +3,7 @@ import path from "path";
 import { impliedTpmPath, estimateSpreadBp, forwardHistory, type TpmPathResult, type ForwardHistory, type SwapQuote } from "./tpm-path";
 import { carryRolldown, maturityFromCode, type BondInput } from "./carry";
 import { fairValue, type FvBond, type FvResult } from "./nss";
+import { macroFairValue, type MacroResult } from "./fair-value-macro";
 
 // Lectura en el servidor (al construir el sitio). Los archivos de Bloomberg vienen con BOM.
 const DATA = path.join(process.cwd(), "public", "data");
@@ -95,21 +96,51 @@ export function carryModelData(): CarryModelData {
   }
 }
 
-export type FairValueModelData = FvResult | { error: string };
+export type FairValueModelData = Omit<FvResult, "levels"> | { error: string };
+export type MacroFairValueData = { BTP: MacroResult | { error: string }; BTU: MacroResult | { error: string } } | { error: string };
 
-/** Curva NSS diaria BTP/BTU, valor relativo por bono y breakevens (≈2 años de historia). */
+// Las curvas NSS se ajustan una sola vez por construcción y alimentan ambos modelos de fair value.
+let nssCache: FvResult | null = null;
+function nssResult(): FvResult {
+  if (nssCache) return nssCache;
+  const dir = path.join(DATA, "historico_riskamerica");
+  const bonds: FvBond[] = [];
+  for (const file of readdirSync(dir).filter(f => /^BT[PU]\d{7}\.json$/.test(f))) {
+    const code = file.slice(0, -5), maturity = maturityFromCode(code);
+    if (!maturity) continue;
+    const s = readJson(`historico_riskamerica/${file}`)[code] as { fecha: string[]; tir: (number | null)[] };
+    bonds.push({ code, type: code.slice(0, 3) as "BTP" | "BTU", maturity, dates: s.fecha, tir: s.tir });
+  }
+  nssCache = fairValue(bonds);
+  return nssCache;
+}
+
+/** Curva NSS diaria BTP/BTU, valor relativo por bono y breakevens (≈2 años de historia en gráficos). */
 export function fairValueModelData(): FairValueModelData {
   try {
-    const dir = path.join(DATA, "historico_riskamerica");
-    const bonds: FvBond[] = [];
-    for (const file of readdirSync(dir).filter(f => /^BT[PU]\d{7}\.json$/.test(f))) {
-      const code = file.slice(0, -5), maturity = maturityFromCode(code);
-      if (!maturity) continue;
-      const s = readJson(`historico_riskamerica/${file}`)[code] as { fecha: string[]; tir: (number | null)[] };
-      bonds.push({ code, type: code.slice(0, 3) as "BTP" | "BTU", maturity, dates: s.fecha, tir: s.tir });
-    }
-    return fairValue(bonds);
+    const { levels: _levels, ...rest } = nssResult();
+    return rest;
   } catch (error) {
     return { error: error instanceof Error ? error.message : "No fue posible ajustar las curvas." };
+  }
+}
+
+/** Tasa a 10 años de las curvas NSS contra TPM, Treasury 10a, CDS, cobre y USD/CLP. */
+export function macroFairValueData(): MacroFairValueData {
+  try {
+    const levels = nssResult().levels;
+    const tpmRows = (readJson("historico_bcentral/datos-diarios.json") as { fecha: string; tpm: number | null }[]).filter(r => typeof r.tpm === "number");
+    const drivers = {
+      tpm: new Map(tpmRows.map(r => [r.fecha, r.tpm as number] as const)),
+      ust10: bloomberg("treasury_10y"), cds: bloomberg("cds_chile"), copper: bloomberg("cobre"), usdclp: bloomberg("usdclp"),
+    };
+    const run = (key: "nom10" | "real10") => {
+      try {
+        return macroFairValue(new Map(levels.filter(l => typeof l[key] === "number").map(l => [l.date, l[key] as number] as const)), drivers);
+      } catch (error) { return { error: error instanceof Error ? error.message : "Sin datos." }; }
+    };
+    return { BTP: run("nom10"), BTU: run("real10") };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "No fue posible estimar el fair value direccional." };
   }
 }

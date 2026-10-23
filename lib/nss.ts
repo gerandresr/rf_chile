@@ -113,12 +113,14 @@ export type FvRow = {
   residualBp: number; change1mBp: number | null; z: number | null; percentile: number | null;
   meanBp: number | null; observations: number; inFit: boolean;
 };
+export type FvLevel = { date: string; nom2: number | null; real2: number | null; nom10: number | null; real10: number | null };
 export type FvBreakeven = { tenor: number; value: number; change1mBp: number | null; percentile: number | null };
 export type FvResult = {
   date: string;
   curves: Record<"BTP" | "BTU", { curve: NssCurve; n: number; points: { t: number; y: number }[] } | null>;
   rows: FvRow[];
   breakevens: FvBreakeven[];
+  levels: FvLevel[];
   history: { date: string; be2: number | null; be5: number | null; be10: number | null; be20: number | null; nom10: number | null; real10: number | null }[];
   window: number;
 };
@@ -131,14 +133,19 @@ const BE_TENORS = [2, 5, 10, 20];
 const isZero = (code: string) => /^(BTP|BTU)000/.test(code);
 const years = (from: string, to: string) => (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY / 365.25;
 
+/**
+ * `historyDays`: historia que se devuelve para gráficos; las curvas se ajustan en toda la muestra para
+ * entregar en `levels` las tasas NSS a 2 y 10 años de cada fecha (insumo del modelo direccional).
+ */
 export function fairValue(bonds: FvBond[], historyDays = 520): FvResult {
   const byDate = bonds.map(b => new Map(b.dates.map((d, i) => [d, b.tir[i]] as const).filter((e): e is [string, number] => typeof e[1] === "number")));
   const allDates = [...new Set(bonds.flatMap(b => b.dates))].sort();
-  const dates = allDates.slice(-historyDays);
+  const dates = allDates;
   if (!dates.length) throw new Error("Sin datos de bonos.");
 
   const residuals = bonds.map(() => new Map<string, number>());
   const history: FvResult["history"] = [];
+  const levels: FvLevel[] = [];
   let lastCurves: FvResult["curves"] = { BTP: null, BTU: null };
 
   for (const date of dates) {
@@ -154,6 +161,7 @@ export function fairValue(bonds: FvBond[], historyDays = 520): FvResult {
     }
     const n = curves.BTP?.curve, r = curves.BTU?.curve;
     const be = (t: number) => (n && r ? breakeven(nssYield(n, t), nssYield(r, t)) : null);
+    levels.push({ date, nom2: n ? nssYield(n, 2) : null, real2: r ? nssYield(r, 2) : null, nom10: n ? nssYield(n, 10) : null, real10: r ? nssYield(r, 10) : null });
     history.push({ date, be2: be(2), be5: be(5), be10: be(10), be20: be(20), nom10: n ? nssYield(n, 10) : null, real10: r ? nssYield(r, 10) : null });
     lastCurves = curves;
   }
@@ -194,5 +202,5 @@ export function fairValue(bonds: FvBond[], historyDays = 520): FvResult {
     breakevens.push({ tenor, value, change1mBp: typeof prev === "number" ? 100 * (value - prev) : null, percentile: zAndPercentile(hist, Z_MIN).pct });
   }
 
-  return { date, curves: lastCurves, rows, breakevens, history, window: Z_WINDOW };
+  return { date, curves: lastCurves, rows, breakevens, history: history.slice(-historyDays), levels, window: Z_WINDOW };
 }

@@ -46,6 +46,11 @@ export function NssFairValueModel({ data }: { data: FairValueModelData }) {
   const be10 = result.breakevens.find(b => b.tenor === 10);
 
   return <div className="model-content">
+    <div className="model-notice">
+      <strong>Para qué sirve.</strong>
+      <p>Responde <b>qué bono tener</b> dentro de la curva: compara cada BTP o BTU con sus pares del mismo tipo y detecta cuál rinde más (barato) o menos (caro) de lo normal para su plazo. Es una señal de <b>valor relativo</b> que funciona igual si las tasas suben o bajan, y de horizonte más corto: los desajustes suelen corregirse en días o semanas.
+        Se complementa con el modelo direccional, que responde <b>cuánta duración</b> tener.</p>
+    </div>
     <div className="model-intro">
       <p>Cada día se ajusta una curva Nelson-Siegel-Svensson a los BTP y otra a los BTU. El <b>residuo</b> es cuánto rinde cada bono por sobre (+, barato) o por debajo (−, caro) de la curva a su mismo plazo. Como cada papel tiene un residuo &quot;normal&quot; propio, la señal es su <b>z-score</b> frente a su historia de 1 año.</p>
       <div className="segmented" role="group" aria-label="Tipo de bono" style={{ flexShrink: 0 }}>
