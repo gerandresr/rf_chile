@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Area, Bar, Brush, CartesianGrid, ComposedChart, Customized, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Circle, Copy, Download, Eye, EyeOff, MousePointerClick, MoveUpRight, Plus, Save, Search, Square, Trash2, Type, X } from "lucide-react";
 import { AppShell } from "./AppShell";
+import { ComparativeChart } from "./ComparativeChart";
 import type { Catalog, CatalogSeries } from "@/lib/data-catalog.server";
 import { extractSeries } from "@/lib/series-data";
 
@@ -212,6 +213,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
   const byId = useMemo(() => new Map(catalog.groups.flatMap(g => g.series.map(s => [s.id, s] as const))), [catalog]);
   const allSeries = useMemo(() => catalog.groups.flatMap(g => g.series), [catalog]);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
+  const [chartMode, setChartMode] = useState<"normal" | "comparative">("normal");
   const [dragVLabel, setDragVLabel] = useState<string | null>(null);
   const [dragLegend, setDragLegend] = useState(false);
   const set = (patch: Partial<Config>) => setConfig(c => ({ ...c, ...patch }));
@@ -555,7 +557,8 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
         <strong>{r.nombre}</strong>{r.config.subtitle && <span>{resolveText(r.config.subtitle, r.config.series ?? [])}</span>}
       </button>)}</div>
     </section>}
-    <div className="cb-layout">
+    <div className="panel cb-block"><div className="segmented" role="group" aria-label="Modo de gráfico"><button className={chartMode === "normal" ? "selected" : ""} onClick={() => setChartMode("normal")}>Gráfico normal</button><button className={chartMode === "comparative" ? "selected" : ""} onClick={() => setChartMode("comparative")}>Comparativo histórico</button></div></div>
+    {chartMode === "comparative" ? <ComparativeChart catalog={catalog} candidates={config.series} /> : <div className="cb-layout">
       <aside className="cb-side">
         <section className="panel cb-block">
           <h2>Series</h2>
