@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, LayoutDashboard, Landmark, FlaskConical, Calculator, Lightbulb, LineChart, TrendingUp } from "lucide-react";
+import { Activity, BarChart3, LayoutDashboard, FlaskConical, Calculator, Lightbulb, LineChart, TrendingUp } from "lucide-react";
 import { VisitorCounter } from "./VisitorCounter";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const p = usePathname();
 
   const nav = [
-    { href: "/", label: "Benchmark", icon: Landmark },
     { href: "/dashboard-rf", label: "Mercado RF", icon: LayoutDashboard },
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
     { href: "/graficos", label: "Gráficos", icon: LineChart },
