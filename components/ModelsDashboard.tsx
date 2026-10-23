@@ -3,21 +3,27 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { AppShell } from "./AppShell";
-import { TaylorModel, type ActivityGaps } from "./TaylorModel";
+import { TaylorModel } from "./TaylorModel";
+import monthlyData from "@/public/data/historico_bcentral/datos-mensuales.json";
+import { useMemo } from "react";
 import { RealExchangeRateChart } from "./RealExchangeRateChart";
 import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
 import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
-import { NairuModel, type NairuEstimate } from "./NairuModel";
 import { CarryModel } from "./CarryModel";
 import type { CarryModelData } from "@/lib/market-models.server";
 
 // GARCH y Técnicos para BTP/BTU están ocultos; cambiar a true para mostrarlos de nuevo.
 const SHOW_MARKET_MODELS = false;
 
-export function ModelsDashboard({ nairu, activityGaps, carry }: {
-  nairu: NairuEstimate; activityGaps: ActivityGaps; carry: CarryModelData;
-}) {
+export function ModelsDashboard({ carry }: { carry: CarryModelData }) {
+  const [nairu, setNairu] = useState(8.16);
+  const [okun, setOkun] = useState(2);
+  const gaps = useMemo(() => ({
+    filtered: Object.fromEntries(monthlyData.filter(r => typeof r.desempleo === "number").map(r => [r.fecha, -okun * ((r.desempleo as number) - nairu)])),
+    smoothed: Object.fromEntries(monthlyData.filter(r => typeof r.desempleo === "number").map(r => [r.fecha, -okun * ((r.desempleo as number) - nairu)])),
+  }), [nairu, okun]);
+  const recent = [...monthlyData].reverse().find(r => typeof r.desempleo === "number");
   const [carryOpen, setCarryOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [taylorOpen, setTaylorOpen] = useState(false);
@@ -27,12 +33,12 @@ export function ModelsDashboard({ nairu, activityGaps, carry }: {
   return <AppShell>
     <header className="page-head"><div><div className="eyebrow">Trading Propietario</div><h1>Modelos</h1><p>Selecciona un modelo para consultar sus resultados.</p></div></header>
     <details className="panel model-disclosure" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary><span>Tasa de desempleo natural (filtro de Kalman · Okun)</span><ChevronDown size={20} aria-hidden="true" /></summary>
-      {open && <NairuModel estimate={nairu} />}
+      <summary><span>NAIRU manual · {nairu.toFixed(2).replace(".", ",")}%</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      {open && <div className="model-content"><p>La NAIRU es un supuesto editable. No se estima automáticamente mediante el filtro de Kalman.</p><div className="taylor-controls"><label>NAIRU (%)<input type="number" min="0" max="30" step="0.01" value={nairu} onChange={e => { const v = e.currentTarget.valueAsNumber; if (Number.isFinite(v) && v >= 0 && v <= 30) setNairu(v); }} /></label><label>Coeficiente de Okun (% de actividad por pp de desempleo)<input type="number" min="0" max="10" step="0.1" value={okun} onChange={e => { const v = e.currentTarget.valueAsNumber; if (Number.isFinite(v) && v >= 0 && v <= 10) setOkun(v); }} /></label></div>{recent && <p className="model-caption">Último desempleo registrado: {recent.desempleo!.toFixed(2).replace(".", ",")}% ({recent.fecha}). Brecha de actividad aproximada: {(-okun * (recent.desempleo! - nairu)).toFixed(2).replace(".", ",")}%, calculada como −Okun × (desempleo − NAIRU). No es una estimación oficial de brecha del producto.</p>}</div>}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setTaylorOpen(event.currentTarget.open)}>
       <summary><span>Regla de Taylor</span><ChevronDown size={20} aria-hidden="true" /></summary>
-      {taylorOpen && <TaylorModel gaps={activityGaps} />}
+      {taylorOpen && <TaylorModel gaps={gaps} nairu={nairu} okun={okun} />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setCarryOpen(event.currentTarget.open)}>
       <summary><span>Carry y roll-down BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
