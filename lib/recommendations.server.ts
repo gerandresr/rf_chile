@@ -1,7 +1,7 @@
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import path from "path";
 
-/** Ideas de trading (content/recomendaciones.json) con su métrica recalculada con los últimos datos. */
+/** Informes de ideas de trading (content/recomendaciones/AAAA-MM-DD.json) con su métrica recalculada con los últimos datos. */
 type Term = { id: string; w: number };
 export type Idea = {
   id: string; titulo: string; tipo: string; conviccion: "Alta" | "Media" | "Baja";
@@ -10,7 +10,7 @@ export type Idea = {
   entrada: number; objetivo: number; stop: number; horizonte: string;
 };
 export type IdeaWithLive = Idea & { actual: number | null; actualFecha: string | null; resultado: number | null; spark: number[] };
-export type Recommendations = { fecha: string; datosAl: string; autor: string; resumen: string[]; advertencia: string; ideas: IdeaWithLive[] };
+export type Recommendations = { fecha: string; datosAl: string; resumen: string[]; advertencia: string; ideas: IdeaWithLive[] };
 
 const DATA = path.join(process.cwd(), "public", "data");
 const readJson = (p: string) => JSON.parse(readFileSync(p, "utf8").replace(/^﻿/, ""));
@@ -26,9 +26,16 @@ function load(id: string): Map<string, number> {
   return out;
 }
 
-export function recommendations(): Recommendations {
-  const raw = readJson(path.join(process.cwd(), "content", "recomendaciones.json")) as Omit<Recommendations, "ideas"> & { ideas: Idea[] };
+const DIR = path.join(process.cwd(), "content", "recomendaciones");
+
+/** Todos los informes, del más nuevo al más antiguo. */
+export function recommendationReports(): Recommendations[] {
   const cache = new Map<string, Map<string, number>>();
+  return readdirSync(DIR).filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().reverse()
+    .map(f => report(readJson(path.join(DIR, f)) as Omit<Recommendations, "ideas"> & { ideas: Idea[] }, cache));
+}
+
+function report(raw: Omit<Recommendations, "ideas"> & { ideas: Idea[] }, cache: Map<string, Map<string, number>>): Recommendations {
   const series = (id: string) => { if (!cache.has(id)) { try { cache.set(id, load(id)); } catch { cache.set(id, new Map()); } } return cache.get(id)!; };
   const ideas = raw.ideas.map(idea => {
     const maps = idea.metrica.terminos.map(t => series(t.id));

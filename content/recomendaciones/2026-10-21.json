@@ -1,7 +1,6 @@
 {
   "fecha": "2026-10-21",
   "datosAl": "Bonos 19-oct-2026 · swaps 20-oct-2026",
-  "autor": "Generado con IA (Claude) actuando como trader senior de renta fija local",
   "resumen": [
     "Tasas nominales en máximos de un año: BTP 10 en 6,08% (+67 pb en el año) y curva BTP 2–10 en 93 pb (percentil 82 del último año).",
     "El mercado descuenta alzas: la TPM esperada sube de 4,50% a ~5,06% hacia agosto 2027 y el SPC 2 años está 62 pb sobre la TPM (percentil 99 de 3 años).",
@@ -16,103 +15,265 @@
       "titulo": "Fly SPC 2–5–10: recibir 5 años contra 2 y 10 años",
       "tipo": "Fly",
       "conviccion": "Media",
-      "operacion": ["Recibir SPC CLP 5 años (100% del riesgo)", "Pagar SPC CLP 2 años (50% del DV01)", "Pagar SPC CLP 10 años (50% del DV01)"],
-      "metrica": { "nombre": "Fly 2×5a − 2a − 10a", "terminos": [{ "id": "bbg:clpcam_5y", "w": 2 }, { "id": "bbg:clpcam_2y", "w": -1 }, { "id": "bbg:clpcam_10y", "w": -1 }], "unidad": "pb", "ganaSi": "baja" },
-      "entrada": 7.0, "objetivo": -8.0, "stop": 17.0, "horizonte": "3 meses",
+      "operacion": [
+        "Recibir SPC CLP 5 años (100% del riesgo)",
+        "Pagar SPC CLP 2 años (50% del DV01)",
+        "Pagar SPC CLP 10 años (50% del DV01)"
+      ],
+      "metrica": {
+        "nombre": "Fly 2×5a − 2a − 10a",
+        "terminos": [
+          {
+            "id": "bbg:clpcam_5y",
+            "w": 2
+          },
+          {
+            "id": "bbg:clpcam_2y",
+            "w": -1
+          },
+          {
+            "id": "bbg:clpcam_10y",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "baja"
+      },
+      "entrada": 7.0,
+      "objetivo": -8.0,
+      "stop": 17.0,
+      "horizonte": "3 meses",
       "fundamentos": [
         "El 5 años es el punto más barato de la curva swap: el fly está en 7 pb, percentil 97 de 3 años y z-score +2,2 del último año (promedio 3 años: −18 pb).",
         "Cuando el z-score superó 1,5, el fly bajó en 13 semanas en el 77% de los casos (promedio −6 pb).",
         "Es neutral a duración: no depende de acertar la dirección de la TPM."
       ],
-      "riesgos": ["Que el mercado siga descontando alzas concentradas a mediano plazo (5 años sigue subiendo más que los extremos).", "Observaciones semanales solapadas: la estadística sobreestima la independencia."]
+      "riesgos": [
+        "Que el mercado siga descontando alzas concentradas a mediano plazo (5 años sigue subiendo más que los extremos).",
+        "Observaciones semanales solapadas: la estadística sobreestima la independencia."
+      ]
     },
     {
       "id": "bei-corto-carry-uf",
       "titulo": "Largo inflación corta: comprar BTU 2 años contra BTP 2 años (carry de UF hasta el 9 de enero)",
       "tipo": "Inflación",
       "conviccion": "Media",
-      "operacion": ["Comprar BTU0001028 (oct-2028)", "Vender BTP0501028 (oct-2028), ~1,04 veces el nominal en pesos (neutral a DV01)"],
-      "metrica": { "nombre": "BTP0501028 − BTU0001028 (≈ BEI 2 años)", "terminos": [{ "id": "BTP0501028", "w": 1 }, { "id": "BTU0001028", "w": -1 }], "unidad": "pb", "ganaSi": "sube" },
-      "entrada": 344.1, "objetivo": 355.0, "stop": 320.0, "horizonte": "Hasta el 9-ene-2027",
+      "operacion": [
+        "Comprar BTU0001028 (oct-2028)",
+        "Vender BTP0501028 (oct-2028), ~1,04 veces el nominal en pesos (neutral a DV01)"
+      ],
+      "metrica": {
+        "nombre": "BTP0501028 − BTU0001028 (≈ BEI 2 años)",
+        "terminos": [
+          {
+            "id": "BTP0501028",
+            "w": 1
+          },
+          {
+            "id": "BTU0001028",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "sube"
+      },
+      "entrada": 344.1,
+      "objetivo": 355.0,
+      "stop": 320.0,
+      "horizonte": "Hasta el 9-ene-2027",
       "fundamentos": [
         "Carry estacional: entre hoy y el 9 de enero la UF devenga ~1,25% (IPC de septiembre efectivo y forwards de octubre 0,52% y noviembre 0,47%), versus ~0,75% que implica una compensación de 3,4% anual: ~27 pb de colchón en BEI.",
         "El BEI 2 años (3,38%) está bajo la inflación que el propio mercado espera para los próximos 12 meses (3,85% según forwards).",
         "Shock de petróleo y peso débil (USD/CLP 982) sostienen la inflación de corto plazo."
       ],
-      "riesgos": ["IPC de octubre o noviembre bajo lo esperado.", "Salir antes del período de IPC de diciembre (~0,05%), donde el carry de UF se vuelve negativo.", "Liquidez del BTU cero cupón."]
+      "riesgos": [
+        "IPC de octubre o noviembre bajo lo esperado.",
+        "Salir antes del período de IPC de diciembre (~0,05%), donde el carry de UF se vuelve negativo.",
+        "Liquidez del BTU cero cupón."
+      ]
     },
     {
       "id": "rv-btp-2034",
       "titulo": "Valor relativo BTP 2034: comprar BTP0600134 y vender BTP0581034",
       "tipo": "Valor relativo",
       "conviccion": "Media",
-      "operacion": ["Comprar BTP0600134 (ene-2034)", "Vender BTP0581034 (oct-2034), 91 por cada 100 comprados (neutral a DV01)"],
-      "metrica": { "nombre": "TIR BTP0600134 − BTP0581034", "terminos": [{ "id": "BTP0600134", "w": 1 }, { "id": "BTP0581034", "w": -1 }], "unidad": "pb", "ganaSi": "baja" },
-      "entrada": 5.3, "objetivo": -5.0, "stop": 12.0, "horizonte": "1–2 meses",
+      "operacion": [
+        "Comprar BTP0600134 (ene-2034)",
+        "Vender BTP0581034 (oct-2034), 91 por cada 100 comprados (neutral a DV01)"
+      ],
+      "metrica": {
+        "nombre": "TIR BTP0600134 − BTP0581034",
+        "terminos": [
+          {
+            "id": "BTP0600134",
+            "w": 1
+          },
+          {
+            "id": "BTP0581034",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "baja"
+      },
+      "entrada": 5.3,
+      "objetivo": -5.0,
+      "stop": 12.0,
+      "horizonte": "1–2 meses",
       "fundamentos": [
         "Contra una curva Nelson-Siegel diaria, el 0600134 está 2 pb barato (promedio 6 meses: 7 pb caro; se abarató 13 pb en un mes) y el 0581034 está 6 pb caro (promedio: 1 pb caro).",
         "El diferencial de residuos (8 pb) está ~14 pb sobre su media de 6 meses; con ambos bonos en el mismo tramo, el riesgo de curva es bajo.",
         "Alternativa con la misma lógica: BTP0700534 (barato 1 pb vs promedio −7 pb)."
       ],
-      "riesgos": ["Flujos de licitación o reapertura del 0600134.", "Costo de préstamo del papel vendido."]
+      "riesgos": [
+        "Flujos de licitación o reapertura del 0600134.",
+        "Costo de préstamo del papel vendido."
+      ]
     },
     {
       "id": "pagar-spc-1y",
       "titulo": "Sesgo táctico pagador: pagar SPC CLP 1 año",
       "tipo": "Direccional",
       "conviccion": "Baja",
-      "operacion": ["Pagar SPC CLP 1 año"],
-      "metrica": { "nombre": "SPC CLP 1 año", "terminos": [{ "id": "bbg:clpcam_1y", "w": 1 }], "unidad": "%", "ganaSi": "sube" },
-      "entrada": 4.905, "objetivo": 5.15, "stop": 4.75, "horizonte": "3 meses",
+      "operacion": [
+        "Pagar SPC CLP 1 año"
+      ],
+      "metrica": {
+        "nombre": "SPC CLP 1 año",
+        "terminos": [
+          {
+            "id": "bbg:clpcam_1y",
+            "w": 1
+          }
+        ],
+        "unidad": "%",
+        "ganaSi": "sube"
+      },
+      "entrada": 4.905,
+      "objetivo": 5.15,
+      "stop": 4.75,
+      "horizonte": "3 meses",
       "fundamentos": [
         "Momentum de inflación: IPC 4,5% anualizado a 3 meses, Brent +84% en el año y peso en máximos de un año.",
         "Historia: cuando el SPC 2 años estuvo más de 50 pb sobre la TPM, siguió subiendo en las 13 semanas siguientes en 74% de los casos.",
         "Treasuries en 5,1% y Fed subiendo: poco espacio para una baja de tasas globales."
       ],
-      "riesgos": ["La actividad es débil (IMACEC negativo, desempleo 9,6%): si el Banco Central ve el shock de oferta como transitorio, el tramo corto puede bajar fuerte.", "Carry negativo: pagar 4,905% contra una TPM de 4,50% cuesta ~10 pb en 3 meses."]
+      "riesgos": [
+        "La actividad es débil (IMACEC negativo, desempleo 9,6%): si el Banco Central ve el shock de oferta como transitorio, el tramo corto puede bajar fuerte.",
+        "Carry negativo: pagar 4,905% contra una TPM de 4,50% cuesta ~10 pb en 3 meses."
+      ]
     },
     {
       "id": "bei-10-corto",
       "titulo": "Corto inflación larga: comprar BTP 2035 y vender BTU 2035",
       "tipo": "Inflación",
       "conviccion": "Baja",
-      "operacion": ["Comprar BTP0500335 (mar-2035)", "Vender BTU0200335 (mar-2035), neutral a DV01"],
-      "metrica": { "nombre": "BTP0500335 − BTU0200335 (≈ BEI 8 años)", "terminos": [{ "id": "BTP0500335", "w": 1 }, { "id": "BTU0200335", "w": -1 }], "unidad": "pb", "ganaSi": "baja" },
-      "entrada": 334.5, "objetivo": 315.0, "stop": 345.0, "horizonte": "6 meses",
+      "operacion": [
+        "Comprar BTP0500335 (mar-2035)",
+        "Vender BTU0200335 (mar-2035), neutral a DV01"
+      ],
+      "metrica": {
+        "nombre": "BTP0500335 − BTU0200335 (≈ BEI 8 años)",
+        "terminos": [
+          {
+            "id": "BTP0500335",
+            "w": 1
+          },
+          {
+            "id": "BTU0200335",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "baja"
+      },
+      "entrada": 334.5,
+      "objetivo": 315.0,
+      "stop": 345.0,
+      "horizonte": "6 meses",
       "fundamentos": [
         "La compensación inflacionaria a 10 años (3,26%) está en el percentil 89 del último año y 25–35 pb sobre la meta de 3%.",
         "Un shock de petróleo debería afectar poco la inflación de largo plazo si el Banco Central mantiene su credibilidad.",
         "Complementa la idea de inflación corta: largo BEI corto y corto BEI largo."
       ],
-      "riesgos": ["Si el shock de petróleo se vuelve persistente, la prima por inflación de largo plazo puede seguir subiendo.", "Carry negativo mientras el IPC mensual se mantenga alto."]
+      "riesgos": [
+        "Si el shock de petróleo se vuelve persistente, la prima por inflación de largo plazo puede seguir subiendo.",
+        "Carry negativo mientras el IPC mensual se mantenga alto."
+      ]
     },
     {
       "id": "asw-btu-10",
       "titulo": "BTU caros contra swaps: vender BTU 2038 y recibir SPC UF 10 años",
       "tipo": "Asset swap",
       "conviccion": "Baja",
-      "operacion": ["Vender BTU0300338 (mar-2038)", "Recibir SPC UF 10 años por el mismo DV01"],
-      "metrica": { "nombre": "TIR BTU0300338 − SPC UF 10 años", "terminos": [{ "id": "BTU0300338", "w": 1 }, { "id": "bbg:ufcam_10y", "w": -1 }], "unidad": "pb", "ganaSi": "sube" },
-      "entrada": 18.5, "objetivo": 30.0, "stop": 10.0, "horizonte": "3–6 meses",
+      "operacion": [
+        "Vender BTU0300338 (mar-2038)",
+        "Recibir SPC UF 10 años por el mismo DV01"
+      ],
+      "metrica": {
+        "nombre": "TIR BTU0300338 − SPC UF 10 años",
+        "terminos": [
+          {
+            "id": "BTU0300338",
+            "w": 1
+          },
+          {
+            "id": "bbg:ufcam_10y",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "sube"
+      },
+      "entrada": 18.5,
+      "objetivo": 30.0,
+      "stop": 10.0,
+      "horizonte": "3–6 meses",
       "fundamentos": [
         "El spread BTU 10 años − swap UF está en 16 pb, percentil 4 de 3 años (promedio 1 año: 30 pb; 3 años: 42 pb).",
         "Se comprimió 28 pb en 3 meses: los BTU están muy demandados frente al derivado."
       ],
-      "riesgos": ["La compresión responde a demanda estructural (fondos de pensiones, seguros) y puede persistir.", "Requiere préstamo del BTU y costo de financiamiento de la posición corta."]
+      "riesgos": [
+        "La compresión responde a demanda estructural (fondos de pensiones, seguros) y puede persistir.",
+        "Requiere préstamo del BTU y costo de financiamiento de la posición corta."
+      ]
     },
     {
       "id": "rv-btu-largo",
       "titulo": "Valor relativo BTU largo: vender BTU 2055 y comprar BTU 2042",
       "tipo": "Valor relativo",
       "conviccion": "Baja",
-      "operacion": ["Vender BTU0281155 (nov-2055)", "Comprar BTU0300142 (ene-2042), 1,6 por cada 1 vendido (neutral a DV01)"],
-      "metrica": { "nombre": "TIR BTU0281155 − BTU0300142", "terminos": [{ "id": "BTU0281155", "w": 1 }, { "id": "BTU0300142", "w": -1 }], "unidad": "pb", "ganaSi": "sube" },
-      "entrada": -6.1, "objetivo": 5.0, "stop": -14.0, "horizonte": "3 meses",
+      "operacion": [
+        "Vender BTU0281155 (nov-2055)",
+        "Comprar BTU0300142 (ene-2042), 1,6 por cada 1 vendido (neutral a DV01)"
+      ],
+      "metrica": {
+        "nombre": "TIR BTU0281155 − BTU0300142",
+        "terminos": [
+          {
+            "id": "BTU0281155",
+            "w": 1
+          },
+          {
+            "id": "BTU0300142",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "sube"
+      },
+      "entrada": -6.1,
+      "objetivo": 5.0,
+      "stop": -14.0,
+      "horizonte": "3 meses",
       "fundamentos": [
         "El BTU 2055 está 9 pb caro contra la curva (z-score −2,5 en 6 meses) y el 2042 está 3 pb barato.",
         "La curva BTU 10–20 años está en el percentil 36 del último año: poco espacio para que se aplane más."
       ],
-      "riesgos": ["Incluye exposición a la pendiente 15–30 años.", "El tramo muy largo tiene baja liquidez y demanda de aseguradoras."]
+      "riesgos": [
+        "Incluye exposición a la pendiente 15–30 años.",
+        "El tramo muy largo tiene baja liquidez y demanda de aseguradoras."
+      ]
     }
   ],
   "advertencia": "Ideas generadas automáticamente con inteligencia artificial a partir de los datos publicados en este sitio. Son material de análisis para la mesa, no constituyen asesoría de inversión ni una recomendación personalizada. Los niveles de entrada corresponden a la fecha de elaboración; los niveles actuales se recalculan con cada actualización de datos."

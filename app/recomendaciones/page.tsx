@@ -1,9 +1,9 @@
 import { RecommendationsView } from "@/components/RecommendationsView";
-import { recommendations } from "@/lib/recommendations.server";
+import { recommendationReports } from "@/lib/recommendations.server";
 
 export const metadata = { title: "Recomendaciones · Mercado RF Chile" };
 
-// Las ideas están en content/recomendaciones.json; los niveles actuales se recalculan al publicar.
+// Un informe por fecha en content/recomendaciones/; los niveles actuales se recalculan al publicar.
 export default function Page() {
-  return <RecommendationsView data={recommendations()} />;
+  return <RecommendationsView reports={recommendationReports()} />;
 }
