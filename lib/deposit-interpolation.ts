@@ -37,5 +37,3 @@ export function interpolateDeposit(days: number | null, points: DepositPoint[]) 
   return null;
 }
 
-/** DPF: tasa base 30 días → tasa anual simple base 360 (×12). */
-export const dpfAnnual = (monthlyPct: number) => monthlyPct * 12;

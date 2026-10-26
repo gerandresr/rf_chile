@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, Calculator, PiggyBank } from "lucide-react";
-import { DEPOSIT_TENORS, dpfAnnual, interpolateDeposit, latestDepositCurve, type DepositCurve, type DepositKind } from "@/lib/deposit-interpolation";
+import { DEPOSIT_TENORS, interpolateDeposit, latestDepositCurve, type DepositCurve, type DepositKind } from "@/lib/deposit-interpolation";
+import { depositEquivalents, equivalenceContext, type EquivalenceContext, type InflationInsurance, type NdfCurve } from "@/lib/deposit-equivalents";
 
 const fmt = (digits: number) => new Intl.NumberFormat("es-CL", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const DIGITS: Record<DepositKind, number> = { DPF: 3, DPR: 2 };
@@ -21,7 +22,7 @@ const bp = (value: number | null, digits = 0) => {
 };
 const day = (date: string) => new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
 
-function DepositCalculator({ kind, curve, status }: { kind: DepositKind; curve: DepositCurve | null; status: "loading" | "ready" | "error" }) {
+function DepositCalculator({ kind, curve, status, ctx }: { kind: DepositKind; curve: DepositCurve | null; status: "loading" | "ready" | "error"; ctx: EquivalenceContext | null }) {
   const [daysText, setDaysText] = useState("");
   const [rateText, setRateText] = useState("");
   const digits = DIGITS[kind];
@@ -31,6 +32,12 @@ function DepositCalculator({ kind, curve, status }: { kind: DepositKind; curve: 
   const result = curve ? interpolateDeposit(days, curve.points) : null;
   const base = result?.rate ?? null;
   const spread = base !== null && entered !== null ? (entered - base) * 100 : null;
+  // Equivalentes de la tasa ingresada o, si no hay, de la interpolada.
+  const subject = entered ?? base;
+  const eq = ctx && subject !== null && days !== null ? depositEquivalents(kind, subject, days, ctx) : null;
+  const eqOf = (rate: number, d: number) => (ctx ? depositEquivalents(kind, rate, d, ctx) : null);
+  const otherLabel = isDpf ? "Equivalente UF (% real anual)" : "Equivalente pesos (% base 30 días)";
+  const other = (e: ReturnType<typeof depositEquivalents>) => (e ? (isDpf ? pct(e.uf, 2) : pct(e.clp30, 3)) : "—");
   const prefix = `interp-${kind.toLowerCase()}`; // "dpf-days" ya existe en Spread Bonos
 
   return (
@@ -53,11 +60,11 @@ function DepositCalculator({ kind, curve, status }: { kind: DepositKind; curve: 
 
         <div className="bond-calculator-results" aria-live="polite">
           <div className="bond-calculator-result">
-            <span>Tasa interpolada{isDpf && base !== null ? ` · ≈ ${fmt(2).format(dpfAnnual(base))}% anual` : ""}</span>
+            <span>Tasa interpolada</span>
             <strong>{pct(base, digits)}</strong>
           </div>
           <div className="bond-calculator-result bond-calculator-result-primary">
-            <span>Spread{isDpf && spread !== null ? ` · ≈ ${bp(spread * 12)} anual` : ""}</span>
+            <span>Spread</span>
             <strong>{bp(spread, isDpf ? 1 : 0)}</strong>
           </div>
         </div>
@@ -69,10 +76,26 @@ function DepositCalculator({ kind, curve, status }: { kind: DepositKind; curve: 
           {status === "error" && <span> · No se pudieron cargar los datos.</span>}
         </p>
 
+        <div className="bond-calculator-results" aria-live="polite">
+          <div className="bond-calculator-result">
+            <span>{otherLabel}{subject !== null && days !== null ? (entered !== null ? " · tu depósito" : " · tasa interpolada") : ""}</span>
+            <strong>{other(eq)}</strong>
+          </div>
+          <div className="bond-calculator-result">
+            <span>Equivalente USD (% anual ACT/360){subject !== null && days !== null ? (entered !== null ? " · tu depósito" : " · tasa interpolada") : ""}</span>
+            <strong>{eq ? pct(eq.usd, 2) : "—"}</strong>
+          </div>
+        </div>
+        <p className="bond-calculator-source">
+          {ctx ? <>Closing derivados {day(ctx.valuationDate)} · UF hoy {fmt(2).format(ctx.uf0)}{eq && <> · UF al vencimiento {fmt(2).format(eq.ufAtMaturity)}</>} · dólar spot {fmt(2).format(ctx.spot)}{eq && <> · forward {fmt(2).format(eq.forward)}</>}</>
+            : status === "ready" ? "Sin closing de derivados: no se pueden calcular los equivalentes." : ""}
+          {ctx && days !== null && subject !== null && !eq && <span> · plazo fuera de los seguros de inflación o puntos forward disponibles</span>}
+        </p>
+
         {curve && <div className="table-wrap" style={{ marginTop: 14 }}><table>
-          <thead><tr><th>Plazo</th><th>{isDpf ? "Tasa base 30 días" : "Tasa real anual"}</th>{isDpf && <th>Equivalente anual (×12)</th>}</tr></thead>
+          <thead><tr><th>Plazo</th><th>{isDpf ? "Tasa base 30 días" : "Tasa real anual"}</th><th>{isDpf ? "Equiv. UF" : "Equiv. pesos (b30)"}</th><th>Equiv. USD</th></tr></thead>
           <tbody>{curve.points.map(p => <tr key={p.days} style={result && (p === result.left || p === result.right) ? { background: "#eef3fb" } : undefined}>
-            <td className="strong">{p.days} días</td><td>{pct(p.rate, digits)}</td>{isDpf && <td>{pct(dpfAnnual(p.rate), 2)}</td>}
+            <td className="strong">{p.days} días</td><td>{pct(p.rate, digits)}</td><td>{other(eqOf(p.rate, p.days))}</td><td>{(() => { const e = eqOf(p.rate, p.days); return e ? pct(e.usd, 2) : "—"; })()}</td>
           </tr>)}</tbody>
         </table></div>}
       </div>
@@ -83,6 +106,7 @@ function DepositCalculator({ kind, curve, status }: { kind: DepositKind; curve: 
 export function DepositInterpolator() {
   const [curves, setCurves] = useState<Partial<Record<DepositKind, DepositCurve | null>>>({});
   const [error, setError] = useState(false);
+  const [ctx, setCtx] = useState<EquivalenceContext | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -96,6 +120,19 @@ export function DepositInterpolator() {
       }));
       return latestDepositCurve(Object.fromEntries(entries));
     };
+    const json = async (path: string) => {
+      const response = await fetch(path, { signal: controller.signal });
+      if (!response.ok) throw new Error(`No se pudo cargar ${path}`);
+      return JSON.parse((await response.text()).replace(/^\uFEFF/, ""));
+    };
+    // Closing de derivados (seguros de inflación y puntos forward), IPC observado y dólar spot del mismo día.
+    Promise.all([json("/data/Closing_Icap/inflacion.json"), json("/data/Closing_Icap/ndf.json"), json("/data/historico_bcentral/datos-mensuales.json"), json("/data/historico_bloomberg/usdclp.json")])
+      .then(([insurance, ndf, monthly, usd]: [InflationInsurance, NdfCurve, { fecha: string; ipc_mom: number | null }[], { usdclp: { fecha: string[]; valor: (number | null)[] } }]) => {
+        const ipc = new Map(monthly.filter(r => typeof r.ipc_mom === "number").map(r => [r.fecha, r.ipc_mom as number]));
+        const spot = usd.usdclp.fecha.map((f, i) => [f, usd.usdclp.valor[i]] as const).filter(([f, v]) => f <= insurance.fecha && typeof v === "number").at(-1)?.[1];
+        if (!controller.signal.aborted && typeof spot === "number") setCtx(equivalenceContext(insurance, ndf, ipc, spot));
+      })
+      .catch(() => { /* sin equivalentes; el interpolador sigue funcionando */ });
     Promise.all([load("DPF"), load("DPR")])
       .then(([dpf, dpr]) => { if (!controller.signal.aborted) setCurves({ DPF: dpf, DPR: dpr }); })
       .catch(() => { if (!controller.signal.aborted) setError(true); });
@@ -115,7 +152,8 @@ export function DepositInterpolator() {
       <div className="calculator-group-content">
         <p className="calculator-group-intro">
           Ingresa el plazo en días para obtener la tasa interpolada de la curva de depósitos a plazo y, si quieres,
-          la tasa de tu depósito para ver su spread. DPF en pesos (tasa base 30 días) y DPR en UF (tasa real anual).
+          la tasa de tu depósito para ver su spread y sus equivalentes. DPF en pesos (tasa base 30 días) y DPR en UF (tasa real anual).
+          Los equivalentes usan el closing de derivados: seguros de inflación para la UF y puntos forward para el dólar.
         </p>
         <div className="calculator-data-date" aria-live="polite">
           {ready && date && <>Cierre de referencia: <strong>{day(date)}</strong> · RiskAmerica</>}
@@ -123,8 +161,8 @@ export function DepositInterpolator() {
           {error && "No se pudieron cargar las curvas de depósitos."}
         </div>
         <div className="bond-calculator-list">
-          <DepositCalculator kind="DPF" curve={curves.DPF ?? null} status={status} />
-          <DepositCalculator kind="DPR" curve={curves.DPR ?? null} status={status} />
+          <DepositCalculator kind="DPF" curve={curves.DPF ?? null} status={status} ctx={ctx} />
+          <DepositCalculator kind="DPR" curve={curves.DPR ?? null} status={status} ctx={ctx} />
         </div>
       </div>
     </details>
