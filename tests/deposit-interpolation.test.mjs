@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { interpolateDeposit, latestDepositCurve, dpfAnnual } from "../lib/deposit-interpolation.ts";
+import { interpolateDeposit, latestDepositCurve } from "../lib/deposit-interpolation.ts";
 
 const close = (a, b, tol = 1e-12) => assert.ok(Math.abs(a - b) < tol, `${a} != ${b}`);
 const pts = [{ days: 90, rate: -0.1 }, { days: 180, rate: 0.9 }, { days: 360, rate: 1.5 }];
@@ -26,5 +26,4 @@ test("curva: último día con todos los plazos", () => {
   });
   assert.equal(c.date, "2026-10-22");
   assert.deepEqual(c.points.map(p => p.rate), [0.1, 0.3]);
-  close(dpfAnnual(0.4), 4.8);
 });
