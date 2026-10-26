@@ -112,7 +112,7 @@ export type DashboardData = {
   benchmarkPapers: { BTP: string[]; BTU: string[] };
   curves: CurveSet[];
   spreads: SpreadCard[];
-  monitor: { key: string; label: string; unit: "%" | "% mensual"; rows: MonitorRow[] }[];
+  monitor: { key: string; label: string; unit: "%" | "% mensual" | "% real"; rows: MonitorRow[] }[];
 };
 
 export function dashboardData(): DashboardData {
@@ -285,17 +285,31 @@ export function dashboardData(): DashboardData {
   const swapRows = (prefix: "clpcam" | "ufcam") => [["1m", "1 mes"], ["3m", "3 meses"], ["6m", "6 meses"], ["9m", "9 meses"], ["1y", "1 año"], ["2y", "2 años"], ["5y", "5 años"], ["7y", "7 años"], ["10y", "10 años"], ["15y", "15 años"], ["20y", "20 años"]]
     .filter(([k]) => { try { readFileSync(path.join(DATA, `historico_bloomberg/${prefix}_${k}.json`)); return true; } catch { return false; } })
     .map(([k, label]) => { const s = bloomberg(`${prefix}_${k}`); return { code: `${prefix === "clpcam" ? "SPC" : "SPC UF"} ${k}`, detail: label, duration: null, value: last(s), changes: changes(s, "bp"), spark: spark(s, 1), percentile: percentile(s) }; });
-  const dpfRows = [7, 30, 90, 180, 270, 360].map(n => {
-    const s = readJson(`historico_riskamerica/DPF_${n}.json`)[`DPF_${n}`] as { fecha: string[]; tir: (number | null)[] };
+  // Depósitos: ASW venc. = tasa anual − swap Cámara al plazo (DPF: tasa base 30 × 12 contra CLP; DPR: tasa real contra UF),
+  // igual que el Swap Spread del Interpolador de Depósitos. En CLP la curva parte en la TPM (día 0) para cubrir 7 días;
+  // en UF, bajo 3 meses se usa el plazo de 3 meses.
+  const depositRows = (kind: "DPF" | "DPR", tenors: number[]) => tenors.flatMap(n => {
+    let s: { fecha: string[]; tir: (number | null)[] };
+    try { s = readJson(`historico_riskamerica/${kind}_${n}.json`)[`${kind}_${n}`]; } catch { return []; }
     const ser = series(s.fecha.map((f, i) => [f, s.tir[i] as number]));
-    return { code: `DPF ${n} días`, detail: "Tasa mensual", duration: null, value: last(ser), changes: changes(ser, "bp"), spark: spark(ser, 1), percentile: percentile(ser) };
+    const date = lastDate(ser), value = last(ser), years = n / 365;
+    const pts = swapCurveOn(kind === "DPF" ? "clpcam" : "ufcam", date).map(c => ({ x: c.years, y: c.value }));
+    if (kind === "DPF") { const t = valueOn(tpm, date); if (t !== null) pts.unshift({ x: 0, y: t }); }
+    else if (pts.length && years < Math.min(...pts.map(p => p.x))) pts.unshift({ x: 0, y: pts.slice().sort((a, b) => a.x - b.x)[0].y });
+    const swap = lin(years, pts);
+    const annual = kind === "DPF" ? value * 12 : value;
+    return [{ code: `${kind} ${n} días`, detail: kind === "DPF" ? "Tasa base 30 días" : "Tasa real anual", duration: null, value,
+      changes: changes(ser, "bp"), spark: spark(ser, 1), percentile: percentile(ser), aswMaturity: swap === null ? null : (annual - swap) * 100 }];
   });
+  const dpfRows = depositRows("DPF", [7, 30, 90, 180, 270, 360]);
+  const dprRows = depositRows("DPR", [90, 180, 360]);
   const monitor = [
     { key: "BTP", label: "BTP", unit: "%" as const, rows: bondRows("BTP") },
     { key: "BTU", label: "BTU", unit: "%" as const, rows: bondRows("BTU") },
     { key: "SPC", label: "Swaps CLP", unit: "%" as const, rows: swapRows("clpcam") },
     { key: "SPCUF", label: "Swaps UF", unit: "%" as const, rows: swapRows("ufcam") },
     { key: "DPF", label: "DPF", unit: "% mensual" as const, rows: dpfRows },
+    { key: "DPR", label: "DPR", unit: "% real" as const, rows: dprRows },
   ];
 
   // Closing de derivados (ICAP): fecha más antigua entre sus archivos, para que se note si alguno quedó atrasado.

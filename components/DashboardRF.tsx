@@ -160,12 +160,14 @@ function Monitor({ monitor }: { monitor: DashboardData["monitor"] }) {
   const header = (key: SortKey, label: string) => <th><button className="dash-sort" onClick={() => setSort(s => ({ key, desc: s.key === key ? !s.desc : true }))}>{label}{sort.key === key ? (sort.desc ? " ▼" : " ▲") : ""}</button></th>;
   const digits = 3;
   const bondTab = group.key === "BTP" || group.key === "BTU";
+  const depositTab = group.key === "DPF" || group.key === "DPR";
   return <section className="panel dash-panel">
     <div className="panel-head" style={{ flexWrap: "wrap" }}><div><div className="eyebrow">Monitor</div><h2>Instrumentos</h2></div>
       <Segmented value={tab} options={monitor.map(m => [m.key, m.label] as [string, string])} onChange={k => { setTab(k); setSort({ key: "order", desc: false }); }} label="Grupo" /></div>
     <div className="table-wrap"><table className="dash-monitor">
-      <thead><tr>{header("order", "Instrumento")}{bondTab && <th>Dur.</th>}{header("value", group.unit === "%" ? "Tasa" : "Tasa mensual")}
+      <thead><tr>{header("order", "Instrumento")}{bondTab && <th>Dur.</th>}{header("value", group.unit === "% mensual" ? "Tasa mensual" : group.unit === "% real" ? "Tasa real" : "Tasa")}
         {bondTab && <>{header("aswDuration", "ASW dur.")}{header("aswMaturity", "ASW venc.")}{header("carry1d", "Carry 1d")}</>}
+        {depositTab && header("aswMaturity", "ASW venc.")}
         {header("d1", "1D")}{header("w1", "1S")}{header("m1", "1M")}{header("ytd", "YTD")}<th className="dash-spark-col">1 mes</th>{header("percentile", "Pctl 1a")}</tr></thead>
       <tbody>{rows.map(r => <tr key={r.code}>
         <td title={r.detail}><span className="strong">{r.code}</span>{bondTab && <div className="subcell">{r.detail}</div>}</td>
@@ -176,12 +178,13 @@ function Monitor({ monitor }: { monitor: DashboardData["monitor"] }) {
           <td className={tone(r.aswMaturity, false)}>{r.aswMaturity == null ? "—" : sgn(r.aswMaturity, 0)}</td>
           <td className={tone(r.carry1d, false)}>{r.carry1d == null ? "—" : sgn(r.carry1d, 2)}</td>
         </>}
+        {depositTab && <td className={tone(r.aswMaturity, false)}>{r.aswMaturity == null ? "—" : sgn(r.aswMaturity, 0)}</td>}
         {(["d1", "w1", "m1", "ytd"] as Period[]).map(p => <td key={p} className={tone(r.changes[p])}>{r.changes[p] == null ? "—" : sgn(r.changes[p]!, p === "ytd" ? 0 : 1)}</td>)}
         <td className="dash-spark-col"><Sparkline values={r.spark} width={120} height={24} /></td>
         <td><div className="dash-pctl"><div style={{ width: `${r.percentile ?? 0}%` }} /></div><span className="dash-pctl-label">{r.percentile == null ? "—" : Math.round(r.percentile)}</span></td>
       </tr>)}</tbody>
     </table></div>
-    <p className="dash-note">Cambios, ASW y carry en pb. ASW = TIR − swap Cámara interpolado por duración o por plazo al vencimiento (BTP contra CLP, BTU contra UF); positivo = bono rinde sobre el swap. Carry 1d = devengo diario de la TIR (más IPC del período UF en BTU) menos TPM, dividido por la duración, como en Mercados. Percentil: posición de la tasa dentro del último año (100 = máximo). Haz clic en los encabezados para ordenar.</p>
+    <p className="dash-note">Cambios, ASW y carry en pb. ASW = TIR − swap Cámara interpolado por duración o por plazo al vencimiento (BTP contra CLP, BTU contra UF); positivo = bono rinde sobre el swap. Carry 1d = devengo diario de la TIR (más IPC del período UF en BTU) menos TPM, dividido por la duración, como en Mercados. En depósitos, ASW venc. = tasa anual − swap Cámara al plazo: DPF (tasa base 30 × 12) contra CLP, con la TPM como punto de partida de la curva, y DPR (tasa real) contra UF. Percentil: posición de la tasa dentro del último año (100 = máximo). Haz clic en los encabezados para ordenar.</p>
   </section>;
 }
 
