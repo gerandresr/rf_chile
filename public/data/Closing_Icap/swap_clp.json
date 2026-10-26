@@ -1,10 +1,10 @@
 {
-  "fecha": "2026-10-22",
+  "fecha": "2026-10-23",
   "instrumento": "swap_clp",
   "datos": [
     {
       "Tenor": "1m",
-      "Mid": 4.52
+      "Mid": 4.525
     },
     {
       "Tenor": "2m",
@@ -12,79 +12,79 @@
     },
     {
       "Tenor": "3m",
-      "Mid": 4.55
+      "Mid": 4.555
     },
     {
       "Tenor": "6m",
-      "Mid": 4.615
+      "Mid": 4.645
     },
     {
       "Tenor": "9m",
-      "Mid": 4.725
+      "Mid": 4.75
     },
     {
       "Tenor": "1y",
-      "Mid": 4.83
+      "Mid": 4.86
     },
     {
       "Tenor": "1.5y",
-      "Mid": 4.995
+      "Mid": 5.025
     },
     {
       "Tenor": "2y",
-      "Mid": 5.01
+      "Mid": 5.04
     },
     {
       "Tenor": "3y",
-      "Mid": 5.185
+      "Mid": 5.21
     },
     {
       "Tenor": "4y",
-      "Mid": 5.325
+      "Mid": 5.345
     },
     {
       "Tenor": "5y",
-      "Mid": 5.43
+      "Mid": 5.445
     },
     {
       "Tenor": "6y",
-      "Mid": 5.53
+      "Mid": 5.545
     },
     {
       "Tenor": "7y",
-      "Mid": 5.605
+      "Mid": 5.63
     },
     {
       "Tenor": "8y",
-      "Mid": 5.67
+      "Mid": 5.685
     },
     {
       "Tenor": "9y",
-      "Mid": 5.74
+      "Mid": 5.75
     },
     {
       "Tenor": "10y",
-      "Mid": 5.8
+      "Mid": 5.81
     },
     {
       "Tenor": "12y",
-      "Mid": 5.86
+      "Mid": 5.87
     },
     {
       "Tenor": "15y",
-      "Mid": 5.91
+      "Mid": 5.925
     },
     {
       "Tenor": "20y",
-      "Mid": 5.915
+      "Mid": 5.93
     },
     {
       "Tenor": "25y",
-      "Mid": 5.965
+      "Mid": 5.975
     },
     {
       "Tenor": "30y",
-      "Mid": 5.985
+      "Mid": 5.97
     }
   ]
 }
