@@ -82,7 +82,7 @@ export function RecommendationsView({ reports }: { reports: Recommendations[] })
   const [open, setOpen] = useState<Record<string, boolean>>({});
   return <AppShell>
     <header className="page-head">
-      <div><div className="eyebrow">Trading Propietario</div><h1>Recomendaciones</h1><p>Ideas de trading en renta fija local, elaboradas con IA a partir de los datos del sitio.</p></div>
+      <div><div className="eyebrow">Trading Propietario</div><h1>Recomendaciones</h1><p>Ideas de trading en renta fija local a partir de los datos del sitio.</p></div>
       {reports[0] && <div className="asof"><span>Último informe</span><strong>{day(reports[0].fecha)}</strong></div>}
     </header>
     {/* Un desplegable por informe, del más nuevo al más antiguo; los niveles actuales se recalculan para todos. */}
