@@ -1,0 +1,170 @@
+{
+  "fecha": "2026-10-26",
+  "datosAl": "Bonos, swaps y closing de derivados al 23-oct-2026",
+  "resumen": [
+    "Tasas nominales siguen cerca de máximos: BTP 10 en 6,08% (+67 pb en el año, percentil 93 del último año) y curva BTP 2–10 en 103 pb (percentil 94 del último año).",
+    "El mercado sigue descontando alzas: la TPM esperada sube de 4,50% a 4,96% hacia agosto 2027 y el SPC 2 años está 54 pb sobre la TPM (percentil 97 de 3 años).",
+    "El shock de oferta se intensificó: Brent 117 USD (+94% en el año, +19 USD en un mes) y USD/CLP en 995, máximo del año. IPC 4,1% anual y 4,5% anualizado a 3 meses; la SAE sigue contenida (3,3% en 12 meses). Los seguros de inflación apuntan a IPC de 0,55% en octubre y 0,49% en noviembre.",
+    "Actividad débil: IMACEC −1,0% anual y desempleo 9,6%. Los modelos del sitio muestran la tensión: la regla de Taylor forward-looking pide una TPM cercana a 3,8%, mientras los swaps pagan 4,96% a septiembre 2027 (unos 115 pb sobre la regla); en cambio, el BTP 10 está solo 5 pb sobre su valor justo macro (z 0,5, neutral).",
+    "Compensación inflacionaria alta y subiendo en el tramo largo: BEI 10 años 3,27% (percentil 89) y 20 años 3,31% (percentil 92, +25 pb en un mes). Los BTU ya no están caros contra swaps UF: el ASW 10 años volvió a 32 pb (percentil 26 de 3 años).",
+    "Ideas del 21-oct: se cierran con objetivo alcanzado el valor relativo BTP 2034 (+10 pb) y el asset swap BTU 2038 (+13 pb); se cierra con ganancia el valor relativo BTU largo (+6 pb), porque ambos bonos volvieron a su curva. Siguen abiertas el fly 2–5–10 (+3 pb), el BEI 8 años corto (+2 pb), el BEI 2 años largo (−5 pb) y el pagador 1 año (−5 pb).",
+    "Postura: sin apuesta fuerte de duración. Mantenemos el fly de swaps, el par de inflación (largo BEI corto por carry de UF hasta enero, corto BEI largo) y un sesgo pagador táctico de baja convicción en el muy corto plazo. No hay hoy un desalineamiento claro de bonos contra la curva NSS (ningún z-score sobre 1,5)."
+  ],
+  "ideas": [
+    {
+      "id": "fly-spc-2-5-10",
+      "titulo": "Fly SPC 2–5–10: recibir 5 años contra 2 y 10 años",
+      "tipo": "Fly",
+      "conviccion": "Media",
+      "operacion": [
+        "Recibir SPC CLP 5 años (100% del riesgo)",
+        "Pagar SPC CLP 2 años (50% del DV01)",
+        "Pagar SPC CLP 10 años (50% del DV01)"
+      ],
+      "metrica": {
+        "nombre": "Fly 2×5a − 2a − 10a",
+        "terminos": [
+          {
+            "id": "bbg:clpcam_5y",
+            "w": 2
+          },
+          {
+            "id": "bbg:clpcam_2y",
+            "w": -1
+          },
+          {
+            "id": "bbg:clpcam_10y",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "baja"
+      },
+      "entrada": 4.0,
+      "objetivo": -8.0,
+      "stop": 14.0,
+      "horizonte": "3 meses",
+      "fundamentos": [
+        "El 5 años sigue siendo el punto más barato de la curva swap: el fly está en 4 pb, percentil 96 de 3 años y z-score +1,8 del último año (promedio 1 año: −7 pb; 3 años: −19 pb).",
+        "Cuando el z-score superó 1,5, el fly bajó en 13 semanas en el 71% de los casos (82 observaciones semanales, promedio −5,6 pb).",
+        "Desde el 21-oct bajó 3 pb; la tesis sigue intacta y es neutral a duración."
+      ],
+      "riesgos": [
+        "Que el mercado siga concentrando las alzas esperadas en el tramo de 5 años.",
+        "Observaciones semanales solapadas: la estadística sobreestima la independencia."
+      ]
+    },
+    {
+      "id": "bei-corto-carry-uf",
+      "titulo": "Largo inflación corta: comprar BTU 2 años contra BTP 2 años (carry de UF hasta el 9 de enero)",
+      "tipo": "Inflación",
+      "conviccion": "Media",
+      "operacion": [
+        "Comprar BTU0001028 (oct-2028)",
+        "Vender BTP0501028 (oct-2028), ~1,04 veces el nominal en pesos (neutral a DV01)"
+      ],
+      "metrica": {
+        "nombre": "BTP0501028 − BTU0001028 (≈ BEI 2 años)",
+        "terminos": [
+          {
+            "id": "BTP0501028",
+            "w": 1
+          },
+          {
+            "id": "BTU0001028",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "sube"
+      },
+      "entrada": 339.3,
+      "objetivo": 352.0,
+      "stop": 318.0,
+      "horizonte": "Hasta el 9-ene-2027",
+      "fundamentos": [
+        "Carry estacional: según los seguros de inflación, la UF sube 1,25% entre hoy y el 9 de enero (de 41.207 a 41.720, con IPC de octubre 0,55% y noviembre 0,49%), contra ~0,72% que implica una compensación de 3,39% anual: unos 28 pb de colchón en BEI.",
+        "El BEI 2 años (3,39%) sigue bajo la inflación que el mercado espera para los próximos 12 meses (3,65% según los seguros de inflación).",
+        "Brent en 117 USD y peso en máximos del año sostienen la inflación de corto plazo. Desde el 21-oct el par bajó 5 pb, pero el grueso del carry (IPC de octubre y noviembre) se devenga entre el 10 de noviembre y el 9 de enero."
+      ],
+      "riesgos": [
+        "IPC de octubre o noviembre bajo lo esperado.",
+        "Salir antes del período de IPC de diciembre (~0,1%), donde el carry de UF se vuelve casi nulo.",
+        "Liquidez del BTU cero cupón."
+      ]
+    },
+    {
+      "id": "pagar-spc-1y",
+      "titulo": "Sesgo táctico pagador: pagar SPC CLP 1 año",
+      "tipo": "Direccional",
+      "conviccion": "Baja",
+      "operacion": [
+        "Pagar SPC CLP 1 año"
+      ],
+      "metrica": {
+        "nombre": "SPC CLP 1 año",
+        "terminos": [
+          {
+            "id": "bbg:clpcam_1y",
+            "w": 1
+          }
+        ],
+        "unidad": "%",
+        "ganaSi": "sube"
+      },
+      "entrada": 4.86,
+      "objetivo": 5.1,
+      "stop": 4.72,
+      "horizonte": "3 meses",
+      "fundamentos": [
+        "Momentum de inflación: IPC 4,5% anualizado a 3 meses, Brent +19 USD en un mes y peso en 995.",
+        "Historia: cuando el SPC 2 años estuvo más de 50 pb sobre la TPM, siguió subiendo en las 13 semanas siguientes en el 73% de los casos (128 observaciones semanales desde 2015).",
+        "Treasuries cerca de 5,0% (percentil 90 del año): poco espacio para un alivio de tasas globales."
+      ],
+      "riesgos": [
+        "La regla de Taylor forward-looking pide una TPM bajo la actual (≈3,8%) y el mercado ya descuenta 46 pb de alzas: si el Banco Central ve el shock como transitorio, el tramo corto puede bajar fuerte.",
+        "Carry negativo: pagar 4,86% contra una TPM de 4,50% cuesta ~9 pb en 3 meses.",
+        "Desde el 21-oct el SPC 1 año bajó 4,5 pb: el stop se ajusta a 4,72%."
+      ]
+    },
+    {
+      "id": "bei-10-corto",
+      "titulo": "Corto inflación larga: comprar BTP 2035 y vender BTU 2035",
+      "tipo": "Inflación",
+      "conviccion": "Baja",
+      "operacion": [
+        "Comprar BTP0500335 (mar-2035)",
+        "Vender BTU0200335 (mar-2035), neutral a DV01"
+      ],
+      "metrica": {
+        "nombre": "BTP0500335 − BTU0200335 (≈ BEI 8 años)",
+        "terminos": [
+          {
+            "id": "BTP0500335",
+            "w": 1
+          },
+          {
+            "id": "BTU0200335",
+            "w": -1
+          }
+        ],
+        "unidad": "pb",
+        "ganaSi": "baja"
+      },
+      "entrada": 332.1,
+      "objetivo": 315.0,
+      "stop": 343.0,
+      "horizonte": "6 meses",
+      "fundamentos": [
+        "La compensación inflacionaria a 10 años (3,27%) está en el percentil 89 del último año y 27 pb sobre la meta de 3%; a 20 años (3,31%) en el percentil 92, tras subir 25 pb en un mes.",
+        "Un shock de petróleo debería afectar poco la inflación de largo plazo si el Banco Central mantiene su credibilidad.",
+        "Complementa la idea de inflación corta: largo BEI corto (carry de UF) y corto BEI largo (prima excesiva)."
+      ],
+      "riesgos": [
+        "Si el shock de petróleo se vuelve persistente, la prima por inflación de largo plazo puede seguir subiendo.",
+        "Carry negativo mientras el IPC mensual se mantenga alto."
+      ]
+    }
+  ],
+  "advertencia": "Ideas generadas automáticamente con inteligencia artificial a partir de los datos publicados en este sitio. Son material de análisis para la mesa, no constituyen asesoría de inversión ni una recomendación personalizada. Los niveles de entrada corresponden a la fecha de elaboración; los niveles actuales se recalculan con cada actualización de datos."
+}

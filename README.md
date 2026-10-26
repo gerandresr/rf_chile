@@ -24,6 +24,10 @@ Pestaña `/dashboard-rf` (`lib/dashboard.server.ts`, calculada al construir el s
 
 ## Modelos
 
+## Recomendaciones
+
+Pestaña `/recomendaciones` (`lib/recommendations.server.ts`, `components/RecommendationsView.tsx`). Un informe por fecha en `content/recomendaciones/AAAA-MM-DD.json` (`fecha`, `datosAl`, `resumen`, `ideas`, `advertencia`); se muestran como desplegables con solo la fecha, del más nuevo al más antiguo. Para cada idea, el nivel actual y el resultado desde la entrada se recalculan con los últimos datos al construir el sitio. Para un informe nuevo basta agregar otro archivo con la fecha del día.
+
 ## Interpolador de Depósitos
 
 En `/calculadoras`, debajo de Spread Bonos (`components/DepositInterpolator.tsx`, `lib/deposit-interpolation.ts`). Dos listas con el mismo formato: Depósitos CLP (DPF 7/30/90/180/270/360 días, tasa base 30 días, con equivalente anual ×12) y Depósitos UF (DPR 90/180/360 días, tasa real anual), leídas de `public/data/historico_riskamerica`. Usa el último día con todos los plazos, interpola linealmente por días y fuera del rango toma el plazo extremo. Si se ingresa la tasa de un depósito, reemplaza a la interpolada en todos los cálculos. **Swap Spread** (pb) = DPF: tasa base 30 × 12 − swap Cámara CLP; DPR: tasa real − swap Cámara UF; swaps del closing de derivados (`Closing_Icap/swap_clp.json`, `swap_uf.json`) interpolados linealmente por días corridos desde la fecha del closing (fuera de la curva, el plazo extremo). También por plazo en la tabla.

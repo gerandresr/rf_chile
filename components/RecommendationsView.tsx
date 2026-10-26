@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { AppShell } from "./AppShell";
 import type { IdeaWithLive, Recommendations } from "@/lib/recommendations.server";
 
@@ -26,7 +26,9 @@ function Spark({ values, entry, target, stop }: { values: number[]; entry: numbe
 }
 
 function IdeaCard({ idea }: { idea: IdeaWithLive }) {
-  const tone = idea.resultado == null ? "" : idea.resultado > 0 ? "rec-good" : idea.resultado < 0 ? "rec-bad" : "";
+  // Color según el resultado redondeado, para que un 0,0 por error de punto flotante no salga rojo.
+  const shown = idea.resultado == null ? null : Number(idea.resultado.toFixed(1));
+  const tone = shown == null ? "" : shown > 0 ? "rec-good" : shown < 0 ? "rec-bad" : "";
   const unit = idea.metrica.unidad === "%" ? "pb" : "pb";
   return <article className="panel rec-card">
     <div className="rec-card-head">
@@ -56,16 +58,12 @@ function IdeaCard({ idea }: { idea: IdeaWithLive }) {
   </article>;
 }
 
-export function RecommendationsView({ data }: { data: Recommendations }) {
+function Report({ data }: { data: Recommendations }) {
   const [filter, setFilter] = useState<"Todas" | "Alta" | "Media" | "Baja">("Todas");
   const ideas = [...data.ideas].sort((a, b) => ORDER[a.conviccion] - ORDER[b.conviccion]).filter(i => filter === "Todas" || i.conviccion === filter);
-  return <AppShell>
-    <header className="page-head">
-      <div><div className="eyebrow">Trading Propietario</div><h1>Recomendaciones</h1><p>Ideas de trading en renta fija local, elaboradas con IA a partir de los datos del sitio.</p></div>
-      <div className="asof"><span>Elaborado</span><strong>{day(data.fecha)}</strong></div>
-    </header>
+  return <div className="model-content">
     <section className="panel rec-summary">
-      <div className="panel-head"><div><div className="eyebrow"><Sparkles size={11} aria-hidden="true" /> {data.autor}</div><h2>Lectura de mercado</h2></div><span className="pill">Datos: {data.datosAl}</span></div>
+      <div className="panel-head"><h2>Lectura de mercado</h2><span className="pill">Datos: {data.datosAl}</span></div>
       <ul>{data.resumen.map(r => <li key={r}>{r}</li>)}</ul>
     </section>
     <div className="rec-toolbar">
@@ -77,5 +75,21 @@ export function RecommendationsView({ data }: { data: Recommendations }) {
     <div className="rec-grid">{ideas.map(i => <IdeaCard key={i.id} idea={i} />)}</div>
     {!ideas.length && <p className="dash-note">No hay ideas con convicción {filter.toLowerCase()}.</p>}
     <div className="model-notice"><strong>Advertencia.</strong><p>{data.advertencia}</p></div>
+  </div>;
+}
+
+export function RecommendationsView({ reports }: { reports: Recommendations[] }) {
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  return <AppShell>
+    <header className="page-head">
+      <div><div className="eyebrow">Trading Propietario</div><h1>Recomendaciones</h1><p>Ideas de trading en renta fija local, elaboradas con IA a partir de los datos del sitio.</p></div>
+      {reports[0] && <div className="asof"><span>Último informe</span><strong>{day(reports[0].fecha)}</strong></div>}
+    </header>
+    {/* Un desplegable por informe, del más nuevo al más antiguo; los niveles actuales se recalculan para todos. */}
+    {reports.map(r => <details key={r.fecha} className="panel model-disclosure" onToggle={e => { const isOpen = e.currentTarget.open; setOpen(o => ({ ...o, [r.fecha]: isOpen })); }}>
+      <summary><span>{day(r.fecha)}</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      {open[r.fecha] && <Report data={r} />}
+    </details>)}
+    {!reports.length && <p className="dash-note">Aún no hay informes.</p>}
   </AppShell>;
 }
