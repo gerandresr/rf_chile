@@ -105,7 +105,7 @@ export type MonitorRow = { code: string; detail: string; duration: number | null
   aswDuration?: number | null; aswMaturity?: number | null; carry1d?: number | null };
 export type CurveSet = { key: string; label: string; tenors: number[]; lines: { label: string; date: string; values: (number | null)[] }[]; points: { term: number; y: number; code: string }[] };
 export type DashboardData = {
-  asOf: { bonds: string; bloomberg: string; bcentral: string };
+  asOf: { bonds: string; bloomberg: string; bcentral: string; derivatives: string | null };
   ticker: TickerItem[];
   macro: { label: string; value: string; detail: string }[];
   benchmarks: BenchmarkRow[];
@@ -298,7 +298,11 @@ export function dashboardData(): DashboardData {
     { key: "DPF", label: "DPF", unit: "% mensual" as const, rows: dpfRows },
   ];
 
-  return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg, bcentral: lastDate(tpm) }, ticker, macro, benchmarks, benchmarkPapers: { BTP: benchmark.BTP ?? [], BTU: benchmark.BTU ?? [] }, curves, spreads, monitor };
+  // Closing de derivados (ICAP): fecha más antigua entre sus archivos, para que se note si alguno quedó atrasado.
+  const derivativeDates = readdirSync(path.join(DATA, "Closing_Icap")).filter(f => f.endsWith(".json")).flatMap(f => {
+    try { const fecha = (readJson(`Closing_Icap/${f}`) as { fecha?: string }).fecha; return typeof fecha === "string" ? [fecha] : []; } catch { return []; }
+  }).sort();
+  return { asOf: { bonds: lastBondDate, bloomberg: lastBloomberg, bcentral: lastDate(tpm), derivatives: derivativeDates[0] ?? null }, ticker, macro, benchmarks, benchmarkPapers: { BTP: benchmark.BTP ?? [], BTU: benchmark.BTU ?? [] }, curves, spreads, monitor };
 }
 
 /** Histórico diario de benchmarks a plazo constante; misma selección e interpolación
