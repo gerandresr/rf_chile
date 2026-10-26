@@ -2,8 +2,9 @@ import { readFileSync, readdirSync } from "fs";
 import path from "path";
 import { impliedTpmPath, estimateSpreadBp, forwardHistory, type TpmPathResult, type ForwardHistory, type SwapQuote } from "./tpm-path";
 import { carryRolldown, maturityFromCode, type BondInput } from "./carry";
-import { fairValue, type FvBond, type FvResult } from "./nss";
+import { fairValue, breakeven, type FvBond, type FvResult } from "./nss";
 import { macroFairValue, type MacroResult } from "./fair-value-macro";
+import { expectedInflation12m, monthOf, type TaylorForwardInput, type MonthValue } from "./taylor-forward";
 
 // Lectura en el servidor (al construir el sitio). Los archivos de Bloomberg vienen con BOM.
 const DATA = path.join(process.cwd(), "public", "data");
@@ -142,5 +143,64 @@ export function macroFairValueData(): MacroFairValueData {
     return { BTP: run("nom10"), BTU: run("real10") };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "No fue posible estimar el fair value direccional." };
+  }
+}
+
+export type TaylorForwardData = TaylorForwardInput | { error: string };
+
+/** Insumos de la Taylor forward-looking: forwards de IPC ICAP, breakeven swap 1a, TPM mensual y trayectoria swap. */
+export function taylorForwardData(): TaylorForwardData {
+  try {
+    // IPC mensual observado + esperado (cada contrato ICAP corresponde al IPC de dos meses antes, como en carry).
+    const monthly = readJson("historico_bcentral/datos-mensuales.json") as { fecha: string; ipc_mom: number | null; ipc_yoy: number | null }[];
+    const ipc = new Map(monthly.filter(r => typeof r.ipc_mom === "number").map(r => [r.fecha, r.ipc_mom as number]));
+    const icap = readJson("Closing_Icap/inflacion.json") as { fecha: string; datos: { Tenor: number; IPC: number | null }[] };
+    for (const r of icap.datos) {
+      const d = new Date(r.Tenor);
+      const month = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 2, 1)).toISOString().slice(0, 10);
+      if (!ipc.has(month) && typeof r.IPC === "number") ipc.set(month, r.IPC);
+    }
+    const path = tpmModelData();
+    if ("error" in path) throw new Error(path.error);
+    const asOf = path.path.valuationDate;
+    const expected12m = expectedInflation12m(ipc, monthOf(asOf));
+
+    // Historia de expectativas: breakeven swap a 1 año (Cámara CLP vs. UF), promedio mensual. Calza con el
+    // horizonte de 12 meses y tiene historia desde 2015; el breakeven NSS a 2 años extrapola antes de 2025.
+    const clp = bloomberg("clpcam_1y"), uf = bloomberg("ufcam_1y");
+    const sums = new Map<string, { s: number; n: number }>();
+    for (const [date, c] of clp) {
+      const u = uf.get(date);
+      if (typeof u !== "number") continue;
+      const m = monthOf(date), acc = sums.get(m) ?? { s: 0, n: 0 };
+      acc.s += breakeven(c, u); acc.n++; sums.set(m, acc);
+    }
+    const expectedHistory: MonthValue[] = [...sums].sort(([x], [y]) => x.localeCompare(y)).map(([month, a]) => ({ month, value: a.s / a.n }));
+
+    // TPM de cierre de cada mes.
+    const daily = (readJson("historico_bcentral/datos-diarios.json") as { fecha: string; tpm: number | null }[]).filter(r => typeof r.tpm === "number").sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const closes = new Map<string, number>();
+    for (const r of daily) closes.set(monthOf(r.fecha), r.tpm as number);
+    const tpmMonthly = [...closes].map(([month, value]) => ({ month, value }));
+    const currentTpm = daily[daily.length - 1].tpm as number;
+
+    // TPM de mercado al cierre de cada mes futuro: última reunión con efecto hasta fin de mes.
+    const market: MonthValue[] = [];
+    const meetings = [...path.path.path].sort((a, b) => a.effective.localeCompare(b.effective));
+    for (let h = 0; h <= 24; h++) {
+      const d = new Date(`${monthOf(asOf)}T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() + h);
+      const month = d.toISOString().slice(0, 10);
+      const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).toISOString().slice(0, 10);
+      if (end > path.path.horizonEnd) break;
+      const last = meetings.filter(m => m.effective <= end).at(-1);
+      market.push({ month, value: last ? last.expectedTpm : path.path.currentTpm });
+    }
+    const lastYoy = [...monthly].reverse().find(r => typeof r.ipc_yoy === "number");
+    return {
+      asOf, icapDate: icap.fecha, expected12m, expectedHistory, expectedHistorySource: "Breakeven swap Cámara 1 año (CLP vs. UF)", tpmMonthly, market, marketSource: path.source, currentTpm,
+      lastIpcYoy: lastYoy ? { month: lastYoy.fecha, value: lastYoy.ipc_yoy as number } : null,
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "No fue posible preparar la regla forward-looking." };
   }
 }

@@ -24,6 +24,15 @@ Pestaña `/dashboard-rf` (`lib/dashboard.server.ts`, calculada al construir el s
 
 ## Modelos
 
+## Regla de Taylor forward-looking (expectativas de mercado)
+
+Desplegable en `/modelos` debajo de la Regla de Taylor (`lib/taylor-forward.ts`, `components/TaylorForwardModel.tsx`, insumos en `taylorForwardData()` de `lib/market-models.server.ts`). Misma regla y parámetros, pero con inflación esperada a 12 meses en vez del IPC efectivo, y comparada con la TPM implícita en los swaps Cámara.
+
+- Proyección: inflación esperada de cada mes futuro = variación compuesta del IPC de los 12 meses siguientes, con IPC observado y forwards ICAP (`Closing_Icap/inflacion.json`, cada contrato corresponde al IPC de dos meses antes). Brecha = −Okun × (desempleo − NAIRU) del último dato, cerrándose según su AR(1) mensual sin constante de los últimos 120 meses. Con inercia: parte de la TPM actual. Mercado: trayectoria por reunión de `lib/tpm-path.ts` llevada al cierre de cada mes, hasta el último plazo cotizado.
+- Historia provisoria: inflación esperada = breakeven swap Cámara 1 año (`clpcam_1y` vs `ufcam_1y`), promedio mensual desde 2015. El breakeven NSS a 2 años no sirve antes de 2025 porque la base histórica no tiene bonos cortos y la curva extrapola. Reemplazar por la Encuesta de Expectativas Económicas (inflación a 11 meses) cuando esté en `datos-mensuales.json`.
+
+Validación: `node --experimental-strip-types --test tests/taylor-forward.test.mjs`.
+
 ## Modelo Fair Value · Valor relativo (curva NSS)
 
 Responde qué bono tener dentro de la curva. Desplegable en `/modelos` (`lib/nss.ts`, `components/NssFairValueModel.tsx`, calculado al construir el sitio con `historico_riskamerica`). Cada fecha de los últimos ~2 años ajusta una curva Nelson-Siegel-Svensson a los BTP y otra a los BTU sobre TIR: grilla de (τ1, τ2) con τ2 ≥ 1,5·τ1, mínimos cuadrados en β y una segunda pasada con pesos de Huber. Ajustan solo bonos con cupón y más de 1 año al vencimiento; los cero cupón se comparan pero no definen la curva y los menores a 1 año se omiten (estacionalidad del IPC en BTU).
