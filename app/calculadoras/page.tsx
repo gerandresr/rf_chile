@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/AppShell";
 import { BondSpreadCalculators } from "@/components/BondSpreadCalculators";
+import { DepositInterpolator } from "@/components/DepositInterpolator";
 
 export default function CalculadorasPage() {
   return (
@@ -11,6 +12,7 @@ export default function CalculadorasPage() {
         </div>
       </header>
       <BondSpreadCalculators />
+      <DepositInterpolator />
     </AppShell>
   );
 }

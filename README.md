@@ -24,6 +24,12 @@ Pestaña `/dashboard-rf` (`lib/dashboard.server.ts`, calculada al construir el s
 
 ## Modelos
 
+## Interpolador de Depósitos
+
+En `/calculadoras`, debajo de Spread Bonos (`components/DepositInterpolator.tsx`, `lib/deposit-interpolation.ts`). Dos listas con el mismo formato: Depósitos CLP (DPF 7/30/90/180/270/360 días, tasa base 30 días, con equivalente anual ×12) y Depósitos UF (DPR 90/180/360 días, tasa real anual), leídas de `public/data/historico_riskamerica`. Usa el último día con todos los plazos, interpola linealmente por días y fuera del rango toma el plazo extremo. Si se ingresa la tasa de un depósito, muestra su spread en pb (DPF en pb base 30 y su equivalente anual).
+
+Validación: `node --experimental-strip-types --test tests/deposit-interpolation.test.mjs`.
+
 ## Regla de Taylor forward-looking (expectativas de mercado)
 
 Desplegable en `/modelos` debajo de la Regla de Taylor (`lib/taylor-forward.ts`, `components/TaylorForwardModel.tsx`, insumos en `taylorForwardData()` de `lib/market-models.server.ts`). Misma regla y parámetros, pero con inflación esperada a 12 meses en vez del IPC efectivo, y comparada con la TPM implícita en los swaps Cámara.
