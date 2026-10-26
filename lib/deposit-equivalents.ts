@@ -89,3 +89,49 @@ export function depositEquivalents(kind: "DPF" | "DPR", rate: number, days: numb
     ufAtMaturity: ufT, forward: fwd,
   };
 }
+
+// ---------- Swap spread ----------
+export type SwapCurveFile = { fecha: string; datos: { Tenor: string; Mid: number | null }[] };
+export type SwapPoint = { days: number; rate: number };
+
+const tenorMonths = (tenor: string) => {
+  const m = tenor.trim().toLowerCase().match(/^([\d.]+)\s*([my])$/);
+  return m ? Math.round(Number(m[1]) * (m[2] === "y" ? 12 : 1)) : null;
+};
+const addMonthsIso = (date: string, months: number) => {
+  const d = new Date(`${date}T00:00:00Z`), dayOfMonth = d.getUTCDate();
+  d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + months);
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(dayOfMonth, last));
+  return d.toISOString().slice(0, 10);
+};
+
+/** Curva swap Cámara (tasa ACT/360) por días corridos desde la fecha del closing. */
+export function swapCurve(file: SwapCurveFile): SwapPoint[] {
+  return file.datos.flatMap(r => {
+    const months = tenorMonths(r.Tenor);
+    if (months === null || typeof r.Mid !== "number" || !Number.isFinite(r.Mid)) return [];
+    return [{ days: Math.round((time(addMonthsIso(file.fecha, months)) - time(file.fecha)) / DAY), rate: r.Mid }];
+  }).sort((a, b) => a.days - b.days);
+}
+
+/** Swap al plazo: lineal por días; fuera del rango, el plazo extremo (marcado). */
+export function swapAt(days: number, curve: SwapPoint[]) {
+  if (!curve.length || !Number.isFinite(days) || days <= 0) return null;
+  const first = curve[0], last = curve[curve.length - 1];
+  if (days <= first.days) return { rate: first.rate, extrapolated: days < first.days };
+  if (days >= last.days) return { rate: last.rate, extrapolated: days > last.days };
+  for (let i = 1; i < curve.length; i++) {
+    const a = curve[i - 1], b = curve[i];
+    if (days <= b.days) return { rate: a.rate + (b.rate - a.rate) * (days - a.days) / (b.days - a.days), extrapolated: false };
+  }
+  return null;
+}
+
+/** Swap spread en pb: DPF (tasa base 30 × 12) − swap CLP; DPR (tasa real anual) − swap UF. */
+export function depositSwapSpread(kind: "DPF" | "DPR", rate: number, days: number, curve: SwapPoint[]) {
+  const swap = swapAt(days, curve);
+  if (!swap || !Number.isFinite(rate)) return null;
+  const annual = kind === "DPF" ? rate * 12 : rate;
+  return { spreadBp: 100 * (annual - swap.rate), swap: swap.rate, annual, extrapolated: swap.extrapolated };
+}

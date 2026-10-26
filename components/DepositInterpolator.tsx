@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, Calculator, PiggyBank } from "lucide-react";
 import { DEPOSIT_TENORS, interpolateDeposit, latestDepositCurve, type DepositCurve, type DepositKind } from "@/lib/deposit-interpolation";
-import { depositEquivalents, equivalenceContext, type EquivalenceContext, type InflationInsurance, type NdfCurve } from "@/lib/deposit-equivalents";
+import { depositEquivalents, depositSwapSpread, equivalenceContext, swapCurve, type EquivalenceContext, type InflationInsurance, type NdfCurve, type SwapCurveFile, type SwapPoint } from "@/lib/deposit-equivalents";
 
 const fmt = (digits: number) => new Intl.NumberFormat("es-CL", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const DIGITS: Record<DepositKind, number> = { DPF: 3, DPR: 2 };
@@ -22,7 +22,7 @@ const bp = (value: number | null, digits = 0) => {
 };
 const day = (date: string) => new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
 
-function DepositCalculator({ kind, curve, status, ctx }: { kind: DepositKind; curve: DepositCurve | null; status: "loading" | "ready" | "error"; ctx: EquivalenceContext | null }) {
+function DepositCalculator({ kind, curve, status, ctx, swaps }: { kind: DepositKind; curve: DepositCurve | null; status: "loading" | "ready" | "error"; ctx: EquivalenceContext | null; swaps: SwapPoint[] | null }) {
   const [daysText, setDaysText] = useState("");
   const [rateText, setRateText] = useState("");
   const digits = DIGITS[kind];
@@ -31,9 +31,10 @@ function DepositCalculator({ kind, curve, status, ctx }: { kind: DepositKind; cu
   const entered = parseInput(rateText);
   const result = curve ? interpolateDeposit(days, curve.points) : null;
   const base = result?.rate ?? null;
-  const spread = base !== null && entered !== null ? (entered - base) * 100 : null;
-  // Equivalentes de la tasa ingresada o, si no hay, de la interpolada.
+  // Si se ingresa la tasa del depósito, reemplaza a la interpolada en todos los cálculos.
   const subject = entered ?? base;
+  const swapSpread = swaps && subject !== null && days !== null ? depositSwapSpread(kind, subject, days, swaps) : null;
+  const swapOf = (rate: number, d: number) => (swaps ? depositSwapSpread(kind, rate, d, swaps) : null);
   const eq = ctx && subject !== null && days !== null ? depositEquivalents(kind, subject, days, ctx) : null;
   const eqOf = (rate: number, d: number) => (ctx ? depositEquivalents(kind, rate, d, ctx) : null);
   const otherLabel = isDpf ? "Equivalente UF (% real anual)" : "Equivalente pesos (% base 30 días)";
@@ -60,18 +61,19 @@ function DepositCalculator({ kind, curve, status, ctx }: { kind: DepositKind; cu
 
         <div className="bond-calculator-results" aria-live="polite">
           <div className="bond-calculator-result">
-            <span>Tasa interpolada</span>
-            <strong>{pct(base, digits)}</strong>
+            <span>{entered !== null ? "Tasa del depósito" : "Tasa interpolada"}</span>
+            <strong>{pct(subject, digits)}</strong>
           </div>
           <div className="bond-calculator-result bond-calculator-result-primary">
-            <span>Spread</span>
-            <strong>{bp(spread, isDpf ? 1 : 0)}</strong>
+            <span>Swap Spread{swapSpread ? ` · vs swap ${isDpf ? "CLP" : "UF"} ${fmt(2).format(swapSpread.swap)}%` : ""}</span>
+            <strong>{bp(swapSpread?.spreadBp ?? null)}</strong>
           </div>
         </div>
         <p className="bond-calculator-source">
-          Curva {kind} · interpolación lineal por días
+          {entered !== null ? <>Tasa ingresada{base !== null && <span> · curva {kind} a ese plazo: {pct(base, digits)}</span>}</> : <>Curva {kind} · interpolación lineal por días
           {result && result.left !== result.right && <span> · entre {result.left.days} y {result.right.days} días</span>}
-          {result?.extrapolated && <span> · fuera del rango cotizado ({curve!.points[0].days}–{curve!.points[curve!.points.length - 1].days} días): se usa el plazo extremo</span>}
+          {result?.extrapolated && <span> · fuera del rango cotizado ({curve!.points[0].days}–{curve!.points[curve!.points.length - 1].days} días): se usa el plazo extremo</span>}</>}
+          {swapSpread && <span> · Swap Spread = {isDpf ? "tasa × 12" : "tasa"} ({fmt(2).format(swapSpread.annual)}%) − swap Cámara {isDpf ? "CLP" : "UF"} interpolado al plazo{swapSpread.extrapolated ? " (plazo fuera de la curva swap: se usa el extremo)" : ""}</span>}
           {status === "loading" && <span> · Cargando cierre…</span>}
           {status === "error" && <span> · No se pudieron cargar los datos.</span>}
         </p>
@@ -93,9 +95,9 @@ function DepositCalculator({ kind, curve, status, ctx }: { kind: DepositKind; cu
         </p>
 
         {curve && <div className="table-wrap" style={{ marginTop: 14 }}><table>
-          <thead><tr><th>Plazo</th><th>{isDpf ? "Tasa base 30 días" : "Tasa real anual"}</th><th>{isDpf ? "Equiv. UF" : "Equiv. pesos (b30)"}</th><th>Equiv. USD</th></tr></thead>
+          <thead><tr><th>Plazo</th><th>{isDpf ? "Tasa base 30 días" : "Tasa real anual"}</th><th>Swap Spread</th><th>{isDpf ? "Equiv. UF" : "Equiv. pesos (b30)"}</th><th>Equiv. USD</th></tr></thead>
           <tbody>{curve.points.map(p => <tr key={p.days} style={result && (p === result.left || p === result.right) ? { background: "#eef3fb" } : undefined}>
-            <td className="strong">{p.days} días</td><td>{pct(p.rate, digits)}</td><td>{other(eqOf(p.rate, p.days))}</td><td>{(() => { const e = eqOf(p.rate, p.days); return e ? pct(e.usd, 2) : "—"; })()}</td>
+            <td className="strong">{p.days} días</td><td>{pct(p.rate, digits)}</td><td>{bp(swapOf(p.rate, p.days)?.spreadBp ?? null)}</td><td>{other(eqOf(p.rate, p.days))}</td><td>{(() => { const e = eqOf(p.rate, p.days); return e ? pct(e.usd, 2) : "—"; })()}</td>
           </tr>)}</tbody>
         </table></div>}
       </div>
@@ -107,6 +109,7 @@ export function DepositInterpolator() {
   const [curves, setCurves] = useState<Partial<Record<DepositKind, DepositCurve | null>>>({});
   const [error, setError] = useState(false);
   const [ctx, setCtx] = useState<EquivalenceContext | null>(null);
+  const [swaps, setSwaps] = useState<Record<DepositKind, SwapPoint[]> | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -133,6 +136,10 @@ export function DepositInterpolator() {
         if (!controller.signal.aborted && typeof spot === "number") setCtx(equivalenceContext(insurance, ndf, ipc, spot));
       })
       .catch(() => { /* sin equivalentes; el interpolador sigue funcionando */ });
+    // Curvas swap Cámara del closing: CLP para DPF (tasa × 12) y UF para DPR.
+    Promise.all([json("/data/Closing_Icap/swap_clp.json"), json("/data/Closing_Icap/swap_uf.json")])
+      .then(([clp, uf]: [SwapCurveFile, SwapCurveFile]) => { if (!controller.signal.aborted) setSwaps({ DPF: swapCurve(clp), DPR: swapCurve(uf) }); })
+      .catch(() => { /* sin swap spread */ });
     Promise.all([load("DPF"), load("DPR")])
       .then(([dpf, dpr]) => { if (!controller.signal.aborted) setCurves({ DPF: dpf, DPR: dpr }); })
       .catch(() => { if (!controller.signal.aborted) setError(true); });
@@ -152,7 +159,7 @@ export function DepositInterpolator() {
       <div className="calculator-group-content">
         <p className="calculator-group-intro">
           Ingresa el plazo en días para obtener la tasa interpolada de la curva de depósitos a plazo y, si quieres,
-          la tasa de tu depósito para ver su spread y sus equivalentes. DPF en pesos (tasa base 30 días) y DPR en UF (tasa real anual).
+          la tasa de tu depósito, que reemplaza a la interpolada, para ver su swap spread y sus equivalentes. DPF en pesos (tasa base 30 días) y DPR en UF (tasa real anual).
           Los equivalentes usan el closing de derivados: seguros de inflación para la UF y puntos forward para el dólar.
         </p>
         <div className="calculator-data-date" aria-live="polite">
@@ -161,8 +168,8 @@ export function DepositInterpolator() {
           {error && "No se pudieron cargar las curvas de depósitos."}
         </div>
         <div className="bond-calculator-list">
-          <DepositCalculator kind="DPF" curve={curves.DPF ?? null} status={status} ctx={ctx} />
-          <DepositCalculator kind="DPR" curve={curves.DPR ?? null} status={status} ctx={ctx} />
+          <DepositCalculator kind="DPF" curve={curves.DPF ?? null} status={status} ctx={ctx} swaps={swaps?.DPF ?? null} />
+          <DepositCalculator kind="DPR" curve={curves.DPR ?? null} status={status} ctx={ctx} swaps={swaps?.DPR ?? null} />
         </div>
       </div>
     </details>
