@@ -47,3 +47,16 @@ test("cierre real del 23 oct 2026: valores revisados con el usuario", () => {
   const r = depositEquivalents("DPR", 1.12, 250, ctx);
   close(r.clp30, 0.462, 0.001); close(r.usd, 5.89, 0.01);
 });
+
+import { swapCurve, swapAt, depositSwapSpread } from "../lib/deposit-equivalents.ts";
+
+test("swap spread: DPF ×12 contra swap CLP y DPR directo contra swap UF", () => {
+  const clp = swapCurve({ fecha: "2026-10-23", datos: [{ Tenor: "1m", Mid: 4.5 }, { Tenor: "3m", Mid: 4.6 }, { Tenor: "1.5y", Mid: 5 }] });
+  assert.deepEqual(clp.map(p => p.days), [31, 92, 548]);
+  close(swapAt(61.5, clp).rate, 4.55, 1e-12);
+  const s = depositSwapSpread("DPF", 0.39, 92, clp);
+  close(s.annual, 4.68, 1e-12); close(s.spreadBp, 8, 1e-9); assert.equal(s.extrapolated, false);
+  const uf = swapCurve({ fecha: "2026-10-23", datos: [{ Tenor: "3m", Mid: -1.33 }, { Tenor: "6m", Mid: 0.28 }] });
+  const r = depositSwapSpread("DPR", -0.07, 90, uf);
+  close(r.spreadBp, 126, 1e-9); assert.equal(r.extrapolated, true);
+});
