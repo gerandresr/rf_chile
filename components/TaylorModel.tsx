@@ -11,7 +11,7 @@ export type ActivityGaps = { smoothed: Record<string, number>; filtered: Record<
 const number = (value: number, digits = 2) => new Intl.NumberFormat("es-CL", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
 const signed = (value: number, digits = 2) => `${value > 0 ? "+" : ""}${number(value, digits)}`;
 const month = (date: string, long = false) => new Intl.DateTimeFormat("es-CL", { month: long ? "long" : "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`));
-const controls: { key: keyof TaylorParameters; label: string; min: number; max: number; step: number }[] = [
+export const controls: { key: keyof TaylorParameters; label: string; min: number; max: number; step: number }[] = [
   { key: "neutralNominal", label: "TPM neutral (%)", min: -5, max: 20, step: 0.25 },
   { key: "inflationTarget", label: "Meta de inflación (%)", min: 0, max: 15, step: 0.25 },
   { key: "inflationWeight", label: "Peso brecha de inflación", min: 0, max: 5, step: 0.25 },

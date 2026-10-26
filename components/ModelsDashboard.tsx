@@ -11,7 +11,8 @@ import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
 import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import { CarryModel } from "./CarryModel";
-import type { CarryModelData, FairValueModelData, MacroFairValueData } from "@/lib/market-models.server";
+import type { CarryModelData, FairValueModelData, MacroFairValueData, TaylorForwardData } from "@/lib/market-models.server";
+import { TaylorForwardModel } from "./TaylorForwardModel";
 import { NssFairValueModel } from "./NssFairValueModel";
 import { MacroFairValueModel } from "./MacroFairValueModel";
 import { NairuPhillipsModel } from "./NairuPhillipsModel";
@@ -20,7 +21,7 @@ import type { PhillipsModelData } from "@/lib/nairu-phillips.server";
 // GARCH y Técnicos para BTP/BTU están ocultos; cambiar a true para mostrarlos de nuevo.
 const SHOW_MARKET_MODELS = false;
 
-export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue }: { carry: CarryModelData; phillips: PhillipsModelData; fairValue: FairValueModelData; macroFairValue: MacroFairValueData }) {
+export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue, taylorForward }: { carry: CarryModelData; phillips: PhillipsModelData; fairValue: FairValueModelData; macroFairValue: MacroFairValueData; taylorForward: TaylorForwardData }) {
   const [nairu, setNairu] = useState(8.16);
   const [okun, setOkun] = useState(2);
   const gaps = useMemo(() => ({
@@ -33,6 +34,7 @@ export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue }: 
   const [macroFairOpen, setMacroFairOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [taylorOpen, setTaylorOpen] = useState(false);
+  const [taylorForwardOpen, setTaylorForwardOpen] = useState(false);
   const [garchOpen, setGarchOpen] = useState(false);
   const [backtestOpen, setBacktestOpen] = useState(false);
   const [oscillatorOpen, setOscillatorOpen] = useState<Partial<Record<Oscillator, boolean>>>({});
@@ -48,6 +50,10 @@ export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue }: 
         <div className="model-content"><p>Brecha de actividad de la regla: supuesto propio, independiente del modelo NAIRU de arriba.</p><div className="taylor-controls"><label>NAIRU supuesta (%)<input type="number" min="0" max="30" step="0.01" value={nairu} onChange={e => { const v = e.currentTarget.valueAsNumber; if (Number.isFinite(v) && v >= 0 && v <= 30) setNairu(v); }} /></label><label>Coeficiente de Okun (% de actividad por pp de desempleo)<input type="number" min="0" max="10" step="0.1" value={okun} onChange={e => { const v = e.currentTarget.valueAsNumber; if (Number.isFinite(v) && v >= 0 && v <= 10) setOkun(v); }} /></label></div>{recent && <p className="model-caption">Último desempleo registrado: {recent.desempleo!.toFixed(2).replace(".", ",")}% ({recent.fecha}). Brecha de actividad aproximada: {(-okun * (recent.desempleo! - nairu)).toFixed(2).replace(".", ",")}%, calculada como −Okun × (desempleo − NAIRU supuesta).</p>}</div>
         <TaylorModel gaps={gaps} nairu={nairu} okun={okun} />
       </>}
+    </details>
+    <details className="panel model-disclosure" onToggle={(event) => setTaylorForwardOpen(event.currentTarget.open)}>
+      <summary><span>Regla de Taylor forward-looking (expectativas de mercado)</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      {taylorForwardOpen && <TaylorForwardModel data={taylorForward} gaps={gaps.filtered} nairu={nairu} okun={okun} />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setCarryOpen(event.currentTarget.open)}>
       <summary><span>Carry y roll-down BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>
