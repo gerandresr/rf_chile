@@ -56,7 +56,7 @@
         "title": "Posiciones de no residentes en mercado local",
         "subtitle": "{series:inv}",
         "source": "Fuente: Banco Central.",
-        "period": "1y",
+        "period": "5y",
         "legend": "bottom",
         "lastValue": true,
         "series": [

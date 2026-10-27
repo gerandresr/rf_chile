@@ -566,7 +566,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     {recommended.length > 0 && <section className="panel cb-block cb-recommended-top">
       <h2>Gráficos recomendados</h2>
       <p className="db-hint">Empieza con un gráfico preparado y personalízalo con tus propias series y anotaciones.</p>
-      <div className="cb-recs">{recommended.map(r => <button key={r.nombre} className="cb-rec" onClick={() => { setConfig({ ...DEFAULT_CONFIG, annotations: [], ...r.config, period: "1y", from: "", to: "" } as Config); window.history.replaceState(null, "", window.location.pathname); flash(`Abierto “${r.nombre}”.`); }}>
+      <div className="cb-recs">{recommended.map(r => <button key={r.nombre} className="cb-rec" onClick={() => { setConfig({ ...DEFAULT_CONFIG, annotations: [], ...r.config, period: r.config.period ?? "1y", from: "", to: "" } as Config); window.history.replaceState(null, "", window.location.pathname); flash(`Abierto “${r.nombre}”.`); }}>
         <strong>{r.nombre}</strong>{r.config.subtitle && <span>{resolveText(r.config.subtitle, r.config.series ?? [])}</span>}
       </button>)}</div>
     </section>}
