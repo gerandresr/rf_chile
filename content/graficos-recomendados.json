@@ -99,6 +99,57 @@
         ],
         "annotations": []
       }
+    },
+    {
+      "nombre": "Retorno USDCLP vs BTP30",
+      "config": {
+        "title": "Retorno USDCLP vs BTP30",
+        "subtitle": "",
+        "source": "Fuente: Bloomberg, Mercado.",
+        "period": "1y",
+        "legend": "bottom",
+        "lastValue": true,
+        "series": [
+          {
+            "uid": "usdclp",
+            "label": "USDCLP",
+            "source": {
+              "kind": "catalog",
+              "leg": {
+                "id": "bbg:usdclp",
+                "field": "valor"
+              }
+            },
+            "type": "line",
+            "color": "#2f6fed",
+            "width": 2,
+            "dash": "solid",
+            "axis": "left",
+            "transform": "base100",
+            "visible": true
+          },
+          {
+            "uid": "btp30",
+            "label": "BTP0470930 precio (× −1)",
+            "source": {
+              "kind": "catalog",
+              "leg": {
+                "id": "BTP0470930",
+                "field": "precio"
+              }
+            },
+            "type": "line",
+            "color": "#d94b4b",
+            "width": 2,
+            "dash": "solid",
+            "axis": "right",
+            "transform": "fromStart",
+            "visible": true,
+            "inverted": true
+          }
+        ],
+        "annotations": []
+      }
     }
   ]
 }
