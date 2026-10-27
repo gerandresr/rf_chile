@@ -58,11 +58,12 @@ const STORAGE = "rf-graficos-guardados";
 /**
  * Textos dinámicos en título y subtítulo: {series} = nombres de las series visibles ("WTI y Brent")
  * y {s} = "s" si hay más de una serie visible (para plurales: "Contrato{s} de {series}").
+ * {series:inv} = las mismas series en orden inverso (en barras apiladas, de arriba hacia abajo).
  */
 function resolveText(text: string, series: { label: string; visible: boolean }[]) {
   const names = series.filter(s => s.visible).map(s => s.label);
-  const list = names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}`;
-  return text.replace(/\{series\}/g, list).replace(/\{s\}/g, names.length > 1 ? "s" : "");
+  const join = (n: string[]) => n.length <= 1 ? n.join("") : `${n.slice(0, -1).join(", ")} y ${n[n.length - 1]}`;
+  return text.replace(/\{series:inv\}/g, join([...names].reverse())).replace(/\{series\}/g, join(names)).replace(/\{s\}/g, names.length > 1 ? "s" : "");
 }
 
 const DEFAULT_CONFIG: Config = {
@@ -659,7 +660,19 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                   } : undefined;
                   if (s.type === "bar") return <Bar key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} fill={s.color} isAnimationActive={false} />;
                   // Barras apiladas: las series de este tipo en el mismo eje se suman una sobre otra (positivas hacia arriba, negativas hacia abajo).
-                  if (s.type === "stacked") return <Bar key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} fill={s.color} stackId={`stack-${s.axis}`} isAnimationActive={false} />;
+                  // La etiqueta del último dato va solo en la barra de más arriba y muestra la suma de las series apiladas visibles.
+                  if (s.type === "stacked") {
+                    const stack = visible.filter(o => o.type === "stacked" && o.axis === s.axis);
+                    const top = stack[stack.length - 1]?.uid === s.uid;
+                    const stackLabel = top && lastLabel ? (p: { x?: number | string; y?: number | string; width?: number | string; index?: number }) => {
+                      if (p.index !== lastIdx) return <g />;
+                      const row = rows[lastIdx] as Record<string, unknown>;
+                      const total = stack.reduce((acc, o) => acc + (typeof row[o.uid] === "number" ? (row[o.uid] as number) : 0), 0);
+                      const text = `${fmt(total, u === "pb" ? 1 : Math.abs(total) >= 100 ? 0 : 2)}${u === "%" ? "%" : ""}`, w = text.length * 6.6 + 10, x = Number(p.x) + Number(p.width ?? 0) + 6, y = Number(p.y);
+                      return <g className="cb-last"><rect x={x} y={y - 9} width={w} height={18} rx={3} fill="#172033" /><text x={x + w / 2} y={y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{text}</text></g>;
+                    } : undefined;
+                    return <Bar key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} fill={s.color} stackId={`stack-${s.axis}`} isAnimationActive={false} label={stackLabel} />;
+                  }
                   if (s.type === "area") return <Area key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} fill={s.color} fillOpacity={0.15} strokeWidth={s.width} strokeDasharray={DASH[s.dash]} connectNulls isAnimationActive={false} label={lastLabel} />;
                   return <Line key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} strokeWidth={s.type === "dots" ? 0 : s.width} strokeDasharray={DASH[s.dash]} dot={s.type === "dots" ? { r: 2.2, fill: s.color, stroke: s.color } : false} connectNulls isAnimationActive={false} legendType={s.type === "dots" ? "circle" : "line"} label={lastLabel} />;
                 })}
