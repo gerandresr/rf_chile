@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
-  // La antigua "Nueva base de datos" ahora es Base de Datos.
+  // Rutas antiguas.
   async redirects() {
-    return [{ source: "/nueva-base-de-datos", destination: "/base-de-datos", permanent: true }];
+    return [
+      { source: "/nueva-base-de-datos", destination: "/base-de-datos", permanent: true },
+      // El Dashboard RF es la página de inicio; la antigua portada de Mercados pasó a /mercados.
+      { source: "/dashboard-rf", destination: "/", permanent: true },
+    ];
   },
   async rewrites() {
     return {

@@ -20,7 +20,10 @@ Sube esta carpeta a GitHub e importa el repositorio desde Vercel. Next.js será 
 
 ## Dashboard RF
 
-Pestaña `/dashboard-rf` (`lib/dashboard.server.ts`, calculada al construir el sitio): franja de indicadores con cambio diario y mini-gráfico de 1 mes, datos macro, mapa de calor de cambios (1D/1S/1M/YTD) por plazo y curva, curvas de hoy versus 1 semana / 1 mes / inicio de año, spreads clave con rango y percentil de 1 año, y monitor de instrumentos ordenable. BTP/BTU 2, 5 y 10 años usan la misma metodología que Tasas Benchmark de Mercados; 20 años interpola entre bonos con cupón.
+La antigua portada de Mercados (curva BTP/BTU, tasas benchmark y tablas de instrumentos vigentes) está en `/mercados`.
+
+
+Página de inicio `/` (`app/page.tsx`, `lib/dashboard.server.ts`; `/dashboard-rf` redirige aquí, calculada al construir el sitio): franja de indicadores con cambio diario y mini-gráfico de 1 mes, datos macro, mapa de calor de cambios (1D/1S/1M/YTD) por plazo y curva, curvas de hoy versus 1 semana / 1 mes / inicio de año, spreads clave con rango y percentil de 1 año, y monitor de instrumentos ordenable. BTP/BTU 2, 5 y 10 años usan la misma metodología que Tasas Benchmark de Mercados; 20 años interpola entre bonos con cupón.
 
 ## Modelos
 
