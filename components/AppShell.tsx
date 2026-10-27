@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BarChart3, LayoutDashboard, FlaskConical, Calculator, Lightbulb, LineChart, TrendingUp, Landmark } from "lucide-react";
+import { Activity, BarChart3, LayoutDashboard, FlaskConical, Calculator, Lightbulb, LineChart, TrendingUp } from "lucide-react";
 import { VisitorCounter } from "./VisitorCounter";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -10,7 +10,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const nav = [
     { href: "/", label: "Mercado RF", icon: LayoutDashboard },
-    { href: "/mercados", label: "Mercados", icon: Landmark },
     { href: "/historicos", label: "Históricos", icon: BarChart3 },
     { href: "/graficos", label: "Gráficos", icon: LineChart },
     { href: "/swap-spreads", label: "Swap Spreads", icon: Activity },
@@ -45,12 +44,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      <main className={`main ${p === "/mercados" ? "markets-page" : ""}`}>
+      <main className="main">
         {children}
         {p === "/" && <VisitorCounter />}
       </main>
 
-      {p === "/mercados" && <style>{`.markets-page .note { display: none !important; }`}</style>}
     </div>
   );
 }

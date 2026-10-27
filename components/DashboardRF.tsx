@@ -184,7 +184,7 @@ function Monitor({ monitor }: { monitor: DashboardData["monitor"] }) {
         <td><div className="dash-pctl"><div style={{ width: `${r.percentile ?? 0}%` }} /></div><span className="dash-pctl-label">{r.percentile == null ? "—" : Math.round(r.percentile)}</span></td>
       </tr>)}</tbody>
     </table></div>
-    <p className="dash-note">Cambios, ASW y carry en pb. ASW = TIR − swap Cámara interpolado por duración o por plazo al vencimiento (BTP contra CLP, BTU contra UF); positivo = bono rinde sobre el swap. Carry 1d = devengo diario de la TIR (más IPC del período UF en BTU) menos TPM, dividido por la duración, como en Mercados. En depósitos, ASW venc. = tasa anual − swap Cámara al plazo: DPF (tasa base 30 × 12) contra CLP, con la TPM como punto de partida de la curva, y DPR (tasa real) contra UF. Percentil: posición de la tasa dentro del último año (100 = máximo). Haz clic en los encabezados para ordenar.</p>
+    <p className="dash-note">Cambios, ASW y carry en pb. ASW = TIR − swap Cámara interpolado por duración o por plazo al vencimiento (BTP contra CLP, BTU contra UF); positivo = bono rinde sobre el swap. Carry 1d = devengo diario de la TIR (más IPC del período UF en BTU) menos TPM, dividido por la duración. En depósitos, ASW venc. = tasa anual − swap Cámara al plazo: DPF (tasa base 30 × 12) contra CLP, con la TPM como punto de partida de la curva, y DPR (tasa real) contra UF. Percentil: posición de la tasa dentro del último año (100 = máximo). Haz clic en los encabezados para ordenar.</p>
   </section>;
 }
 
