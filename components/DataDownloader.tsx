@@ -8,8 +8,8 @@ import { buildTable, toCsv, toXlsx, type ExportColumn, type ExportMeta, type Fre
 
 type Period = "1m" | "3m" | "1y" | "5y" | "all" | "custom";
 type Format = "xlsx" | "csv-cl" | "csv";
-// Descarga deshabilitada temporalmente (sitio público). Cambiar a true para habilitarla.
-const DOWNLOAD_ENABLED = false;
+// Descarga de series habilitada. Cambiar a false para deshabilitarla.
+const DOWNLOAD_ENABLED = true;
 
 const PERIODS: [Period, string][] = [["1m", "1M"], ["3m", "3M"], ["1y", "1A"], ["5y", "5A"], ["all", "Todo"]];
 const BOND_FIELDS = [["tir", "TIR"], ["duracion", "Duración"], ["precio", "Precio"], ["convexidad", "Convexidad"]] as const;
