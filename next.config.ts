@@ -4,8 +4,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/nueva-base-de-datos", destination: "/base-de-datos", permanent: true },
-      // El Dashboard RF es la página de inicio; la antigua portada de Mercados pasó a /mercados.
+      // El Dashboard RF es la página de inicio; la antigua portada de Mercados se eliminó.
       { source: "/dashboard-rf", destination: "/", permanent: true },
+      { source: "/mercados", destination: "/", permanent: true },
     ];
   },
   async rewrites() {
