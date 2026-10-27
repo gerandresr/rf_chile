@@ -304,7 +304,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     const s = byId.get(leg.id), json = s ? cache.current.get(s.file) : null;
     return s && json ? extractSeries(json, s, leg.field) : new Map<string, number>();
   };
-  const isRate = (leg: Leg) => (byId.get(leg.id)?.fields.find(f => f.key === leg.field)?.unit ?? "").includes("%");
+  const isRate = (leg: Leg) => leg.field !== "precio" && (byId.get(leg.id)?.fields.find(f => f.key === leg.field)?.unit ?? "").includes("%");
 
   const { rows, lastDate, units } = useMemo(() => {
     const raw = new Map<string, Map<string, number>>(), units: Record<string, string> = {};
