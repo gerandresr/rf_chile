@@ -6,7 +6,7 @@ import type { Catalog } from "@/lib/data-catalog.server";
 import { extractSeries } from "@/lib/series-data";
 
 type Leg = { id: string; field: string };
-export type ComparableSeries = { uid: string; label: string; source: { kind: "catalog"; leg: Leg } | { kind: "calc"; op: "diff" | "fly"; legs: Leg[] } };
+export type ComparableSeries = { uid: string; label: string; inverted?: boolean; source: { kind: "catalog"; leg: Leg } | { kind: "calc"; op: "diff" | "fly"; legs: Leg[] } };
 type Span = 1 | 3 | 6 | 12;
 type Reference = "month" | "ytd" | "year" | "custom";
 const fmt = (n: number, digits = 2) => new Intl.NumberFormat("es-CL", { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(n);
@@ -50,7 +50,10 @@ export function ComparativeChart({ catalog, candidates, period }: { catalog: Cat
       if (!maps.every(map => map.has(date))) continue;
       const v = selected.source.kind === "catalog" ? value : selected.source.op === "diff"
         ? value - maps[1].get(date)! : 2 * maps[1].get(date)! - value - maps[2].get(date)!;
-      if (Number.isFinite(v)) values.set(date, selected.source.kind === "calc" && isRate ? v * 100 : v);
+      if (Number.isFinite(v)) {
+        const value = selected.source.kind === "calc" && isRate ? v * 100 : v;
+        values.set(date, selected.inverted && value !== 0 ? -value : value);
+      }
     }
     const ordered = [...values].sort(([a], [b]) => a.localeCompare(b));
     if (!ordered.length) return { rows: [], message: "La serie seleccionada no tiene observaciones disponibles." };

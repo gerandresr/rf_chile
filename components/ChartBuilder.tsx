@@ -15,7 +15,7 @@ type Axis = "left" | "right";
 type Transform = "level" | "d1" | "fromStart" | "base100";
 type Leg = { id: string; field: string };
 type Source = { kind: "catalog"; leg: Leg } | { kind: "calc"; op: "diff" | "fly"; legs: Leg[] };
-type PlotSeries = { uid: string; label: string; source: Source; type: ChartType; color: string; width: number; dash: Dash; axis: Axis; transform: Transform; visible: boolean };
+type PlotSeries = { uid: string; label: string; source: Source; type: ChartType; color: string; width: number; dash: Dash; axis: Axis; transform: Transform; visible: boolean; inverted?: boolean };
 // Los campos opcionales mantienen compatibles los gráficos guardados antes de agregarlos.
 type Annotation =
   | { id: string; kind: "hline"; value: number; axis: Axis; label: string; color: string; textColor?: string; width?: number; dash?: Dash; pos?: "left" | "right"; showValue?: boolean }
@@ -342,6 +342,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           out.set(d, unit === "%" ? (v - base) * 100 : unit === "pb" ? v - base : (v / base - 1) * 100);
         }
       });
+      if (s.inverted) for (const [date, value] of out) out.set(date, value === 0 ? 0 : -value);
       shown.set(s.uid, out);
       units[s.uid] = s.transform === "level" ? unit : s.transform === "base100" ? "base 100" : unit === "%" || unit === "pb" ? "pb" : "%";
     }
@@ -596,6 +597,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                 <label>Color<input type="color" value={s.color} onChange={e => setSeries(s.uid, { color: e.target.value })} /></label>
                 <label>Eje<select value={s.axis} onChange={e => setSeries(s.uid, { axis: e.target.value as Axis })}><option value="left">Izquierdo</option><option value="right">Derecho</option></select></label>
                 <label>Valores<select value={s.transform} onChange={e => setSeries(s.uid, { transform: e.target.value as Transform })}>{TRANSFORMS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
+                <label className="cb-check"><input type="checkbox" checked={!!s.inverted} onChange={e => setSeries(s.uid, { inverted: e.target.checked })} />Invertir serie (× −1)</label>
                 {(s.type === "line" || s.type === "area") && <>
                   <label>Grosor<input type="range" min={1} max={5} step={0.5} value={s.width} onChange={e => setSeries(s.uid, { width: Number(e.target.value) })} /></label>
                   <label>Trazo<select value={s.dash} onChange={e => setSeries(s.uid, { dash: e.target.value as Dash })}><option value="solid">Continuo</option><option value="dash">Rayado</option><option value="dot">Punteado</option></select></label>
