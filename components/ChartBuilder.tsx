@@ -371,10 +371,21 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     const event = historicalEvents.find(item => item.id === eventId);
     if (!event) { flash("Selecciona un evento relevante."); return; }
     const dates = rows.map(row => String(row.date));
-    const target = dates.find(date => date >= event.fecha);
+    const day = (d: string) => new Date(d + "T00:00:00Z").getTime() / 86400000;
+    // Espaciado típico entre datos (mediana): ~1 día en series diarias, ~30 en mensuales.
+    const gaps = dates.slice(1).map((d, i) => day(d) - day(dates[i])).sort((x, y) => x - y);
+    const spacing = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 1;
     // Los mercados no siempre abren el día del evento; se utiliza la primera
     // observación disponible durante la semana siguiente.
-    if (!target || (new Date(target + "T00:00:00Z").getTime() - new Date(event.fecha + "T00:00:00Z").getTime()) > 7 * 86400000) {
+    let target = dates.find(date => date >= event.fecha);
+    if (target && day(target) - day(event.fecha) > 7) target = undefined;
+    // Series de menor frecuencia (p. ej. mensuales fechadas el día 1): el evento va en el
+    // período que lo contiene, es decir, el último dato anterior dentro de un espaciado.
+    if (!target && spacing > 7) {
+      const prev = [...dates].reverse().find(date => date <= event.fecha);
+      if (prev && day(event.fecha) - day(prev) < spacing + 1) target = prev;
+    }
+    if (!target) {
       flash("El evento está fuera del rango del gráfico. Amplía el período para agregarlo.");
       return;
     }
