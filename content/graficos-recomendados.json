@@ -49,6 +49,56 @@
         ],
         "annotations": []
       }
+    },
+    {
+      "nombre": "Posiciones de no residentes en mercado local",
+      "config": {
+        "title": "Posiciones de no residentes en mercado local",
+        "subtitle": "{series:inv}",
+        "source": "Fuente: Banco Central.",
+        "period": "1y",
+        "legend": "bottom",
+        "lastValue": true,
+        "series": [
+          {
+            "uid": "teso",
+            "label": "Tesorería",
+            "source": {
+              "kind": "catalog",
+              "leg": {
+                "id": "bcch:posicion_os_teso",
+                "field": "posicion_os_teso"
+              }
+            },
+            "type": "stacked",
+            "color": "#2f6fed",
+            "width": 2,
+            "dash": "solid",
+            "axis": "left",
+            "transform": "level",
+            "visible": true
+          },
+          {
+            "uid": "bc",
+            "label": "Banco Central",
+            "source": {
+              "kind": "catalog",
+              "leg": {
+                "id": "bcch:posicion_os_bc",
+                "field": "posicion_os_bc"
+              }
+            },
+            "type": "stacked",
+            "color": "#f59e0b",
+            "width": 2,
+            "dash": "solid",
+            "axis": "left",
+            "transform": "level",
+            "visible": true
+          }
+        ],
+        "annotations": []
+      }
     }
   ]
 }
