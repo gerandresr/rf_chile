@@ -9,7 +9,7 @@ import type { Catalog, CatalogSeries } from "@/lib/data-catalog.server";
 import { extractSeries } from "@/lib/series-data";
 
 // ---------------- Tipos de configuración ----------------
-type ChartType = "line" | "bar" | "area" | "dots";
+type ChartType = "line" | "bar" | "stacked" | "area" | "dots";
 type Dash = "solid" | "dash" | "dot";
 type Axis = "left" | "right";
 type Transform = "level" | "d1" | "fromStart" | "base100";
@@ -580,7 +580,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                 <button className="cb-icon" title="Quitar" onClick={() => set({ series: config.series.filter(x => x.uid !== s.uid), annotations: config.annotations.filter(a => a.kind !== "arrow" || a.seriesUid !== s.uid) })}><X size={15} /></button>
               </div>
               <div className="cb-series-grid">
-                <label>Tipo<select value={s.type} onChange={e => setSeries(s.uid, { type: e.target.value as ChartType })}><option value="line">Línea</option><option value="bar">Barras</option><option value="area">Área</option><option value="dots">Puntos</option></select></label>
+                <label>Tipo<select value={s.type} onChange={e => setSeries(s.uid, { type: e.target.value as ChartType })}><option value="line">Línea</option><option value="bar">Barras</option><option value="stacked">Barras apiladas</option><option value="area">Área</option><option value="dots">Puntos</option></select></label>
                 <label>Color<input type="color" value={s.color} onChange={e => setSeries(s.uid, { color: e.target.value })} /></label>
                 <label>Eje<select value={s.axis} onChange={e => setSeries(s.uid, { axis: e.target.value as Axis })}><option value="left">Izquierdo</option><option value="right">Derecho</option></select></label>
                 <label>Valores<select value={s.transform} onChange={e => setSeries(s.uid, { transform: e.target.value as Transform })}>{TRANSFORMS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
@@ -639,7 +639,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           <div className="cb-titles">{title && <h2>{title}</h2>}{subtitle && <p>{subtitle}</p>}</div>
           <div ref={chartRef} className={mode !== "none" ? "cb-chart cb-crosshair" : "cb-chart"} style={{ height: config.height }} onMouseMove={e => { if (dragLegend) moveLegend(e); else if (dragVLabel) moveVerticalLabel(e); else onChartPointer(e); }} onMouseUp={() => { setDragVLabel(null); setDragLegend(false); }} onMouseLeave={() => { setGhost(null); setDragVLabel(null); setDragLegend(false); }} onClick={e => { if (dragVLabel) return; if (e.target instanceof SVGElement && e.target.closest(".recharts-surface")) onChartPointer(e, true); }}>
             {!config.series.length ? <div className="loading">Agrega una serie para empezar.</div> : !ready ? <div className="loading">Cargando datos…</div> :
-              <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: config.showXAxisTitle ? 24 : 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
+              <ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows} stackOffset="sign" margin={{ top: 16, right: config.lastValue ? 64 : 12, bottom: config.showXAxisTitle ? 24 : 4, left: 4 }} onClick={onChartClick} onMouseMove={(st: { activeLabel?: string | number } | null) => { if (st?.activeLabel) hoverDate.current = String(st.activeLabel); }}>
                 {(config.grid || config.gridV) && <CartesianGrid strokeDasharray="3 3" horizontal={config.grid} vertical={!!config.gridV} stroke="#e5eaf2" />}
                 <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 11 }} label={config.showXAxisTitle ? { value: config.xAxisTitle ?? "Fecha", position: "insideBottom", offset: -10, fontSize: 13, fill: "#334155", fontWeight: 600 } : undefined} />
                 <YAxis yAxisId="left" hide={config.yAxis === false} domain={domain(config.left)} allowDataOverflow={config.left.min !== "" || config.left.max !== ""} tick={{ fontSize: 11 }} width={config.showYAxisTitle ? 64 : 56} label={config.showYAxisTitle ? { value: config.yAxisTitle ?? "Tasa (%)", angle: -90, position: "insideLeft", fontSize: 13, fill: "#334155", fontWeight: 600 } : undefined} tickFormatter={v => fmt(Number(v), Math.abs(Number(v)) >= 10 ? 0 : 2)} />
@@ -658,6 +658,8 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
                     return <g className="cb-last"><rect x={x} y={y - 9} width={w} height={18} rx={3} fill={s.color} /><text x={x + w / 2} y={y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill="#fff">{text}</text></g>;
                   } : undefined;
                   if (s.type === "bar") return <Bar key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} fill={s.color} isAnimationActive={false} />;
+                  // Barras apiladas: las series de este tipo en el mismo eje se suman una sobre otra (positivas hacia arriba, negativas hacia abajo).
+                  if (s.type === "stacked") return <Bar key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} fill={s.color} stackId={`stack-${s.axis}`} isAnimationActive={false} />;
                   if (s.type === "area") return <Area key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} fill={s.color} fillOpacity={0.15} strokeWidth={s.width} strokeDasharray={DASH[s.dash]} connectNulls isAnimationActive={false} label={lastLabel} />;
                   return <Line key={s.uid} yAxisId={s.axis} dataKey={s.uid} name={name} stroke={s.color} strokeWidth={s.type === "dots" ? 0 : s.width} strokeDasharray={DASH[s.dash]} dot={s.type === "dots" ? { r: 2.2, fill: s.color, stroke: s.color } : false} connectNulls isAnimationActive={false} legendType={s.type === "dots" ? "circle" : "line"} label={lastLabel} />;
                 })}
