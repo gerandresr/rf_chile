@@ -11,8 +11,9 @@ import { OscillatorBacktestModel } from "./OscillatorBacktestModel";
 import { GarchYieldModel } from "./GarchYieldModel";
 import { Oscillator, oscillatorOptions } from "@/lib/oscillators";
 import { CarryModel } from "./CarryModel";
-import type { CarryModelData, FairValueModelData, MacroFairValueData, TaylorForwardData } from "@/lib/market-models.server";
+import type { CarryModelData, FairValueModelData, MacroFairValueData, TaylorEeeData, TaylorForwardData } from "@/lib/market-models.server";
 import { TaylorForwardModel } from "./TaylorForwardModel";
+import { TaylorEeeModel } from "./TaylorEeeModel";
 import { NssFairValueModel } from "./NssFairValueModel";
 import { MacroFairValueModel } from "./MacroFairValueModel";
 import { NairuPhillipsModel } from "./NairuPhillipsModel";
@@ -21,7 +22,7 @@ import type { PhillipsModelData } from "@/lib/nairu-phillips.server";
 // GARCH y Técnicos para BTP/BTU están ocultos; cambiar a true para mostrarlos de nuevo.
 const SHOW_MARKET_MODELS = false;
 
-export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue, taylorForward }: { carry: CarryModelData; phillips: PhillipsModelData; fairValue: FairValueModelData; macroFairValue: MacroFairValueData; taylorForward: TaylorForwardData }) {
+export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue, taylorForward, taylorEee }: { carry: CarryModelData; phillips: PhillipsModelData; fairValue: FairValueModelData; macroFairValue: MacroFairValueData; taylorForward: TaylorForwardData; taylorEee: TaylorEeeData }) {
   const [nairu, setNairu] = useState(8.16);
   const [okun, setOkun] = useState(2);
   const gaps = useMemo(() => ({
@@ -35,6 +36,7 @@ export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue, ta
   const [open, setOpen] = useState(false);
   const [taylorOpen, setTaylorOpen] = useState(false);
   const [taylorForwardOpen, setTaylorForwardOpen] = useState(false);
+  const [taylorEeeOpen, setTaylorEeeOpen] = useState(false);
   const [garchOpen, setGarchOpen] = useState(false);
   const [backtestOpen, setBacktestOpen] = useState(false);
   const [oscillatorOpen, setOscillatorOpen] = useState<Partial<Record<Oscillator, boolean>>>({});
@@ -52,8 +54,12 @@ export function ModelsDashboard({ carry, phillips, fairValue, macroFairValue, ta
       </>}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setTaylorForwardOpen(event.currentTarget.open)}>
-      <summary><span>Regla de Taylor forward-looking (expectativas de mercado)</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      <summary><span>Regla de Taylor forward-looking (mercado)</span><ChevronDown size={20} aria-hidden="true" /></summary>
       {taylorForwardOpen && <TaylorForwardModel data={taylorForward} gaps={gaps.filtered} nairu={nairu} okun={okun} />}
+    </details>
+    <details className="panel model-disclosure" onToggle={(event) => setTaylorEeeOpen(event.currentTarget.open)}>
+      <summary><span>Regla de Taylor forward-looking (EEE)</span><ChevronDown size={20} aria-hidden="true" /></summary>
+      {taylorEeeOpen && <TaylorEeeModel data={taylorEee} gaps={gaps.filtered} nairu={nairu} okun={okun} />}
     </details>
     <details className="panel model-disclosure" onToggle={(event) => setCarryOpen(event.currentTarget.open)}>
       <summary><span>Carry y roll-down BTP/BTU</span><ChevronDown size={20} aria-hidden="true" /></summary>

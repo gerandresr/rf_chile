@@ -36,14 +36,24 @@ Equivalentes (`lib/deposit-equivalents.ts`) con el closing de derivados: DPF →
 
 Validación: `node --experimental-strip-types --test tests/deposit-interpolation.test.mjs`.
 
-## Regla de Taylor forward-looking (expectativas de mercado)
+## Regla de Taylor forward-looking (mercado)
 
 Desplegable en `/modelos` debajo de la Regla de Taylor (`lib/taylor-forward.ts`, `components/TaylorForwardModel.tsx`, insumos en `taylorForwardData()` de `lib/market-models.server.ts`). Misma regla y parámetros, pero con inflación esperada a 12 meses en vez del IPC efectivo, y comparada con la TPM implícita en los swaps Cámara.
 
 - Proyección: inflación esperada de cada mes futuro = variación compuesta del IPC de los 12 meses siguientes, con IPC observado y forwards ICAP (`Closing_Icap/inflacion.json`, cada contrato corresponde al IPC de dos meses antes). Brecha = −Okun × (desempleo − NAIRU) del último dato, cerrándose según su AR(1) mensual sin constante de los últimos 120 meses. Con inercia: parte de la TPM actual. Mercado: trayectoria por reunión de `lib/tpm-path.ts` llevada al cierre de cada mes, hasta el último plazo cotizado.
-- Historia provisoria: inflación esperada = breakeven swap Cámara 1 año (`clpcam_1y` vs `ufcam_1y`), promedio mensual desde 2015. El breakeven NSS a 2 años no sirve antes de 2025 porque la base histórica no tiene bonos cortos y la curva extrapola. Reemplazar por la Encuesta de Expectativas Económicas (inflación a 11 meses) cuando esté en `datos-mensuales.json`.
+- Historia: inflación esperada = breakeven swap Cámara 1 año (`clpcam_1y` vs `ufcam_1y`), promedio mensual desde 2015. El breakeven NSS a 2 años no sirve antes de 2025 porque la base histórica no tiene bonos cortos y la curva extrapola.
 
 Validación: `node --experimental-strip-types --test tests/taylor-forward.test.mjs`.
+
+## Regla de Taylor forward-looking (EEE)
+
+Desplegable en `/modelos` debajo de la versión de mercado (`lib/taylor-eee.ts`, `components/TaylorEeeModel.tsx`, insumos en `taylorEeeData()` de `lib/market-models.server.ts`). Misma regla y parámetros, con la inflación esperada de la Encuesta de Expectativas Económicas (`eee_inf_a_24m` por defecto, horizonte de política; o `eee_inf_a_12m`) desde `historico_bcentral/datos-mensuales.json`.
+
+- Historia desde 2015: regla vs. TPM de cierre de mes y TPM esperada EEE a 12 meses (`eee_tpm_a_12m`). Desvío medio |TPM − regla| en pb.
+- Próximos 12 meses: expectativa fija en el último dato de la encuesta, brecha cerrándose según su AR(1) (igual que la versión de mercado) y trayectoria con inercia desde la TPM actual. A 12 meses se compara con `eee_tpm_a_12m` y con la TPM implícita en swaps de `taylorForwardData()`.
+- PIB esperado: se muestra la serie `eee_pib_AAAA` de año más reciente (informativa; la brecha sigue saliendo del desempleo).
+
+Validación: `node --experimental-strip-types --test tests/taylor-eee.test.mjs`.
 
 ## Modelo Fair Value · Valor relativo (curva NSS)
 
