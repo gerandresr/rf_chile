@@ -9,7 +9,9 @@
     "ipc_yoy": 4.5,
     "tc_real": 97.9755221112076,
     "posicion_os_teso": 1509.8560202,
-    "posicion_os_bc": 864.77676411
+    "posicion_os_bc": 864.77676411,
+    "eee_inf_a_12m": 2.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-02-01",
@@ -21,7 +23,9 @@
     "ipc_yoy": 4.4,
     "tc_real": 97.1244194609596,
     "posicion_os_teso": 1675.8999621,
-    "posicion_os_bc": 892.35965611
+    "posicion_os_bc": 892.35965611,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-03-01",
@@ -33,7 +37,9 @@
     "ipc_yoy": 4.2,
     "tc_real": 95.6911110018926,
     "posicion_os_teso": 1574.8699003,
-    "posicion_os_bc": 782.81592884
+    "posicion_os_bc": 782.81592884,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-04-01",
@@ -45,7 +51,9 @@
     "ipc_yoy": 4.1,
     "tc_real": 93.4790825864388,
     "posicion_os_teso": 1511.0422939,
-    "posicion_os_bc": 750.2922297
+    "posicion_os_bc": 750.2922297,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-05-01",
@@ -57,7 +65,9 @@
     "ipc_yoy": 4.0,
     "tc_real": 92.9608820473869,
     "posicion_os_teso": 1474.2166855,
-    "posicion_os_bc": 728.43602948
+    "posicion_os_bc": 728.43602948,
+    "eee_inf_a_12m": 3.1,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-06-01",
@@ -69,7 +79,9 @@
     "ipc_yoy": 4.4,
     "tc_real": 95.6112315279845,
     "posicion_os_teso": 1370.3886397,
-    "posicion_os_bc": 692.2859982
+    "posicion_os_bc": 692.2859982,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-07-01",
@@ -81,7 +93,9 @@
     "ipc_yoy": 4.6,
     "tc_real": 97.3346710017302,
     "posicion_os_teso": 1274.1838823,
-    "posicion_os_bc": 663.62038264
+    "posicion_os_bc": 663.62038264,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-08-01",
@@ -93,7 +107,9 @@
     "ipc_yoy": 5.0,
     "tc_real": 100.3374396594,
     "posicion_os_teso": 1152.1299857,
-    "posicion_os_bc": 612.22715241
+    "posicion_os_bc": 612.22715241,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-09-01",
@@ -105,7 +121,9 @@
     "ipc_yoy": 4.6,
     "tc_real": 99.2994179996729,
     "posicion_os_teso": 1126.8332119,
-    "posicion_os_bc": 579.22280106
+    "posicion_os_bc": 579.22280106,
+    "eee_inf_a_12m": 3.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-10-01",
@@ -117,7 +135,9 @@
     "ipc_yoy": 4.0,
     "tc_real": 98.2958423499059,
     "posicion_os_teso": 1142.7876698,
-    "posicion_os_bc": 517.93484481
+    "posicion_os_bc": 517.93484481,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-11-01",
@@ -129,7 +149,9 @@
     "ipc_yoy": 3.9,
     "tc_real": 99.8778967742343,
     "posicion_os_teso": 1079.8111848,
-    "posicion_os_bc": 499.88526542
+    "posicion_os_bc": 499.88526542,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2015-12-01",
@@ -141,7 +163,9 @@
     "ipc_yoy": 4.4,
     "tc_real": 98.435907669001,
     "posicion_os_teso": 1081.7684719,
-    "posicion_os_bc": 516.2866229
+    "posicion_os_bc": 516.2866229,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-01-01",
@@ -153,7 +177,9 @@
     "ipc_yoy": 4.8,
     "tc_real": 98.5264381254244,
     "posicion_os_teso": 1083.2231742,
-    "posicion_os_bc": 530.15734627
+    "posicion_os_bc": 530.15734627,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-02-01",
@@ -165,7 +191,9 @@
     "ipc_yoy": 4.7,
     "tc_real": 96.5235809734704,
     "posicion_os_teso": 1111.2482864,
-    "posicion_os_bc": 510.20309367
+    "posicion_os_bc": 510.20309367,
+    "eee_inf_a_12m": 3.4,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-03-01",
@@ -177,7 +205,9 @@
     "ipc_yoy": 4.5,
     "tc_real": 94.5801032262657,
     "posicion_os_teso": 1152.666969,
-    "posicion_os_bc": 581.65654503
+    "posicion_os_bc": 581.65654503,
+    "eee_inf_a_12m": 3.3,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-04-01",
@@ -189,7 +219,9 @@
     "ipc_yoy": 4.2,
     "tc_real": 94.3962197641026,
     "posicion_os_teso": 1279.2429155,
-    "posicion_os_bc": 773.61887726
+    "posicion_os_bc": 773.61887726,
+    "eee_inf_a_12m": 3.3,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-05-01",
@@ -201,7 +233,9 @@
     "ipc_yoy": 4.2,
     "tc_real": 96.1278757811475,
     "posicion_os_teso": 1233.2429192,
-    "posicion_os_bc": 791.94513165
+    "posicion_os_bc": 791.94513165,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-06-01",
@@ -213,7 +247,9 @@
     "ipc_yoy": 4.2,
     "tc_real": 96.2054703107396,
     "posicion_os_teso": 1288.9461289,
-    "posicion_os_bc": 824.13004353
+    "posicion_os_bc": 824.13004353,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-07-01",
@@ -225,7 +261,9 @@
     "ipc_yoy": 4.0,
     "tc_real": 92.3833940625039,
     "posicion_os_teso": 1593.7536487,
-    "posicion_os_bc": 830.21406932
+    "posicion_os_bc": 830.21406932,
+    "eee_inf_a_12m": 3.1,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-08-01",
@@ -237,7 +275,9 @@
     "ipc_yoy": 3.4,
     "tc_real": 93.2145310686594,
     "posicion_os_teso": 1612.924502,
-    "posicion_os_bc": 831.07819796
+    "posicion_os_bc": 831.07819796,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-09-01",
@@ -249,7 +289,9 @@
     "ipc_yoy": 3.1,
     "tc_real": 94.2942415909616,
     "posicion_os_teso": 1550.3108983,
-    "posicion_os_bc": 663.4188737
+    "posicion_os_bc": 663.4188737,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-10-01",
@@ -261,7 +303,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 93.1096655706621,
     "posicion_os_teso": 1509.6539356,
-    "posicion_os_bc": 663.38943755
+    "posicion_os_bc": 663.38943755,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-11-01",
@@ -273,7 +317,9 @@
     "ipc_yoy": 2.9,
     "tc_real": 91.6403611888281,
     "posicion_os_teso": 1429.0572388,
-    "posicion_os_bc": 621.44829092
+    "posicion_os_bc": 621.44829092,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2016-12-01",
@@ -285,7 +331,9 @@
     "ipc_yoy": 2.7,
     "tc_real": 91.4166384440751,
     "posicion_os_teso": 1455.1423196,
-    "posicion_os_bc": 607.16135747
+    "posicion_os_bc": 607.16135747,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-01-01",
@@ -297,7 +345,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 91.6527751083888,
     "posicion_os_teso": 1484.4185134,
-    "posicion_os_bc": 601.87638826
+    "posicion_os_bc": 601.87638826,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-02-01",
@@ -309,7 +359,9 @@
     "ipc_yoy": 2.7,
     "tc_real": 90.1295039411471,
     "posicion_os_teso": 1574.8064615,
-    "posicion_os_bc": 577.9762345
+    "posicion_os_bc": 577.9762345,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-03-01",
@@ -321,7 +373,9 @@
     "ipc_yoy": 2.7,
     "tc_real": 92.385312577194,
     "posicion_os_teso": 1672.5507399,
-    "posicion_os_bc": 509.81442183
+    "posicion_os_bc": 509.81442183,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-04-01",
@@ -333,7 +387,9 @@
     "ipc_yoy": 2.7,
     "tc_real": 91.9592676892774,
     "posicion_os_teso": 2412.1111593,
-    "posicion_os_bc": 505.67845175
+    "posicion_os_bc": 505.67845175,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-05-01",
@@ -345,7 +401,9 @@
     "ipc_yoy": 2.6,
     "tc_real": 94.1006707030951,
     "posicion_os_teso": 2454.241441,
-    "posicion_os_bc": 414.77359148
+    "posicion_os_bc": 414.77359148,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-06-01",
@@ -357,7 +415,9 @@
     "ipc_yoy": 1.7,
     "tc_real": 93.9218034908745,
     "posicion_os_teso": 3291.8810326,
-    "posicion_os_bc": 376.72913903
+    "posicion_os_bc": 376.72913903,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-07-01",
@@ -369,7 +429,9 @@
     "ipc_yoy": 1.7,
     "tc_real": 93.1238606314105,
     "posicion_os_teso": 3930.1758758,
-    "posicion_os_bc": 358.4246292
+    "posicion_os_bc": 358.4246292,
+    "eee_inf_a_12m": 2.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-08-01",
@@ -381,7 +443,9 @@
     "ipc_yoy": 1.9,
     "tc_real": 92.247285036589,
     "posicion_os_teso": 4593.5730853,
-    "posicion_os_bc": 364.07845043
+    "posicion_os_bc": 364.07845043,
+    "eee_inf_a_12m": 2.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-09-01",
@@ -393,7 +457,9 @@
     "ipc_yoy": 1.5,
     "tc_real": 90.8313192043758,
     "posicion_os_teso": 4810.9554805,
-    "posicion_os_bc": 350.36116496
+    "posicion_os_bc": 350.36116496,
+    "eee_inf_a_12m": 2.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-10-01",
@@ -405,7 +471,9 @@
     "ipc_yoy": 1.9,
     "tc_real": 90.1696529297066,
     "posicion_os_teso": 5263.4303936,
-    "posicion_os_bc": 517.54612018
+    "posicion_os_bc": 517.54612018,
+    "eee_inf_a_12m": 2.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-11-01",
@@ -417,7 +485,9 @@
     "ipc_yoy": 1.9,
     "tc_real": 90.8622268277884,
     "posicion_os_teso": 5750.8355184,
-    "posicion_os_bc": 496.69015409
+    "posicion_os_bc": 496.69015409,
+    "eee_inf_a_12m": 2.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2017-12-01",
@@ -429,7 +499,9 @@
     "ipc_yoy": 2.3,
     "tc_real": 91.7817790677913,
     "posicion_os_teso": 6848.0682052,
-    "posicion_os_bc": 606.94583079
+    "posicion_os_bc": 606.94583079,
+    "eee_inf_a_12m": 2.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-01-01",
@@ -441,7 +513,9 @@
     "ipc_yoy": 2.2,
     "tc_real": 88.4728667218395,
     "posicion_os_teso": 7351.371208,
-    "posicion_os_bc": 515.61175681
+    "posicion_os_bc": 515.61175681,
+    "eee_inf_a_12m": 2.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-02-01",
@@ -453,7 +527,9 @@
     "ipc_yoy": 2.0,
     "tc_real": 88.2434642010124,
     "posicion_os_teso": 7606.5703229,
-    "posicion_os_bc": 512.87563614
+    "posicion_os_bc": 512.87563614,
+    "eee_inf_a_12m": 2.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-03-01",
@@ -465,7 +541,9 @@
     "ipc_yoy": 1.8,
     "tc_real": 88.8603267336441,
     "posicion_os_teso": 7971.5696817,
-    "posicion_os_bc": 440.79104642
+    "posicion_os_bc": 440.79104642,
+    "eee_inf_a_12m": 2.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-04-01",
@@ -477,7 +555,9 @@
     "ipc_yoy": 1.9,
     "tc_real": 88.4249077325582,
     "posicion_os_teso": 8427.6712585,
-    "posicion_os_bc": 445.32138853
+    "posicion_os_bc": 445.32138853,
+    "eee_inf_a_12m": 2.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-05-01",
@@ -489,7 +569,9 @@
     "ipc_yoy": 2.0,
     "tc_real": 90.244734556363,
     "posicion_os_teso": 7928.027714,
-    "posicion_os_bc": 441.44115585
+    "posicion_os_bc": 441.44115585,
+    "eee_inf_a_12m": 2.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-06-01",
@@ -501,7 +583,9 @@
     "ipc_yoy": 2.5,
     "tc_real": 90.4743018386987,
     "posicion_os_teso": 7624.9900677,
-    "posicion_os_bc": 413.0654247
+    "posicion_os_bc": 413.0654247,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-07-01",
@@ -513,7 +597,9 @@
     "ipc_yoy": 2.7,
     "tc_real": 91.4631382054588,
     "posicion_os_teso": 7763.846475,
-    "posicion_os_bc": 423.12297822
+    "posicion_os_bc": 423.12297822,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-08-01",
@@ -525,7 +611,9 @@
     "ipc_yoy": 2.6,
     "tc_real": 91.1086300641489,
     "posicion_os_teso": 7327.6760281,
-    "posicion_os_bc": 402.17401318
+    "posicion_os_bc": 402.17401318,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-09-01",
@@ -537,7 +625,9 @@
     "ipc_yoy": 3.1,
     "tc_real": 93.4935707737664,
     "posicion_os_teso": 7839.6369237,
-    "posicion_os_bc": 442.32027368
+    "posicion_os_bc": 442.32027368,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-10-01",
@@ -549,7 +639,9 @@
     "ipc_yoy": 2.9,
     "tc_real": 93.1236635865099,
     "posicion_os_teso": 7822.9080746,
-    "posicion_os_bc": 451.19594287
+    "posicion_os_bc": 451.19594287,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-11-01",
@@ -561,7 +653,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 92.3764320856405,
     "posicion_os_teso": 8486.7964144,
-    "posicion_os_bc": 449.3575798
+    "posicion_os_bc": 449.3575798,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2018-12-01",
@@ -573,7 +667,9 @@
     "ipc_yoy": 2.6,
     "tc_real": 92.732400884683,
     "posicion_os_teso": 8949.4413891,
-    "posicion_os_bc": 262.60975609
+    "posicion_os_bc": 262.60975609,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-01-01",
@@ -585,7 +681,9 @@
     "ipc_yoy": 2.2,
     "tc_real": 93.125813953785,
     "posicion_os_teso": 9581.3741729,
-    "posicion_os_bc": 316.16949038
+    "posicion_os_bc": 316.16949038,
+    "eee_inf_a_12m": 2.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-02-01",
@@ -597,7 +695,9 @@
     "ipc_yoy": 2.2,
     "tc_real": 90.9890915434464,
     "posicion_os_teso": 9821.6824377,
-    "posicion_os_bc": 286.6371132
+    "posicion_os_bc": 286.6371132,
+    "eee_inf_a_12m": 2.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-03-01",
@@ -609,7 +709,9 @@
     "ipc_yoy": 2.5,
     "tc_real": 92.0730459951337,
     "posicion_os_teso": 9670.3958244,
-    "posicion_os_bc": 271.31727007
+    "posicion_os_bc": 271.31727007,
+    "eee_inf_a_12m": 2.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-04-01",
@@ -621,7 +723,9 @@
     "ipc_yoy": 2.4,
     "tc_real": 91.8490912381729,
     "posicion_os_teso": 10477.831681,
-    "posicion_os_bc": 219.05484115
+    "posicion_os_bc": 219.05484115,
+    "eee_inf_a_12m": 2.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-05-01",
@@ -633,7 +737,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 93.6537591263062,
     "posicion_os_teso": 11148.456612,
-    "posicion_os_bc": 269.60365841
+    "posicion_os_bc": 269.60365841,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-06-01",
@@ -645,7 +751,9 @@
     "ipc_yoy": 2.7,
     "tc_real": 94.0261798010548,
     "posicion_os_teso": 11056.433057,
-    "posicion_os_bc": 497.31583874
+    "posicion_os_bc": 497.31583874,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-07-01",
@@ -657,7 +765,9 @@
     "ipc_yoy": 2.6,
     "tc_real": 93.7082943243845,
     "posicion_os_teso": 11080.497711,
-    "posicion_os_bc": 204.18721649
+    "posicion_os_bc": 204.18721649,
+    "eee_inf_a_12m": 2.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-08-01",
@@ -669,7 +779,9 @@
     "ipc_yoy": 2.6,
     "tc_real": 94.8707851439826,
     "posicion_os_teso": 10848.117558,
-    "posicion_os_bc": 196.16730411
+    "posicion_os_bc": 196.16730411,
+    "eee_inf_a_12m": 2.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-09-01",
@@ -681,7 +793,9 @@
     "ipc_yoy": 2.2,
     "tc_real": 95.0877058797319,
     "posicion_os_teso": 10198.248766,
-    "posicion_os_bc": 155.65001336
+    "posicion_os_bc": 155.65001336,
+    "eee_inf_a_12m": 2.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-10-01",
@@ -693,7 +807,9 @@
     "ipc_yoy": 2.7,
     "tc_real": 95.2987933734727,
     "posicion_os_teso": 10238.921435,
-    "posicion_os_bc": 156.65511944
+    "posicion_os_bc": 156.65511944,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-11-01",
@@ -705,7 +821,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 102.994971481357,
     "posicion_os_teso": 10935.905977,
-    "posicion_os_bc": 171.83795976
+    "posicion_os_bc": 171.83795976,
+    "eee_inf_a_12m": 2.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2019-12-01",
@@ -717,7 +835,9 @@
     "ipc_yoy": 3.0,
     "tc_real": 102.689465693722,
     "posicion_os_teso": 11665.986706,
-    "posicion_os_bc": 227.09529376
+    "posicion_os_bc": 227.09529376,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-01-01",
@@ -729,7 +849,9 @@
     "ipc_yoy": 3.5,
     "tc_real": 103.543002537853,
     "posicion_os_teso": 10867.078697,
-    "posicion_os_bc": 128.5323878
+    "posicion_os_bc": 128.5323878,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-02-01",
@@ -741,7 +863,9 @@
     "ipc_yoy": 3.9,
     "tc_real": 105.090445901853,
     "posicion_os_teso": 10454.953023,
-    "posicion_os_bc": 119.42733258
+    "posicion_os_bc": 119.42733258,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-03-01",
@@ -753,7 +877,9 @@
     "ipc_yoy": 3.7,
     "tc_real": 107.768048514733,
     "posicion_os_teso": 8749.8065001,
-    "posicion_os_bc": 113.19506948
+    "posicion_os_bc": 113.19506948,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-04-01",
@@ -765,7 +891,9 @@
     "ipc_yoy": 3.4,
     "tc_real": 107.082927515004,
     "posicion_os_teso": 9098.9446808,
-    "posicion_os_bc": 135.28027027
+    "posicion_os_bc": 135.28027027,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-05-01",
@@ -777,7 +905,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 102.598548762003,
     "posicion_os_teso": 8822.1105628,
-    "posicion_os_bc": 110.15693974
+    "posicion_os_bc": 110.15693974,
+    "eee_inf_a_12m": 2.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-06-01",
@@ -789,7 +919,9 @@
     "ipc_yoy": 2.6,
     "tc_real": 101.178242985955,
     "posicion_os_teso": 8762.5498006,
-    "posicion_os_bc": 28.664079843
+    "posicion_os_bc": 28.664079843,
+    "eee_inf_a_12m": 2.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-07-01",
@@ -801,7 +933,9 @@
     "ipc_yoy": 2.5,
     "tc_real": 100.727365661484,
     "posicion_os_teso": 9362.806689,
-    "posicion_os_bc": 29.854355296
+    "posicion_os_bc": 29.854355296,
+    "eee_inf_a_12m": 2.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-08-01",
@@ -813,7 +947,9 @@
     "ipc_yoy": 2.4,
     "tc_real": 102.011403114003,
     "posicion_os_teso": 9470.0832575,
-    "posicion_os_bc": 29.240709582
+    "posicion_os_bc": 29.240709582,
+    "eee_inf_a_12m": 2.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-09-01",
@@ -825,7 +961,9 @@
     "ipc_yoy": 3.1,
     "tc_real": 101.150130066628,
     "posicion_os_teso": 8989.5614219,
-    "posicion_os_bc": 28.011413102
+    "posicion_os_bc": 28.011413102,
+    "eee_inf_a_12m": 2.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-10-01",
@@ -837,7 +975,9 @@
     "ipc_yoy": 3.0,
     "tc_real": 102.994574869891,
     "posicion_os_teso": 9492.5735981,
-    "posicion_os_bc": 28.83985456
+    "posicion_os_bc": 28.83985456,
+    "eee_inf_a_12m": 2.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-11-01",
@@ -849,7 +989,9 @@
     "ipc_yoy": 2.7,
     "tc_real": 101.080171649168,
     "posicion_os_teso": 10352.210994,
-    "posicion_os_bc": 28.588792742
+    "posicion_os_bc": 28.588792742,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2020-12-01",
@@ -861,7 +1003,9 @@
     "ipc_yoy": 3.0,
     "tc_real": 99.0347535047997,
     "posicion_os_teso": 10898.39561,
-    "posicion_os_bc": 33.429187839
+    "posicion_os_bc": 33.429187839,
+    "eee_inf_a_12m": 2.9,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-01-01",
@@ -873,7 +1017,9 @@
     "ipc_yoy": 3.1,
     "tc_real": 98.0682029842506,
     "posicion_os_teso": 10072.488855,
-    "posicion_os_bc": 31.443495386
+    "posicion_os_bc": 31.443495386,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-02-01",
@@ -885,7 +1031,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 98.3719730508139,
     "posicion_os_teso": 9784.8380558,
-    "posicion_os_bc": 390.86412451
+    "posicion_os_bc": 390.86412451,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-03-01",
@@ -897,7 +1045,9 @@
     "ipc_yoy": 2.9,
     "tc_real": 98.0981225620933,
     "posicion_os_teso": 8525.1173219,
-    "posicion_os_bc": 255.98580801
+    "posicion_os_bc": 255.98580801,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-04-01",
@@ -909,7 +1059,9 @@
     "ipc_yoy": 3.3,
     "tc_real": 96.0292523122216,
     "posicion_os_teso": 8657.491556,
-    "posicion_os_bc": 13.343550111
+    "posicion_os_bc": 13.343550111,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-05-01",
@@ -921,7 +1073,9 @@
     "ipc_yoy": 3.6,
     "tc_real": 98.0508606857577,
     "posicion_os_teso": 8671.6491013,
-    "posicion_os_bc": 9.3063195593
+    "posicion_os_bc": 9.3063195593,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-06-01",
@@ -933,7 +1087,9 @@
     "ipc_yoy": 3.8,
     "tc_real": 100.50461288975,
     "posicion_os_teso": 8808.0224436,
-    "posicion_os_bc": 12.37940788
+    "posicion_os_bc": 12.37940788,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-07-01",
@@ -945,7 +1101,9 @@
     "ipc_yoy": 4.5,
     "tc_real": 102.750739514609,
     "posicion_os_teso": 9910.3964261,
-    "posicion_os_bc": 11.852775693
+    "posicion_os_bc": 11.852775693,
+    "eee_inf_a_12m": 3.3,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-08-01",
@@ -957,7 +1115,9 @@
     "ipc_yoy": 4.8,
     "tc_real": 106.516912336528,
     "posicion_os_teso": 10052.495392,
-    "posicion_os_bc": 11.368146276
+    "posicion_os_bc": 11.368146276,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2021-09-01",
@@ -969,7 +1129,9 @@
     "ipc_yoy": 5.3,
     "tc_real": 106.252121330957,
     "posicion_os_teso": 9032.3063263,
-    "posicion_os_bc": 10.467616813
+    "posicion_os_bc": 10.467616813,
+    "eee_inf_a_12m": 4.3,
+    "eee_inf_a_24m": 3.2
   },
   {
     "fecha": "2021-10-01",
@@ -981,7 +1143,9 @@
     "ipc_yoy": 6.0,
     "tc_real": 109.624194281367,
     "posicion_os_teso": 9241.4057846,
-    "posicion_os_bc": 10.548133813
+    "posicion_os_bc": 10.548133813,
+    "eee_inf_a_12m": 4.5,
+    "eee_inf_a_24m": 3.3
   },
   {
     "fecha": "2021-11-01",
@@ -993,7 +1157,9 @@
     "ipc_yoy": 6.7,
     "tc_real": 109.24032470174,
     "posicion_os_teso": 9418.8387222,
-    "posicion_os_bc": 10.244144152
+    "posicion_os_bc": 10.244144152,
+    "eee_inf_a_12m": 4.8,
+    "eee_inf_a_24m": 3.5
   },
   {
     "fecha": "2021-12-01",
@@ -1005,7 +1171,9 @@
     "ipc_yoy": 7.2,
     "tc_real": 113.328244178534,
     "posicion_os_teso": 9343.1119287,
-    "posicion_os_bc": 10.209500532
+    "posicion_os_bc": 10.209500532,
+    "eee_inf_a_12m": 4.8,
+    "eee_inf_a_24m": 3.5
   },
   {
     "fecha": "2022-01-01",
@@ -1017,7 +1185,9 @@
     "ipc_yoy": 7.7,
     "tc_real": 110.136454537895,
     "posicion_os_teso": 10040.168422,
-    "posicion_os_bc": 327.16449812
+    "posicion_os_bc": 327.16449812,
+    "eee_inf_a_12m": 4.7,
+    "eee_inf_a_24m": 3.7
   },
   {
     "fecha": "2022-02-01",
@@ -1029,7 +1199,9 @@
     "ipc_yoy": 7.8,
     "tc_real": 109.74015085075,
     "posicion_os_teso": 10320.496037,
-    "posicion_os_bc": 314.6412652
+    "posicion_os_bc": 314.6412652,
+    "eee_inf_a_12m": 4.8,
+    "eee_inf_a_24m": 3.5
   },
   {
     "fecha": "2022-03-01",
@@ -1041,7 +1213,9 @@
     "ipc_yoy": 9.4,
     "tc_real": 107.991942781323,
     "posicion_os_teso": 10135.940552,
-    "posicion_os_bc": 213.39070199
+    "posicion_os_bc": 213.39070199,
+    "eee_inf_a_12m": 5.3,
+    "eee_inf_a_24m": 3.7
   },
   {
     "fecha": "2022-04-01",
@@ -1053,7 +1227,9 @@
     "ipc_yoy": 10.5,
     "tc_real": 109.151838609874,
     "posicion_os_teso": 9128.3271449,
-    "posicion_os_bc": 64.212715159
+    "posicion_os_bc": 64.212715159,
+    "eee_inf_a_12m": 6.0,
+    "eee_inf_a_24m": 3.7
   },
   {
     "fecha": "2022-05-01",
@@ -1065,7 +1241,9 @@
     "ipc_yoy": 11.5,
     "tc_real": 110.047941961785,
     "posicion_os_teso": 9465.92163,
-    "posicion_os_bc": 273.52039934
+    "posicion_os_bc": 273.52039934,
+    "eee_inf_a_12m": 6.2,
+    "eee_inf_a_24m": 3.7
   },
   {
     "fecha": "2022-06-01",
@@ -1077,7 +1255,9 @@
     "ipc_yoy": 12.5,
     "tc_real": 110.691889367648,
     "posicion_os_teso": 8448.8439418,
-    "posicion_os_bc": 539.33286356
+    "posicion_os_bc": 539.33286356,
+    "eee_inf_a_12m": 6.5,
+    "eee_inf_a_24m": 3.6
   },
   {
     "fecha": "2022-07-01",
@@ -1089,7 +1269,9 @@
     "ipc_yoy": 13.1,
     "tc_real": 119.711692596569,
     "posicion_os_teso": 7852.4293286,
-    "posicion_os_bc": 487.18637407
+    "posicion_os_bc": 487.18637407,
+    "eee_inf_a_12m": 7.1,
+    "eee_inf_a_24m": 4.0
   },
   {
     "fecha": "2022-08-01",
@@ -1101,7 +1283,9 @@
     "ipc_yoy": 14.1,
     "tc_real": 112.36303833682,
     "posicion_os_teso": 7835.8560417,
-    "posicion_os_bc": 0.7073379081
+    "posicion_os_bc": 0.7073379081,
+    "eee_inf_a_12m": 7.3,
+    "eee_inf_a_24m": 4.0
   },
   {
     "fecha": "2022-09-01",
@@ -1113,7 +1297,9 @@
     "ipc_yoy": 13.7,
     "tc_real": 111.254574470978,
     "posicion_os_teso": 6715.5764235,
-    "posicion_os_bc": 104.43299165
+    "posicion_os_bc": 104.43299165,
+    "eee_inf_a_12m": 7.0,
+    "eee_inf_a_24m": 3.8
   },
   {
     "fecha": "2022-10-01",
@@ -1125,7 +1311,9 @@
     "ipc_yoy": 12.8,
     "tc_real": 113.343782967025,
     "posicion_os_teso": 7297.1725821,
-    "posicion_os_bc": 529.12070106
+    "posicion_os_bc": 529.12070106,
+    "eee_inf_a_12m": 6.3,
+    "eee_inf_a_24m": 3.9
   },
   {
     "fecha": "2022-11-01",
@@ -1137,7 +1325,9 @@
     "ipc_yoy": 13.3,
     "tc_real": 108.226194104112,
     "posicion_os_teso": 8161.2609929,
-    "posicion_os_bc": 659.61622467
+    "posicion_os_bc": 659.61622467,
+    "eee_inf_a_12m": 5.8,
+    "eee_inf_a_24m": 3.5
   },
   {
     "fecha": "2022-12-01",
@@ -1149,7 +1339,9 @@
     "ipc_yoy": 12.8,
     "tc_real": 104.763372388649,
     "posicion_os_teso": 8320.4794031,
-    "posicion_os_bc": 613.61345324
+    "posicion_os_bc": 613.61345324,
+    "eee_inf_a_12m": 5.3,
+    "eee_inf_a_24m": 3.5
   },
   {
     "fecha": "2023-01-01",
@@ -1161,7 +1353,9 @@
     "ipc_yoy": 12.3,
     "tc_real": 100.31089707588,
     "posicion_os_teso": 8160.0231915,
-    "posicion_os_bc": 766.60182967
+    "posicion_os_bc": 766.60182967,
+    "eee_inf_a_12m": 5.0,
+    "eee_inf_a_24m": 3.3
   },
   {
     "fecha": "2023-02-01",
@@ -1173,7 +1367,9 @@
     "ipc_yoy": 11.9,
     "tc_real": 96.5642928244928,
     "posicion_os_teso": 7696.5361683,
-    "posicion_os_bc": 578.55620403
+    "posicion_os_bc": 578.55620403,
+    "eee_inf_a_12m": 5.0,
+    "eee_inf_a_24m": 3.2
   },
   {
     "fecha": "2023-03-01",
@@ -1185,7 +1381,9 @@
     "ipc_yoy": 11.1,
     "tc_real": 96.4527958655783,
     "posicion_os_teso": 8062.8580863,
-    "posicion_os_bc": 1087.110748
+    "posicion_os_bc": 1087.110748,
+    "eee_inf_a_12m": 4.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-04-01",
@@ -1197,7 +1395,9 @@
     "ipc_yoy": 9.9,
     "tc_real": 96.206408325714,
     "posicion_os_teso": 7839.1650619,
-    "posicion_os_bc": 669.4645085
+    "posicion_os_bc": 669.4645085,
+    "eee_inf_a_12m": 4.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-05-01",
@@ -1209,7 +1409,9 @@
     "ipc_yoy": 8.7,
     "tc_real": 94.5674453584248,
     "posicion_os_teso": 9110.4289502,
-    "posicion_os_bc": 268.33637677
+    "posicion_os_bc": 268.33637677,
+    "eee_inf_a_12m": 4.3,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-06-01",
@@ -1221,7 +1423,9 @@
     "ipc_yoy": 7.6,
     "tc_real": 94.1476462096886,
     "posicion_os_teso": 9048.1828127,
-    "posicion_os_bc": 465.59371062
+    "posicion_os_bc": 465.59371062,
+    "eee_inf_a_12m": 4.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-07-01",
@@ -1233,7 +1437,9 @@
     "ipc_yoy": 6.5,
     "tc_real": 95.795646881008,
     "posicion_os_teso": 9488.0320192,
-    "posicion_os_bc": 350.73643791
+    "posicion_os_bc": 350.73643791,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-08-01",
@@ -1245,7 +1451,9 @@
     "ipc_yoy": 5.3,
     "tc_real": 99.8585794919079,
     "posicion_os_teso": 8804.6423108,
-    "posicion_os_bc": 156.92379395
+    "posicion_os_bc": 156.92379395,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-09-01",
@@ -1257,7 +1465,9 @@
     "ipc_yoy": 5.1,
     "tc_real": 102.011661673527,
     "posicion_os_teso": 7900.7778458,
-    "posicion_os_bc": 382.40656543
+    "posicion_os_bc": 382.40656543,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-10-01",
@@ -1269,7 +1479,9 @@
     "ipc_yoy": 5.0,
     "tc_real": 105.805938922861,
     "posicion_os_teso": 8517.9557181,
-    "posicion_os_bc": 308.21861091
+    "posicion_os_bc": 308.21861091,
+    "eee_inf_a_12m": 3.4,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-11-01",
@@ -1281,7 +1493,9 @@
     "ipc_yoy": 4.8,
     "tc_real": 102.150814018433,
     "posicion_os_teso": 8929.4583192,
-    "posicion_os_bc": 272.98068097
+    "posicion_os_bc": 272.98068097,
+    "eee_inf_a_12m": 3.3,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2023-12-01",
@@ -1293,7 +1507,9 @@
     "ipc_yoy": 3.9,
     "tc_real": 100.709451475655,
     "posicion_os_teso": 8943.7576148,
-    "posicion_os_bc": 243.23988288
+    "posicion_os_bc": 243.23988288,
+    "eee_inf_a_12m": 3.1,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-01-01",
@@ -1305,7 +1521,9 @@
     "ipc_yoy": 3.8,
     "tc_real": 103.281435841068,
     "posicion_os_teso": 8315.6648122,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-02-01",
@@ -1317,7 +1535,9 @@
     "ipc_yoy": 4.5,
     "tc_real": 109.368213904362,
     "posicion_os_teso": 7688.5989103,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-03-01",
@@ -1329,7 +1549,9 @@
     "ipc_yoy": 3.7,
     "tc_real": 109.8811483931,
     "posicion_os_teso": 6842.5081538,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-04-01",
@@ -1341,7 +1563,9 @@
     "ipc_yoy": 4.0,
     "tc_real": 108.138945495347,
     "posicion_os_teso": 7034.40612,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.1,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-05-01",
@@ -1353,7 +1577,9 @@
     "ipc_yoy": 4.1,
     "tc_real": 103.31514396465,
     "posicion_os_teso": 6944.1692941,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-06-01",
@@ -1365,7 +1591,9 @@
     "ipc_yoy": 4.2,
     "tc_real": 103.638554542729,
     "posicion_os_teso": 6881.7929266,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-07-01",
@@ -1377,7 +1605,9 @@
     "ipc_yoy": 4.6,
     "tc_real": 104.388522341527,
     "posicion_os_teso": 7393.8309315,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-08-01",
@@ -1389,7 +1619,9 @@
     "ipc_yoy": 4.7,
     "tc_real": 104.621687461073,
     "posicion_os_teso": 7800.3445681,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-09-01",
@@ -1401,7 +1633,9 @@
     "ipc_yoy": 4.1,
     "tc_real": 104.588835219296,
     "posicion_os_teso": 8223.7583259,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-10-01",
@@ -1413,7 +1647,9 @@
     "ipc_yoy": 4.7,
     "tc_real": 104.010745120625,
     "posicion_os_teso": 7623.307696,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.7,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-11-01",
@@ -1425,7 +1661,9 @@
     "ipc_yoy": 4.2,
     "tc_real": 106.422048226031,
     "posicion_os_teso": 7379.1318978,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2024-12-01",
@@ -1437,7 +1675,9 @@
     "ipc_yoy": 4.5,
     "tc_real": 107.129140110238,
     "posicion_os_teso": 6632.3420338,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-01-01",
@@ -1449,7 +1689,9 @@
     "ipc_yoy": 4.9,
     "tc_real": 108.132823912952,
     "posicion_os_teso": 6904.5515434,
-    "posicion_os_bc": 101.44042999
+    "posicion_os_bc": 101.44042999,
+    "eee_inf_a_12m": 3.8,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-02-01",
@@ -1461,7 +1703,9 @@
     "ipc_yoy": 4.7,
     "tc_real": 104.096818039323,
     "posicion_os_teso": 7596.1736675,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-03-01",
@@ -1473,7 +1717,9 @@
     "ipc_yoy": 4.9,
     "tc_real": 101.612070701953,
     "posicion_os_teso": 7766.9224846,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-04-01",
@@ -1485,7 +1731,9 @@
     "ipc_yoy": 4.5,
     "tc_real": 104.76205491578,
     "posicion_os_teso": 8164.8486549,
-    "posicion_os_bc": 0.0
+    "posicion_os_bc": 0.0,
+    "eee_inf_a_12m": 3.6,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-05-01",
@@ -1497,7 +1745,9 @@
     "ipc_yoy": 4.4,
     "tc_real": 103.169605672416,
     "posicion_os_teso": 8471.1623009,
-    "posicion_os_bc": 106.07906834
+    "posicion_os_bc": 106.07906834,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-06-01",
@@ -1509,7 +1759,9 @@
     "ipc_yoy": 4.1,
     "tc_real": 103.932259000426,
     "posicion_os_teso": 8970.6378779,
-    "posicion_os_bc": 289.02310857
+    "posicion_os_bc": 289.02310857,
+    "eee_inf_a_12m": 3.4,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-07-01",
@@ -1521,7 +1773,9 @@
     "ipc_yoy": 4.3,
     "tc_real": 104.971418751418,
     "posicion_os_teso": 9295.6389868,
-    "posicion_os_bc": 92.068673219
+    "posicion_os_bc": 92.068673219,
+    "eee_inf_a_12m": 3.3,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-08-01",
@@ -1533,7 +1787,9 @@
     "ipc_yoy": 4.0,
     "tc_real": 106.329727810412,
     "posicion_os_teso": 9521.0030996,
-    "posicion_os_bc": 175.93491008
+    "posicion_os_bc": 175.93491008,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-09-01",
@@ -1545,7 +1801,9 @@
     "ipc_yoy": 4.4,
     "tc_real": 105.970702871292,
     "posicion_os_teso": 11004.449393,
-    "posicion_os_bc": 277.30390694
+    "posicion_os_bc": 277.30390694,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-10-01",
@@ -1557,7 +1815,9 @@
     "ipc_yoy": 3.4,
     "tc_real": 105.284034092205,
     "posicion_os_teso": 12056.568337,
-    "posicion_os_bc": 526.12154415
+    "posicion_os_bc": 526.12154415,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-11-01",
@@ -1569,7 +1829,9 @@
     "ipc_yoy": 3.4,
     "tc_real": 103.048396454475,
     "posicion_os_teso": 14020.822894,
-    "posicion_os_bc": 473.65686951
+    "posicion_os_bc": 473.65686951,
+    "eee_inf_a_12m": 3.2,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2025-12-01",
@@ -1581,7 +1843,9 @@
     "ipc_yoy": 3.5,
     "tc_real": 101.622904386553,
     "posicion_os_teso": 14812.353039,
-    "posicion_os_bc": 476.76333844
+    "posicion_os_bc": 476.76333844,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-01-01",
@@ -1593,7 +1857,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 98.7819341323889,
     "posicion_os_teso": 16729.0518427,
-    "posicion_os_bc": 205.223006
+    "posicion_os_bc": 205.223006,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-02-01",
@@ -1605,7 +1871,9 @@
     "ipc_yoy": 2.4,
     "tc_real": 97.7986211694071,
     "posicion_os_teso": 17360.9685295,
-    "posicion_os_bc": 204.0462285
+    "posicion_os_bc": 204.0462285,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-03-01",
@@ -1617,7 +1885,9 @@
     "ipc_yoy": 2.8,
     "tc_real": 102.404854185569,
     "posicion_os_teso": 16128.7061296,
-    "posicion_os_bc": 825.413579
+    "posicion_os_bc": 825.413579,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-04-01",
@@ -1629,7 +1899,9 @@
     "ipc_yoy": 4.0,
     "tc_real": 101.766213581975,
     "posicion_os_teso": 17244.5279155,
-    "posicion_os_bc": 696.5553319
+    "posicion_os_bc": 696.5553319,
+    "eee_inf_a_12m": 4.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-05-01",
@@ -1641,7 +1913,9 @@
     "ipc_yoy": 3.9,
     "tc_real": 102.249764389625,
     "posicion_os_teso": 20175.3847236,
-    "posicion_os_bc": 807.9156225
+    "posicion_os_bc": 807.9156225,
+    "eee_inf_a_12m": 3.3,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-06-01",
@@ -1653,7 +1927,9 @@
     "ipc_yoy": 4.3,
     "tc_real": 102.232777942797,
     "posicion_os_teso": 19148.2241091,
-    "posicion_os_bc": 734.749994
+    "posicion_os_bc": 734.749994,
+    "eee_inf_a_12m": 3.1,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-07-01",
@@ -1665,7 +1941,9 @@
     "ipc_yoy": 3.5,
     "tc_real": 105.171555467588,
     "posicion_os_teso": 20339.2278628,
-    "posicion_os_bc": 2379.9431182
+    "posicion_os_bc": 2379.9431182,
+    "eee_inf_a_12m": 3.0,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-08-01",
@@ -1677,7 +1955,9 @@
     "ipc_yoy": 4.1,
     "tc_real": 104.32536031474,
     "posicion_os_teso": 21040.0616724,
-    "posicion_os_bc": 2302.9165406
+    "posicion_os_bc": 2302.9165406,
+    "eee_inf_a_12m": 3.1,
+    "eee_inf_a_24m": 3.0
   },
   {
     "fecha": "2026-09-01",
@@ -1689,6 +1969,22 @@
     "ipc_yoy": 4.1,
     "tc_real": 108.209705853992,
     "posicion_os_teso": 20616.8636468,
-    "posicion_os_bc": 3401.4592936
+    "posicion_os_bc": 3401.4592936,
+    "eee_inf_a_12m": 3.3,
+    "eee_inf_a_24m": 3.0
+  },
+  {
+    "fecha": "2026-10-01",
+    "imacec": null,
+    "imacec_ind_des": null,
+    "desempleo": null,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": null,
+    "tc_real": null,
+    "posicion_os_teso": null,
+    "posicion_os_bc": null,
+    "eee_inf_a_12m": 3.4,
+    "eee_inf_a_24m": 3.0
   }
 ]
