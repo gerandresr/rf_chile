@@ -86,7 +86,7 @@ export function TaylorForwardModel({ data, gaps, nairu, okun }: { data: TaylorFo
     </section>
 
     <section className="model-chart-section" aria-label="Historia de la regla forward-looking">
-      <div className="panel-head"><h2>Historia: TPM vs. regla forward-looking (provisoria)</h2><span className="pill">Expectativa: {data.expectedHistorySource}</span></div>
+      <div className="panel-head"><h2>Historia: TPM vs. regla forward-looking (expectativas de mercado)</h2><span className="pill">Expectativa: {data.expectedHistorySource}</span></div>
       <div className="model-chart"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={history} margin={{ top: 12, right: 12, bottom: 8, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5eaf2" />
         <XAxis dataKey="date" tickFormatter={d => month(String(d))} minTickGap={50} tick={{ fontSize: 11 }} />
@@ -102,7 +102,7 @@ export function TaylorForwardModel({ data, gaps, nairu, okun }: { data: TaylorFo
     <div className="model-notice">
       <strong>Cómo leerlo.</strong>
       <p><b>Regla</b>: TPM neutral + (1 + peso de inflación) × (inflación esperada 12 meses − meta) + peso de actividad × brecha. <b>Inflación esperada</b>: variación compuesta del IPC de los 12 meses siguientes según los forwards de ICAP; si el último IPC publicado aún no cubre algún mes, se completa con su forward. <b>Brecha</b>: −Okun × (desempleo − NAIRU) del último dato, que se cierra al ritmo de su AR(1) mensual de los últimos 10 años. <b>Con inercia</b>: parte de la TPM actual y se acerca cada mes un {number(100 * (1 - parameters.smoothing), 0)}% a la regla. <b>Mercado</b>: TPM implícita en los swaps Cámara al cierre de cada mes, hasta donde llegan los plazos cotizados.
-        <b> Historia provisoria</b>: mientras no se incorpore la Encuesta de Expectativas Económicas, la inflación esperada histórica es el breakeven swap Cámara a 1 año (CLP vs. UF), que incluye primas por riesgo y liquidez y es más volátil que una encuesta; en 2022 llegó a 9%. Los forwards de ICAP también incluyen primas. Escenario, no pronóstico.</p>
+        <b> Historia</b>: la inflación esperada histórica es el breakeven swap Cámara a 1 año (CLP vs. UF), que incluye primas por riesgo y liquidez y es más volátil que una encuesta; en 2022 llegó a 9%. La versión con la Encuesta de Expectativas Económicas está en el desplegable siguiente. Los forwards de ICAP también incluyen primas. Escenario, no pronóstico.</p>
     </div>
   </div>;
 }

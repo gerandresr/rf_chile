@@ -8,9 +8,9 @@
  * La trayectoria con inercia parte de la TPM actual: i_h = ρ·i_(h−1) + (1 − ρ)·Taylor_h.
  * Se compara con la TPM implícita en los swaps Cámara.
  *
- * Historia (provisoria, mientras no haya serie de expectativas de encuesta): la inflación esperada es el
+ * Historia: la inflación esperada es el
  * breakeven swap Cámara a 1 año, CLP vs. UF (promedio mensual). Incluye primas por riesgo inflacionario
- * y liquidez, por lo que es más ruidoso que una encuesta.
+ * y liquidez, por lo que es más ruidoso que una encuesta (la versión con la EEE está en lib/taylor-eee.ts).
  */
 import type { TaylorParameters } from "./taylor";
 

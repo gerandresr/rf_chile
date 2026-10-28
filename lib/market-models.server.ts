@@ -5,6 +5,7 @@ import { carryRolldown, maturityFromCode, type BondInput } from "./carry";
 import { fairValue, breakeven, type FvBond, type FvResult } from "./nss";
 import { macroFairValue, type MacroResult } from "./fair-value-macro";
 import { expectedInflation12m, monthOf, type TaylorForwardInput, type MonthValue } from "./taylor-forward";
+import type { TaylorEeeInput } from "./taylor-eee";
 
 // Lectura en el servidor (al construir el sitio). Los archivos de Bloomberg vienen con BOM.
 const DATA = path.join(process.cwd(), "public", "data");
@@ -202,5 +203,36 @@ export function taylorForwardData(): TaylorForwardData {
     };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "No fue posible preparar la regla forward-looking." };
+  }
+}
+
+export type TaylorEeeData = TaylorEeeInput | { error: string };
+
+/** Insumos de la Taylor forward-looking con la Encuesta de Expectativas Económicas (EEE). */
+export function taylorEeeData(): TaylorEeeData {
+  try {
+    type Row = { fecha: string; eee_inf_a_12m?: number | null; eee_inf_a_24m?: number | null; eee_tpm_a_12m?: number | null } & Record<string, unknown>;
+    const monthly = readJson("historico_bcentral/datos-mensuales.json") as Row[];
+    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+    // PIB esperado: la serie eee_pib_AAAA con el año más reciente.
+    const pibKey = Object.keys(monthly.at(-1) ?? {}).filter(k => /^eee_pib_\d{4}$/.test(k)).sort().at(-1) ?? null;
+    const rows = monthly.map(r => ({ month: r.fecha, inf12: num(r.eee_inf_a_12m), inf24: num(r.eee_inf_a_24m), tpm12: num(r.eee_tpm_a_12m), pib: pibKey ? num(r[pibKey]) : null }))
+      .filter(r => r.inf12 !== null || r.inf24 !== null || r.tpm12 !== null);
+    if (!rows.length) throw new Error("datos-mensuales.json no trae series de la EEE (eee_inf_a_12m, eee_inf_a_24m, eee_tpm_a_12m).");
+
+    const daily = (readJson("historico_bcentral/datos-diarios.json") as { fecha: string; tpm: number | null }[]).filter(r => typeof r.tpm === "number").sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const closes = new Map<string, number>();
+    for (const r of daily) closes.set(monthOf(r.fecha), r.tpm as number);
+    const last = daily[daily.length - 1];
+
+    // Trayectoria de mercado: la misma de la versión con expectativas de mercado (si está disponible).
+    const forward = taylorForwardData();
+    const market = "error" in forward ? [] : forward.market;
+    return {
+      rows, pibLabel: pibKey ? pibKey.slice(-4) : "", tpmMonthly: [...closes].map(([month, value]) => ({ month, value })),
+      currentTpm: last.tpm as number, currentTpmDate: last.fecha, market, marketSource: "error" in forward ? null : forward.marketSource,
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "No fue posible preparar la regla con la EEE." };
   }
 }
