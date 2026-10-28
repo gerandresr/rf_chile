@@ -67,10 +67,10 @@ export function BondSwapStrategy({ bond, last, universe, market, signals, onMark
     <div className="ss-controls">
       <label>DV01 objetivo del bono (USD/pb)<input type="number" min="1" step="500" value={dvUSD} onChange={e => setDvUSD(Number(e.target.value))} /></label>
       <label>USD/CLP<input type="number" min="1" step="0.01" value={fx} onChange={e => setFx(e.target.value)} /></label>
-      <label>Duración del bono (JSON)<input type="number" value={duration} readOnly /><span>Dato al {day(last.date)}</span></label>
+      <label>Duración del bono (JSON)<input type="text" value={fmt(duration, 2)} readOnly /><span>Dato al {day(last.date)}</span></label>
       <label>Swap para cubrir<select value={tenor} onChange={e => { setTenor(Number(e.target.value)); setSwapRate(""); setRiskOverride(""); }}>{quotes.filter(q => q.x >= 1).map(q => <option key={q.x} value={q.x}>{q.x}y · {fmt(q.y, 3)}%</option>)}</select></label>
-      <label>Tasa del bono anual (%)<input type="number" min="-99.99" step="0.001" value={bondRate} onChange={e => setBondRate(e.target.value)} /><span>Mercado: {fmt(last.yield, 4)}%</span></label>
-      <label>Tasa fija swap anual (%)<input type="number" min="-99.99" step="0.001" value={swapRate === "" ? recommendedFixed ?? "" : swapRate} onChange={e => setSwapRate(e.target.value)} /><span>Recomendada: {fmt(recommendedFixed, 3)}% · editable</span>{swapRate !== "" && <button type="button" className="ss-rate-reset" onClick={() => setSwapRate("")}>Usar recomendada</button>}</label>
+      <label>Tasa del bono anual (%)<input type="number" min="-99.99" step="0.001" value={bondRate} onChange={e => setBondRate(e.target.value)} /></label>
+      <label>Tasa fija swap anual (%)<input type="number" min="-99.99" step="0.001" value={swapRate === "" ? recommendedFixed ?? "" : swapRate} onChange={e => setSwapRate(e.target.value)} />{swapRate !== "" && <button type="button" className="ss-rate-reset" onClick={() => setSwapRate("")}>Usar recomendada</button>}</label>
       <label>Cobertura del DV01 (%)<input type="number" min="0" step="5" value={hedgePct} onChange={e => setHedgePct(Number(e.target.value))} /></label>
     </div>
     <p className="ss-caption">TIR bono usada {fmt(Number(bondRate), 4)}% (editable) y curva swap de referencia al {day(last.date)}. USD/CLP precargado {market.fx ? `${fmt(market.fx.value)} al ${day(market.fx.date)}` : "no disponible"}; TPM {market.tpm ? `${fmt(market.tpm.value)}% al ${day(market.tpm.date)}` : "no disponible"}. Ambos editables. El USD solo expresa el DV01 objetivo: la estrategia se calcula en CLP.</p>
