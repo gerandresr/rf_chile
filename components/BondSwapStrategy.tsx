@@ -19,7 +19,8 @@ export function BondSwapStrategy({ bond, last, universe, market, signals, onMark
   const initialTenor = quotes.filter(q => q.x >= 1).slice().sort((a,b) => Math.abs(a.x - last.term) - Math.abs(b.x - last.term))[0]?.x ?? 5;
   const [dvUSD, setDvUSD] = useState(3000), [fx, setFx] = useState(market.fx ? String(market.fx.value) : "");
   const [tenor, setTenor] = useState(initialTenor), [hedgePct, setHedgePct] = useState(100);
-  const [duration, setDuration] = useState(last.macaulay / (1 + last.yield / 100)), [riskOverride, setRiskOverride] = useState("");
+  const duration = last.macaulay;
+  const [riskOverride, setRiskOverride] = useState("");
   const [valuePer100, setValuePer100] = useState(100), [ufSpot, setUfSpot] = useState("");
   const [funding, setFunding] = useState(market.tpm ? String(market.tpm.value) : ""), [camera, setCamera] = useState(market.tpm ? String(market.tpm.value) : "");
   const [commonShock, setCommonShock] = useState(0), [extraBond, setExtraBond] = useState(0), [extraSwap, setExtraSwap] = useState(0), [costs, setCosts] = useState(0);
@@ -66,9 +67,9 @@ export function BondSwapStrategy({ bond, last, universe, market, signals, onMark
     <div className="ss-controls">
       <label>DV01 objetivo del bono (USD/pb)<input type="number" min="1" step="500" value={dvUSD} onChange={e => setDvUSD(Number(e.target.value))} /></label>
       <label>USD/CLP<input type="number" min="1" step="0.01" value={fx} onChange={e => setFx(e.target.value)} /></label>
-      <label>Duración modificada del bono<input type="number" min="0.01" step="0.001" value={duration} onChange={e => setDuration(Number(e.target.value))} /></label>
+      <label>Duración del bono (JSON)<input type="number" value={duration} readOnly /><span>Dato al {day(last.date)}</span></label>
       <label>Swap para cubrir<select value={tenor} onChange={e => { setTenor(Number(e.target.value)); setSwapRate(""); setRiskOverride(""); }}>{quotes.filter(q => q.x >= 1).map(q => <option key={q.x} value={q.x}>{q.x}y · {fmt(q.y, 3)}%</option>)}</select></label>
-      <label>Tasa del bono anual (%)<input type="number" min="-99.99" step="0.001" value={bondRate} onChange={e => { setBondRate(e.target.value); const rate = Number(e.target.value); if (e.target.value !== "" && Number.isFinite(rate) && rate > -100) setDuration(last.macaulay / (1 + rate / 100)); }} /><span>Mercado: {fmt(last.yield, 4)}%</span></label>
+      <label>Tasa del bono anual (%)<input type="number" min="-99.99" step="0.001" value={bondRate} onChange={e => setBondRate(e.target.value)} /><span>Mercado: {fmt(last.yield, 4)}%</span></label>
       <label>Tasa fija swap anual (%)<input type="number" min="-99.99" step="0.001" value={swapRate === "" ? recommendedFixed ?? "" : swapRate} onChange={e => setSwapRate(e.target.value)} /><span>Recomendada: {fmt(recommendedFixed, 3)}% · editable</span>{swapRate !== "" && <button type="button" className="ss-rate-reset" onClick={() => setSwapRate("")}>Usar recomendada</button>}</label>
       <label>Cobertura del DV01 (%)<input type="number" min="0" step="5" value={hedgePct} onChange={e => setHedgePct(Number(e.target.value))} /></label>
     </div>
@@ -79,7 +80,7 @@ export function BondSwapStrategy({ bond, last, universe, market, signals, onMark
       <div className="kpi"><div className="kpi-label">Nocional swap {tenor}y</div><div className="kpi-value ss-money">{billions(sizing?.swapNominal)}</div><div className="kpi-foot">{bond.currency === "UF" ? "Equivalente CLP" : "CLP"} · paga {fmt(fixed, 3)}%</div></div>
       <div className="kpi"><div className="kpi-label">DV01 neto inicial (USD/pb)</div><div className="kpi-value">{fmt(sizing ? sizing.residualDV01 / Number(fx) : null)}</div><div className="kpi-foot">Bono {fmt(dvUSD, 0)} − swap {fmt(dvUSD * hedgePct / 100, 0)}; positivo = pérdida ante alza</div></div></div>
     <details><summary>Supuestos de nocionales y sensibilidad</summary><div className="ss-controls ss-advanced"><label>Valor de mercado por 100 de nominal<input type="number" min="1" step="0.01" value={valuePer100} onChange={e => setValuePer100(Number(e.target.value))} /></label><label>Riesgo swap por nocional (años)<input type="number" min="0.01" step="0.001" value={riskOverride} placeholder={fmt(annuity, 5)} onChange={e => setRiskOverride(e.target.value)} /></label>{bond.currency === "UF" && <label>UF actual en CLP (opcional)<input type="number" min="1" step="0.01" value={ufSpot} onChange={e => setUfSpot(e.target.value)} /></label>}</div>
-      <p className="ss-caption">DV01 CLP = DV01 USD × USD/CLP. Valor de mercado bono = DV01 CLP / (Dmod × 0,0001). Nominal bono = valor de mercado / factor VM/nominal. Sin precio sucio se asume par; no es un nominal exacto. Nocional swap = DV01 cubierto / (anualidad × 0,0001). La anualidad de flujos descontados, {fmt(annuity, 5)} años, es sensibilidad por nocional; no es la duración modificada de un bono. Puede sustituirse por una sensibilidad validada de mesa.</p>
+      <p className="ss-caption">DV01 CLP = DV01 USD × USD/CLP. Valor de mercado bono = DV01 CLP / (duración del JSON × 0,0001). Se usa directamente la duración publicada para la fecha del bono, sin convertirla ni recalcularla con la TIR. Nominal bono = valor de mercado / factor VM/nominal. Sin precio sucio se asume par; no es un nominal exacto. Nocional swap = DV01 cubierto / (anualidad × 0,0001). La anualidad de flujos descontados, {fmt(annuity, 5)} años, es sensibilidad por nocional; no es la duración modificada de un bono. Puede sustituirse por una sensibilidad validada de mesa.</p>
       {bond.currency === "UF" && Number(ufSpot) > 0 && <p className="ss-caption">Nominal bono ≈ {fmt(sizing ? sizing.bondNominal / Number(ufSpot) : null)} UF; nocional swap ≈ {fmt(sizing ? sizing.swapNominal / Number(ufSpot) : null)} UF.</p>}
     </details>
     <h3>Fondeo y escenario de tasas</h3><div className="ss-controls">
