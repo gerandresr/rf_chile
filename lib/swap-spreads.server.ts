@@ -64,7 +64,7 @@ export function swapSpreadData(): SpreadData {
       if (swap === null) { missing++; return; }
       const matched = interpolate(macaulay / (1 + y / 100), curve.map(p => ({ x: swapDuration(p.x, p.y), y: p.y })));
       points.push({ date, yield: round(y), swap: round(swap), spread: round((y - swap) * 100),
-        durationSpread: matched === null ? null : round((y - matched) * 100), macaulay: round(macaulay), term: round(term) });
+        durationSpread: matched === null ? null : round((y - matched) * 100), macaulay, term: round(term) });
     });
     // Una fecha por observación; nunca arrastramos cotizaciones de un día distinto.
     const unique = [...new Map(points.map(p => [p.date, p])).values()].sort((a, b) => a.date.localeCompare(b.date));
