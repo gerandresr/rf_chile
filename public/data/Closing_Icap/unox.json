@@ -1,38 +1,38 @@
 {
-  "fecha": "2026-10-27",
+  "fecha": "2026-10-28",
   "instrumento": "unox",
   "datos": [
     {
       "Tenor": "1m",
-      "Mid": -0.15
+      "Mid": -0.2
     },
     {
       "Tenor": "1X2m",
-      "Mid": -0.26
+      "Mid": -0.27
     },
     {
       "Tenor": "1x3m",
-      "Mid": -0.75
+      "Mid": -0.68
     },
     {
       "Tenor": "1x6m",
-      "Mid": -1.7
+      "Mid": -1.65
     },
     {
       "Tenor": "1x9m",
-      "Mid": -2.55
+      "Mid": -2.25
     },
     {
       "Tenor": "1x12m",
-      "Mid": -3.45
+      "Mid": -3.0
     },
     {
       "Tenor": "1x18m",
-      "Mid": -4.35
+      "Mid": -3.75
     },
     {
       "Tenor": "1x24m",
-      "Mid": -3.2
+      "Mid": -2.75
     }
   ]
 }
