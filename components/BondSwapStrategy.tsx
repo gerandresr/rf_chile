@@ -64,15 +64,19 @@ export function BondSwapStrategy({ bond, last, universe, market, signals, onMark
     ["Resultado neto estimado", "total"],
   ];
   return <section className="panel ss-trade"><div className="panel-head"><div><div className="eyebrow">Comprar bono + pagar fijo / recibir Cámara</div><h2>Bono + swap: DV01, carry y escenarios</h2></div><label className="ss-instrument-picker">Instrumento<select value={bond.code} onChange={e => onBondChange(e.target.value)}>{selectableBonds.map(b => <option key={b.code} value={b.code}>{b.code} - SPC {b.currency}</option>)}</select></label></div>
-    <div className="ss-controls">
-      <label>DV01 objetivo del bono (USD/pb)<input type="number" min="1" step="500" value={dvUSD} onChange={e => setDvUSD(Number(e.target.value))} /></label>
+    <div className="ss-controls ss-strategy-row">
+      <label>DV01 estrategia (USD/pb)<input type="number" min="1" step="500" value={dvUSD} onChange={e => setDvUSD(Number(e.target.value))} /></label>
       <label>USD/CLP<input type="number" min="1" step="0.01" value={fx} onChange={e => setFx(e.target.value)} /></label>
-      <label>Duración del bono (JSON)<input type="text" value={fmt(duration, 2)} readOnly /><span>Dato al {day(last.date)}</span></label>
-      <label>Swap para cubrir<select value={tenor} onChange={e => { setTenor(Number(e.target.value)); setSwapRate(""); setRiskOverride(""); }}>{quotes.filter(q => q.x >= 1).map(q => <option key={q.x} value={q.x}>{q.x}y · {fmt(q.y, 3)}%</option>)}</select></label>
-      <label>Tasa del bono anual (%)<input type="number" min="-99.99" step="0.001" value={bondRate} onChange={e => setBondRate(e.target.value)} /></label>
-      <label>Tasa fija swap anual (%)<input type="number" min="-99.99" step="0.001" value={swapRate === "" ? recommendedFixed ?? "" : swapRate} onChange={e => setSwapRate(e.target.value)} />{swapRate !== "" && <button type="button" className="ss-rate-reset" onClick={() => setSwapRate("")}>Usar recomendada</button>}</label>
-      <label>Cobertura del DV01 (%)<input type="number" min="0" step="5" value={hedgePct} onChange={e => setHedgePct(Number(e.target.value))} /></label>
     </div>
+    <fieldset className="ss-input-group"><legend>Información del bono</legend><div className="ss-controls ss-strategy-row">
+      <label>Tasa del bono anual (%)<input type="number" min="-99.99" step="0.001" value={bondRate} onChange={e => setBondRate(e.target.value)} /></label>
+      <label>Duración del bono<input type="text" value={fmt(duration, 2)} readOnly /></label>
+    </div></fieldset>
+    <fieldset className="ss-input-group"><legend>Información del swap</legend><div className="ss-controls ss-strategy-row ss-swap-row">
+      <label>Cobertura del DV01 (%)<input type="number" min="0" step="5" value={hedgePct} onChange={e => setHedgePct(Number(e.target.value))} /></label>
+      <label>Tenor Swap<select value={tenor} onChange={e => { setTenor(Number(e.target.value)); setSwapRate(""); setRiskOverride(""); }}>{quotes.filter(q => q.x >= 1).map(q => <option key={q.x} value={q.x}>{q.x}y · {fmt(q.y, 3)}%</option>)}</select></label>
+      <label>Tasa Swap anual (%)<input type="number" min="-99.99" step="0.001" value={swapRate === "" ? recommendedFixed ?? "" : swapRate} onChange={e => setSwapRate(e.target.value)} />{swapRate !== "" && <button type="button" className="ss-rate-reset" onClick={() => setSwapRate("")}>Usar recomendada</button>}</label>
+    </div></fieldset>
     <p className="ss-caption">TIR bono usada {fmt(Number(bondRate), 4)}% (editable) y curva swap de referencia al {day(last.date)}. USD/CLP precargado {market.fx ? `${fmt(market.fx.value)} al ${day(market.fx.date)}` : "no disponible"}; TPM {market.tpm ? `${fmt(market.tpm.value)}% al ${day(market.tpm.date)}` : "no disponible"}. Ambos editables. El USD solo expresa el DV01 objetivo: la estrategia se calcula en CLP.</p>
     {(!sizing || !source) && <p role="status" className="model-notice">{curve.error || "Completa DV01, USD/CLP, duración, fondeo y Cámara válidos. Se necesita una curva swap de la misma fecha que el bono."}</p>}
     <div className="kpi-grid ss-kpis ss-trade-kpis">
