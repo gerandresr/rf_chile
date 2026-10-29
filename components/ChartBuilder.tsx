@@ -564,6 +564,9 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
     <header className="page-head">
       <div><div className="eyebrow">Herramientas</div><h1>Personaliza tu gráfico</h1><p>Combina series financieras, ajusta el diseño y destaca los movimientos que quieras analizar.</p></div>
     </header>
+    <div style={{ marginBottom: 20 }}>
+<button className="db-link" style={{ fontSize: 18, fontWeight: 600 }} onClick={() => { setConfig({ ...DEFAULT_CONFIG, series: [], annotations: [], title: "", subtitle: "", source: "Fuente: Mercado, Bloomberg, Banco Central." }); window.history.replaceState(null, "", window.location.pathname); }}>Empezar un gráfico en blanco</button>
+    </div>
     {recommended.length > 0 && <section className="panel cb-block cb-recommended-top">
       <h2>Gráficos recomendados</h2>
       <p className="db-hint">Empieza con un gráfico preparado y personalízalo con tus propias series y anotaciones.</p>
@@ -734,6 +737,13 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
         </section>
 
         }
+        <section className="panel cb-block">
+          <h2>Guardar</h2>
+          <div className="cb-inline"><input value={saveName} onChange={e => setSaveName(e.target.value)} placeholder={config.title || "Nombre del gráfico"} aria-label="Nombre para guardar" /><button className="cb-btn" onClick={saveChart}><Save size={14} aria-hidden="true" />Guardar en este navegador</button></div>
+          {Object.keys(saved).length > 0 ? <ul className="cb-annots">{Object.keys(saved).sort().map(name => <li key={name}><button className="db-link" onClick={() => { setConfig({ ...DEFAULT_CONFIG, ...saved[name] }); flash(`Abierto “${name}”.`); }}>{name}</button><button className="cb-icon" onClick={() => removeSaved(name)} title="Borrar"><Trash2 size={13} /></button></li>)}</ul>
+            : <p className="db-hint">Los gráficos guardados quedan solo en este navegador. Para compartir uno, usa “Link”: abre exactamente la misma configuración.</p>}
+        </section>
+
         <section className="cb-annotations-section" aria-label="Herramientas de anotación">
           <div className="cb-annotations-head"><h2>Anotaciones</h2><p>Personaliza tu gráfico con eventos, referencias y elementos visuales.</p></div>
           <div className="cb-annotations-grid">
@@ -823,13 +833,7 @@ export function ChartBuilder({ catalog, recommended = [], historicalEvents = [] 
           </div>
         </section>
 
-        <section className="panel cb-block">
-          <h2>Guardar</h2>
-          <div className="cb-inline"><input value={saveName} onChange={e => setSaveName(e.target.value)} placeholder={config.title || "Nombre del gráfico"} aria-label="Nombre para guardar" /><button className="cb-btn" onClick={saveChart}><Save size={14} aria-hidden="true" />Guardar en este navegador</button></div>
-          {Object.keys(saved).length > 0 ? <ul className="cb-annots">{Object.keys(saved).sort().map(name => <li key={name}><button className="db-link" onClick={() => { setConfig({ ...DEFAULT_CONFIG, ...saved[name] }); flash(`Abierto “${name}”.`); }}>{name}</button><button className="cb-icon" onClick={() => removeSaved(name)} title="Borrar"><Trash2 size={13} /></button></li>)}</ul>
-            : <p className="db-hint">Los gráficos guardados quedan solo en este navegador. Para compartir uno, usa “Link”: abre exactamente la misma configuración.</p>}
-          <button className="db-link" onClick={() => { setConfig({ ...DEFAULT_CONFIG, series: [], annotations: [], title: "", subtitle: "", source: "Fuente: Mercado, Bloomberg, Banco Central." }); window.history.replaceState(null, "", window.location.pathname); }}>Empezar un gráfico en blanco</button>
-        </section>
+
       </div>
     </div>
   </AppShell>;
