@@ -75,22 +75,29 @@ function buildBenchmarkDurationCurve(data: RFData, type: BondType): CurvePoint[]
  * Interpolación lineal por duración. Igual que Tasas Benchmark,
  * fuera del rango se toma la yield del extremo más cercano.
  */
-function interpolateDuration(duration: number | null, curve: CurvePoint[]): number | null {
-  if (duration === null || !Number.isFinite(duration) || duration <= 0 || !curve.length) return null;
-  if (duration <= curve[0].duration) return curve[0].yield;
-  if (duration >= curve[curve.length - 1].duration) return curve[curve.length - 1].yield;
+type Interpolation = { value: number; points: CurvePoint[]; extrapolated: boolean };
 
-  for (let index = 1; index < curve.length; index++) {
-    const left = curve[index - 1];
+function interpolateDuration(duration: number | null, curve: CurvePoint[]): Interpolation | null {
+  if (duration === null || !Number.isFinite(duration) || duration <= 0 || !curve.length) return null;
+  const first = curve[0], last = curve[curve.length - 1];
+  if (duration < first.duration) return { value: first.yield, points: [first], extrapolated: true };
+  if (duration > last.duration) return { value: last.yield, points: [last], extrapolated: true };
+
+  for (let index = 0; index < curve.length; index++) {
     const right = curve[index];
-    if (duration <= right.duration) {
-      if (Math.abs(right.duration - left.duration) < 1e-10) return (left.yield + right.yield) / 2;
-      const weight = (duration - left.duration) / (right.duration - left.duration);
-      return left.yield + weight * (right.yield - left.yield);
-    }
+    if (Math.abs(duration - right.duration) < 1e-10) return { value: right.yield, points: [right], extrapolated: false };
+    if (index === 0 || duration > right.duration) continue;
+    const left = curve[index - 1];
+    if (Math.abs(right.duration - left.duration) < 1e-10) return { value: (left.yield + right.yield) / 2, points: [left, right], extrapolated: false };
+    const weight = (duration - left.duration) / (right.duration - left.duration);
+    return { value: left.yield + weight * (right.yield - left.yield), points: [left, right], extrapolated: false };
   }
   return null;
 }
+
+/** BTU0190930 → BTU30 (tipo + año de vencimiento). */
+const shortCode = (code: string) => code.slice(0, 3) + code.slice(-2);
+const durationFormat = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /**
  * (((1 + yield_decimal) ** (vencimiento_dias / 365) - 1)
@@ -120,7 +127,8 @@ function SpreadCalculator({
 
   const duration = parsePercentInput(durationText);
   const enteredYield = parsePercentInput(yieldText);
-  const base = interpolateDuration(duration, curve);
+  const interpolation = interpolateDuration(duration, curve);
+  const base = interpolation?.value ?? null;
   const spread = base !== null && enteredYield !== null ? (enteredYield - base) * 100 : null;
   const dpfRate = compareDPF(parsePercentInput(dpfDaysText), parsePercentInput(dpfYieldText));
   const isCLP = type === "BTP";
@@ -164,6 +172,10 @@ function SpreadCalculator({
         </div>
         <p className="bond-calculator-source">
           Curva {type} · interpolación por duración
+          {interpolation && <span>
+            {interpolation.extrapolated ? " · fuera de rango, toma el extremo: " : interpolation.points.length === 1 ? " · coincide con: " : " · entre: "}
+            {interpolation.points.map((p, i) => <span key={p.code}>{i > 0 ? " y " : ""}<strong title={p.code}>{shortCode(p.code)}</strong> a {formatPercent(p.yield)} (dur. {durationFormat.format(p.duration)})</span>)}
+          </span>}
           {dataStatus === "loading" && <span> · Cargando cierre…</span>}
           {dataStatus === "error" && <span> · No se pudieron cargar los datos.</span>}
           {dataStatus === "ready" && curve.length === 0 && <span> · Sin cotizaciones benchmark válidas.</span>}
