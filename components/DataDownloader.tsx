@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, Download, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { ChevronDown, Download, Lock, Search, X } from "lucide-react";
 import { AppShell } from "./AppShell";
 import type { Catalog, CatalogSeries } from "@/lib/data-catalog.server";
 import { buildTable, toCsv, toXlsx, type ExportColumn, type ExportMeta, type Frequency, type MonthlyMode } from "@/lib/export-table";
@@ -46,6 +46,25 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
   const cache = useRef(new Map<string, unknown>());
   const [loaded, setLoaded] = useState(0);
   const [error, setError] = useState("");
+  // Clave de descarga: se valida en el servidor (/api/descarga) y queda recordada con una cookie.
+  const [unlocked, setUnlocked] = useState<boolean | null>(null);
+  const [clave, setClave] = useState("");
+  const [claveError, setClaveError] = useState("");
+  const [checking, setChecking] = useState(false);
+  useEffect(() => {
+    fetch("/api/descarga", { cache: "no-store" }).then(r => r.json()).then(j => setUnlocked(!!j.ok)).catch(() => setUnlocked(false));
+  }, []);
+  const submitClave = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!clave.trim() || checking) return;
+    setChecking(true); setClaveError("");
+    try {
+      const r = await fetch("/api/descarga", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clave }) });
+      const j = await r.json().catch(() => ({}));
+      if (j.ok) { setUnlocked(true); setClave(""); } else setClaveError(j.error ?? "Clave incorrecta.");
+    } catch { setClaveError("No fue posible validar la clave. Intenta de nuevo."); }
+    setChecking(false);
+  };
 
   const toggle = (id: string) => setSelected(list => list.includes(id) ? list.filter(x => x !== id) : [...list, id]);
   const addMany = (ids: string[]) => setSelected(list => [...list, ...ids.filter(id => !list.includes(id))]);
@@ -93,7 +112,7 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
   const shownFrom = period === "custom" ? from : (range.from ?? firstDate), shownTo = period === "custom" ? to : lastDate;
 
   const download = () => {
-    if (!DOWNLOAD_ENABLED) return;
+    if (!DOWNLOAD_ENABLED || !unlocked) return;
     const stamp = (table.rows.at(-1)?.[0] ?? lastDate).replace(/-/g, "");
     const name = `rfchilena_${stamp}.${format === "xlsx" ? "xlsx" : "csv"}`;
     const blob = format === "xlsx"
@@ -165,9 +184,17 @@ export function DataDownloader({ catalog }: { catalog: Catalog }) {
           <p className="db-hint">{format === "xlsx" ? "Hoja Datos + hoja Descripción con fuente y unidad de cada columna." : format === "csv-cl" ? "Separador ; y coma decimal: abre directo en Excel en español." : "Separador , y punto decimal: para Python, R u otros."}</p>
         </div>
         {error && <div className="model-notice" role="alert">{error}</div>}
-        <button className="db-download" disabled={!DOWNLOAD_ENABLED || !selected.length || !ready || !table.rows.length} onClick={download} title={DOWNLOAD_ENABLED ? undefined : "Descarga deshabilitada"}>
+        {DOWNLOAD_ENABLED && unlocked === false && <form className="db-lock" onSubmit={submitClave}>
+          <label htmlFor="db-clave"><Lock size={14} aria-hidden="true" /> Clave de descarga</label>
+          <div className="db-lock-row">
+            <input id="db-clave" type="password" size={1} autoComplete="current-password" value={clave} onChange={e => { setClave(e.target.value); setClaveError(""); }} placeholder="Ingresa la clave" />
+            <button type="submit" disabled={!clave.trim() || checking}>{checking ? "Validando…" : "Desbloquear"}</button>
+          </div>
+          {claveError && <p className="db-lock-error" role="alert">{claveError}</p>}
+        </form>}
+        <button className="db-download" disabled={!DOWNLOAD_ENABLED || !unlocked || !selected.length || !ready || !table.rows.length} onClick={download} title={DOWNLOAD_ENABLED ? undefined : "Descarga deshabilitada"}>
           <Download size={16} aria-hidden="true" />
-          {!DOWNLOAD_ENABLED ? "Descarga deshabilitada" : !selected.length ? "Elige al menos una serie" : !ready ? "Cargando datos…" : `Descargar ${columns.length} ${columns.length === 1 ? "columna" : "columnas"} · ${table.rows.length.toLocaleString("es-CL")} filas`}
+          {!DOWNLOAD_ENABLED ? "Descarga deshabilitada" : unlocked === null ? "Verificando acceso…" : !unlocked ? "Ingresa la clave para descargar" : !selected.length ? "Elige al menos una serie" : !ready ? "Cargando datos…" : `Descargar ${columns.length} ${columns.length === 1 ? "columna" : "columnas"} · ${table.rows.length.toLocaleString("es-CL")} filas`}
         </button>
       </aside>
     </div>
