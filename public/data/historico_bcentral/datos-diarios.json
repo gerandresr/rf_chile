@@ -25918,5 +25918,23 @@
     "tpm": 4.5,
     "usdclp_obs": 993.22,
     "componente_m2": null
+  },
+  {
+    "fecha": "2026-10-31",
+    "tpm": null,
+    "usdclp_obs": null,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-11-01",
+    "tpm": null,
+    "usdclp_obs": null,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-11-02",
+    "tpm": 4.5,
+    "usdclp_obs": 992.66,
+    "componente_m2": null
   }
 ]
