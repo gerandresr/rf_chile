@@ -1,0 +1,119 @@
+{
+  "fecha": "2026-11-02",
+  "datosAl": "Bonos y swaps al 30-oct-2026 · closing de derivados al 02-nov-2026",
+  "resumen": [
+    "Corrección de tasas en octubre, pero aún en la parte alta del año: BTP 10 (curva NSS) en 6,06% (−15 pb en el mes, +65 pb en el año) y BTU 10 en 2,66% (−19 pb en el mes). Al 30-oct el SPC 2 años quedó en 5,155% y el 10 años en 5,855%; el closing del 02-nov los baja a 5,11% y 5,79% (−4,5 y −6,5 pb).",
+    "El Banco Central mantuvo la TPM en 4,50% el 27-oct. Según el closing del 02-nov, los swaps descuentan 4,58% para diciembre y 5,10% a octubre de 2027 (+60 pb). La regla de Taylor forward-looking con inercia apunta a 3,77% en ese horizonte, unos 130 pb bajo el mercado. El SPC 2 años está 66 pb sobre la TPM (percentil 99 de 3 años), pero con esa señal la brecha se cerró solo en el 46% de los casos a 3 meses. El BTP 10 está 7 pb sobre su valor justo macro (z 0,6): sin señal direccional.",
+    "Macro: IPC de septiembre 0,4% mensual y 4,1% anual, con la SAE contenida (0,1% mensual). IMACEC de septiembre +0,2% anual y desempleo 9,80%. La EEE espera 3,4% de inflación a 12 meses y TPM de 4,5%. Los seguros de inflación apuntan a 0,57% en octubre, 0,47% en noviembre y 0,15% en diciembre (4,18% en 12 meses). Externos: Brent 108,6 USD, USD/CLP 987, CDS Chile 55 pb y Treasury 10 años 4,92%.",
+    "Compensación inflacionaria alta pero sin señal de venta: BEI swap 2 años 3,76% (percentil 92 de 3 años) y 10 años 3,37% (percentil 91). El BEI de papeles 2034 subió 35 pb en el mes, a 3,47% (percentil 94), por el abaratamiento relativo del BTP y no por mayor inflación esperada: el BEI 2035 bajó 4 pb, a 3,38%. Con z sobre 1,5, el BEI de papeles revirtió en solo 43–62% de los casos a 3 meses en los plazos con más historia.",
+    "Depósitos sin desalineamientos: DPF 90 días en 4,64% anual (base 30 × 12) contra SPC 3 meses en 4,60%, y DPF 180 días 12 pb sobre el swap (z −0,1). Los DPR contra swaps UF están en z de 0 a 0,5.",
+    "Calidad de datos: bonos al 30-oct. Los swaps Cámara históricos del 02-nov repiten el 30-oct y no se usan como nuevo nivel; en el tramo corto UF (3 a 9 meses) traen saltos atípicos por el cambio de mes. La TPM de Bloomberg está congelada desde el 08-oct; se usa la del Banco Central. El diferencial BTP0231028 − BTP0501028 (mismo vencimiento) marcó −11 pb el 30-oct, después de un −6 pb el 28-oct que revirtió al día siguiente. El BTP0231028 cotiza en niveles redondos (5,00%), así que no se toma como señal.",
+    "Ideas del 26-oct: el valor relativo BTU 2033–2034 alcanzó el objetivo el 26-oct (+8,3 pb; diferencial en +2,6 pb). Siguen abiertas el fly SPC 2–5–10 (−3,0 pb; 7 pb contra 4 pb de entrada; se renueva hoy) y el aplanamiento BTP 2028–2030 (+5,7 pb; −61,6 pb). Este último no se renueva: la mejora del 30-oct vino de un dato ruidoso del BTP 2028, y la señal se debilitó (z −1,6 contra −2,1 en la entrada).",
+    "Postura: sin apuesta de duración ni de inflación outright. El riesgo está en valor relativo: la sobrerreacción del BTU 2034 (convicción alta), el fly SPC 2–5–10 (convicción alta) y el tramo largo UF 2050–2055 (convicción media). Las dos ideas en BTU venden el papel caro de cada par y son neutrales a DV01."
+  ],
+  "ideas": [
+    {
+      "id": "rv-btu-2034-2035",
+      "titulo": "Valor relativo BTU 2034–2035: vender BTU0300134 y comprar BTU0200335",
+      "tipo": "Valor relativo",
+      "conviccion": "Alta",
+      "operacion": [
+        "Vender BTU0300134 (ene-2034)",
+        "Comprar BTU0200335 (mar-2035), 91 por cada 100 vendidos (neutral a DV01)"
+      ],
+      "metrica": {
+        "nombre": "TIR BTU0300134 − BTU0200335",
+        "terminos": [
+          { "id": "BTU0300134", "w": 1 },
+          { "id": "BTU0200335", "w": -1 }
+        ],
+        "unidad": "pb",
+        "ganaSi": "sube"
+      },
+      "entrada": -12.4,
+      "objetivo": -6.0,
+      "stop": -16.5,
+      "horizonte": "1–2 meses",
+      "fundamentos": [
+        "El diferencial está en −12,4 pb (2,49% vs 2,62%), en el percentil 1 de 1 y de 3 años y con z −3,0 del último año (promedio −2,6 pb, desviación 3,3 pb). Desde el 23-oct, el BTU 2034 bajó 16 pb y el 2035 solo 5 pb.",
+        "El desalineamiento es del 2034: contra la curva NSS está 6,2 pb caro (z −1,95; promedio −0,3 pb), mientras el 2035 está 0,8 pb barato. El diferencial de residuos marca z −2,2. El BEI de papeles 2034 subió 35 pb en el mes y el 2035 bajó 4 pb: el movimiento es propio del papel.",
+        "Validación: en este par, con z bajo −2 el diferencial subió en 21 días hábiles en el 100% de los casos (10 observaciones semanales, promedio +10,8 pb). En pares de bonos del mismo tipo y plazos cercanos con |z| ≥ 2 en el residuo NSS, el diferencial volvió hacia su media en 21 días hábiles en el 87% de los casos (439 observaciones, mediana 10,3 pb).",
+        "Mismo tramo de la curva (14 meses entre vencimientos) y neutral a DV01: el riesgo de nivel e inflación es acotado."
+      ],
+      "riesgos": [
+        "Demanda estructural por el BTU 2034, que en 2023 llegó a −14,9 pb contra el 2035 antes de revertir.",
+        "Costo de préstamo y liquidez de la venta corta del BTU 2034.",
+        "La diferencia de duración (6,5 vs 7,7 años) deja una exposición menor a la pendiente UF 6–8 años."
+      ]
+    },
+    {
+      "id": "fly-spc-2-5-10",
+      "titulo": "Fly SPC 2–5–10: recibir 5 años contra 2 y 10 años",
+      "tipo": "Fly",
+      "conviccion": "Alta",
+      "operacion": [
+        "Recibir SPC CLP 5 años (100% del riesgo)",
+        "Pagar SPC CLP 2 años (50% del DV01)",
+        "Pagar SPC CLP 10 años (50% del DV01)"
+      ],
+      "metrica": {
+        "nombre": "Fly 2×5a − 2a − 10a",
+        "terminos": [
+          { "id": "bbg:clpcam_5y", "w": 2 },
+          { "id": "bbg:clpcam_2y", "w": -1 },
+          { "id": "bbg:clpcam_10y", "w": -1 }
+        ],
+        "unidad": "pb",
+        "ganaSi": "baja"
+      },
+      "entrada": 7.0,
+      "objetivo": -3.0,
+      "stop": 14.0,
+      "horizonte": "3 meses",
+      "fundamentos": [
+        "El 5 años sigue siendo el punto barato de la curva swap: el fly está en 7 pb, en el percentil 98 del último año y 99 de 3 años, con z +2,1 (promedio 1 año: −6,5 pb; 3 años: −18 pb).",
+        "Validación: con z sobre 1,5, el fly bajó en 13 semanas en el 77% de los casos (84 observaciones semanales desde 2015, promedio −5,4 pb). Con z sobre 2: 76% (42 observaciones, −4,5 pb).",
+        "El closing del 02-nov deja el fly en 4 pb (5 años 5,47%, 2 años 5,11%, 10 años 5,79%). El fly UF 2–5–10 también marca el 5 años barato (32 pb, z +2,1). Es neutral a duración."
+      ],
+      "riesgos": [
+        "Que el mercado siga concentrando las alzas esperadas en el tramo de 2 a 5 años (pendiente 2–5 en 38,5 pb, percentil 96 de 3 años).",
+        "Desde el 21-oct el fly ha oscilado entre 3,5 y 7 pb sin converger.",
+        "Observaciones semanales solapadas: la estadística sobreestima la independencia."
+      ]
+    },
+    {
+      "id": "rv-btu-2050-2055",
+      "titulo": "Tramo largo UF: vender BTU0210750 y comprar BTU0281155",
+      "tipo": "Valor relativo",
+      "conviccion": "Media",
+      "operacion": [
+        "Vender BTU0210750 (jul-2050)",
+        "Comprar BTU0281155 (nov-2055), 83 por cada 100 vendidos (neutral a DV01)"
+      ],
+      "metrica": {
+        "nombre": "TIR BTU0210750 − BTU0281155",
+        "terminos": [
+          { "id": "BTU0210750", "w": 1 },
+          { "id": "BTU0281155", "w": -1 }
+        ],
+        "unidad": "pb",
+        "ganaSi": "sube"
+      },
+      "entrada": -7.1,
+      "objetivo": -2.5,
+      "stop": -10.5,
+      "horizonte": "2–3 meses",
+      "fundamentos": [
+        "El diferencial está en −7,1 pb (2,73% vs 2,80%), en el percentil 6 desde que existe el BTU 2055 (jul-2024) y con z −1,6 del último año (promedio −0,6 pb). Se abrió 7 pb en el mes.",
+        "Contra la curva NSS, el BTU 2050 está 4,6 pb caro (percentil 1 de 3 años) y el 2055, 2,6 pb barato (percentil 95 del año). El diferencial de residuos marca z −1,7.",
+        "Validación: en este par, con z bajo −1,5 el diferencial subió en 21 días hábiles en 6 de 7 casos (promedio +9,0 pb)."
+      ],
+      "riesgos": [
+        "Muestra corta (historia desde julio de 2024) y pocas señales previas.",
+        "Mayor oferta del BTU 2055 en licitaciones de Tesorería, que lo mantenga barato.",
+        "Menor liquidez del tramo largo; la diferencia de duración (18,3 vs 19,8 años) deja exposición a la pendiente 25–30 años."
+      ]
+    }
+  ],
+  "advertencia": "Material de análisis para la mesa. No constituye asesoría de inversión ni una recomendación personalizada. Los niveles de entrada corresponden a la fecha de elaboración; los niveles actuales se recalculan con cada actualización de datos."
+}
