@@ -1,0 +1,120 @@
+{
+  "fecha": "2026-11-09",
+  "datosAl": "Bonos y swaps al 06-nov-2026 · closing de derivados al 04-nov-2026",
+  "resumen": [
+    "Fuerte recepción en swaps y bonos rezagados: entre el 30-oct y el 06-nov, el SPC 2 años bajó 15 pb (5,005%), el 5 años 24 pb (5,30%) y el 10 años 25 pb (5,605%). En la misma semana, el BTP 10 (curva NSS) bajó solo 4 pb (6,02%) y el BTU 10, 2 pb (2,65%). El swap UF 10 años cayó 6 pb (2,425%).",
+    "Por ese rezago, los swap spreads nominales se duplicaron: BTP 10 NSS − SPC 10 años en 41 pb (20 pb el 30-oct; percentil 99 de 1 año y 46 de 3 años) y BTP 20 NSS − SPC 20 años en 36 pb (17 pb; percentil 99 de 1 año). En UF no hay desalineamiento: BTU 10 − swap UF en 22 pb (percentil 18 de 1 año).",
+    "La TPM sigue en 4,50%. Los swaps descuentan 4,62% para diciembre y 5,00% a octubre de 2027 (+50 pb). La regla de Taylor forward-looking con inercia apunta a 3,69% en ese horizonte, unos 130 pb bajo el mercado. El SPC 2 años está 50 pb sobre la TPM (percentil 86 de 1 año), pero con señal similar la brecha se cerró solo en el 27% de los casos a 3 meses. El BTP 10 está 7 pb sobre su valor justo macro (z 0,7): sin señal direccional.",
+    "Macro: IPC de octubre 0,5% mensual y 4,5% anual (4,1% en septiembre), con la SAE en 0,0%. La EEE espera 3,4% de inflación a 12 meses y TPM de 4,5%. Los seguros de inflación apuntan a 0,45% en noviembre y 0,13% en diciembre. BEI swap 2 años 3,51% (percentil 68 de 1 año) y 10 años 3,18% (percentil 31); BEI de papeles 2034 en 3,40% (percentil 90): sin señal. Externos: Brent 98,3 USD (−15 USD desde el 30-oct), USD/CLP 979, CDS Chile 55 pb, Treasury 10 años 4,86% y VIX 25,6.",
+    "Depósitos sin desalineamientos: DPF 90 días en 4,65% anual (base 30 × 12) contra SPC 3 meses en 4,62% (z −0,1), y DPF 180 días 12 pb sobre el swap (z −0,1). Los DPR contra swaps UF están en z de −0,6 a −1,0, sin señal.",
+    "Calidad de datos: bonos al 06-nov. Los swaps Cámara del 09-nov repiten el 06-nov en los plazos de 2 a 20 años y no se usan como nuevo nivel; el tramo corto UF (3 meses a 1 año) sigue con saltos por el cambio de mes. El 06-nov el DPR 180 cayó 32 pb (0,39%) y el DPR 360, 27 pb (1,21%): se tratan como atípicos. La TPM de Bloomberg no tiene datos; se usa la del Banco Central. El closing de derivados es del 04-nov.",
+    "Ideas del 02-nov: el fly SPC 2–5–10 sigue abierto con +8,0 pb (−1 pb contra 7 pb de entrada), a 2 pb del objetivo; no se renueva, porque el fly volvió a niveles normales (z +0,8). El valor relativo BTU 2034–2035 sigue abierto con −0,5 pb (−12,9 pb): tocó −7,2 pb el 04-nov y volvió a abrirse; se renueva hoy. El tramo largo UF 2050–2055 sigue abierto con +2,9 pb (−4,2 pb); no se renueva, porque la señal se diluyó (z −0,9).",
+    "Postura: sin apuesta de duración ni de inflación outright. El riesgo está en valor relativo y swap spread: la sobrerreacción del BTU 2038 (convicción alta), el BTU 2034 caro contra el 2035 (convicción alta) y el BTP 2043 barato contra swaps (convicción media). Las dos ideas en BTU son neutrales a DV01, y la de swap spread se calza con el mismo DV01 en swaps."
+  ],
+  "ideas": [
+    {
+      "id": "rv-btu-2038-2039",
+      "titulo": "Valor relativo BTU 2038–2039: comprar BTU0300338 y vender BTU0300339",
+      "tipo": "Valor relativo",
+      "conviccion": "Alta",
+      "operacion": [
+        "Comprar BTU0300338 (mar-2038)",
+        "Vender BTU0300339 (mar-2039), 92 por cada 100 comprados (neutral a DV01)"
+      ],
+      "metrica": {
+        "nombre": "TIR BTU0300338 − BTU0300339",
+        "terminos": [
+          { "id": "BTU0300338", "w": 1 },
+          { "id": "BTU0300339", "w": -1 }
+        ],
+        "unidad": "pb",
+        "ganaSi": "baja"
+      },
+      "entrada": 6.9,
+      "objetivo": 0.0,
+      "stop": 11.0,
+      "horizonte": "1 mes",
+      "fundamentos": [
+        "El BTU 2038 rinde 6,9 pb sobre el 2039, a pesar de vencer un año antes (2,76% vs 2,69%). Es el percentil 99 del último año, con z +3,2 (promedio −1,5 pb, desviación 2,6 pb). Una semana antes estaba en −2,5 pb.",
+        "El desalineamiento es del 2038: contra la curva NSS está 8,8 pb barato (z +3,6, percentil 99 del año), mientras el 2039 está en línea (+0,5 pb). El diferencial de residuos marca z +3,8. El 2038 subió 5 pb el 05-nov y no revirtió el 06-nov, mientras el resto del tramo bajó 2 pb.",
+        "Validación: en este par, con z sobre 2 el diferencial bajó en 21 días hábiles en el 83% de los casos (18 observaciones semanales, promedio −12,9 pb), y en 42 días en el 94%. Contra el BTU 2040 la señal es la misma: z −2,8, con reversión en el 94% de los casos (16 observaciones).",
+        "Bonos del mismo tramo (un año entre vencimientos; duraciones de 9,7 y 10,4 años) y neutral a DV01: el riesgo de nivel e inflación es acotado."
+      ],
+      "riesgos": [
+        "El BTU 2038 tiene historia de precios ruidosos: el 22-oct marcó +4,8 pb contra el 2039 y revirtió al día siguiente. Si el salto del 05-nov se debe a un precio poco representativo, el nivel de entrada no sería ejecutable.",
+        "En 3 años el diferencial llegó a +17,5 pb (percentil 92 hoy): en el pasado el 2038 se mantuvo barato por períodos largos.",
+        "Liquidez y costo de préstamo de la venta corta del BTU 2039."
+      ]
+    },
+    {
+      "id": "rv-btu-2034-2035",
+      "titulo": "Valor relativo BTU 2034–2035: vender BTU0300134 y comprar BTU0200335",
+      "tipo": "Valor relativo",
+      "conviccion": "Alta",
+      "operacion": [
+        "Vender BTU0300134 (ene-2034)",
+        "Comprar BTU0200335 (mar-2035), 91 por cada 100 vendidos (neutral a DV01)"
+      ],
+      "metrica": {
+        "nombre": "TIR BTU0300134 − BTU0200335",
+        "terminos": [
+          { "id": "BTU0300134", "w": 1 },
+          { "id": "BTU0200335", "w": -1 }
+        ],
+        "unidad": "pb",
+        "ganaSi": "sube"
+      },
+      "entrada": -12.9,
+      "objetivo": -6.0,
+      "stop": -17.0,
+      "horizonte": "1–2 meses",
+      "fundamentos": [
+        "El diferencial está en −12,9 pb (2,47% vs 2,60%), en el percentil 1 de 1 año y de 3 años, con z −3,0 del último año (promedio −2,8 pb). Un mes atrás estaba en −1,1 pb.",
+        "El BTU 2034 sigue 8,8 pb caro contra la curva NSS (z −2,7, percentil 1 del año) y el 2035 está en línea (−0,6 pb). El cero cupón 2033 también está caro (−5,4 pb, z −2,1): el sector 2033–2034 es el desalineado, no el 2035.",
+        "Validación: en este par, con z bajo −2 el diferencial subió en 21 días hábiles en el 100% de los casos (11 observaciones semanales, promedio +10,3 pb). Con z bajo −1,5: 100% (21 observaciones, +10,5 pb).",
+        "Se renueva la idea del 02-nov, que tocó −7,2 pb el 04-nov y volvió a −12,9 pb el 06-nov. Mismo tramo de la curva y neutral a DV01."
+      ],
+      "riesgos": [
+        "Demanda estructural por el BTU 2034, que en 2023 llegó a −15,5 pb contra el 2035 antes de revertir.",
+        "El BTU 2035 cotizó en niveles redondos (2,60% el 04 y el 05-nov): su precio puede reaccionar con rezago.",
+        "La diferencia de duración (6,5 vs 7,7 años) deja una exposición menor a la pendiente UF de 6 a 8 años."
+      ]
+    },
+    {
+      "id": "ss-btp-2043",
+      "titulo": "Swap spread largo: comprar BTP0600143 y pagar SPC 15–20 años",
+      "tipo": "Swap spread",
+      "conviccion": "Media",
+      "operacion": [
+        "Comprar BTP0600143 (ene-2043)",
+        "Pagar SPC CLP por el mismo DV01: 77% en 15 años y 23% en 20 años (plazo interpolado al vencimiento del bono)"
+      ],
+      "metrica": {
+        "nombre": "TIR BTP0600143 − SPC interpolado a 16,2 años",
+        "terminos": [
+          { "id": "BTP0600143", "w": 1 },
+          { "id": "bbg:clpcam_15y", "w": -0.769 },
+          { "id": "bbg:clpcam_20y", "w": -0.231 }
+        ],
+        "unidad": "pb",
+        "ganaSi": "baja"
+      },
+      "entrada": 36.0,
+      "objetivo": 24.0,
+      "stop": 44.0,
+      "horizonte": "2–3 meses",
+      "fundamentos": [
+        "El spread está en 36,0 pb (BTP 6,10% contra un swap interpolado de 5,74%), en el percentil 99,8 del último año y con z +2,6 (promedio 1 año: 10 pb). Un mes atrás estaba en 8 pb: en la última semana el SPC 15 años bajó 23,5 pb y el bono solo 3 pb.",
+        "Validación: con z sobre 2, el spread bajó en 63 días hábiles en el 81% de los casos (16 observaciones semanales, promedio −23 pb), y en 42 días en el 88%. El objetivo es el promedio de 3 años (24 pb).",
+        "No es un desalineamiento propio del papel: el BTP 2043 está en línea con la curva NSS (+1,1 pb) y el BTP 2040 muestra el mismo spread (38 pb, z +2,3). Es el tramo largo de bonos contra swaps, con el mismo movimiento en el spread NSS a 20 años (36 pb, z +2,4).",
+        "El riesgo de nivel queda calzado: comprar el bono y pagar el swap por el mismo DV01."
+      ],
+      "riesgos": [
+        "En 3 años la señal no es extrema (percentil 73, z +0,6): el spread se movió entre 4 y 49 pb en promedios trimestrales, y el último año de spreads bajos puede ser la excepción.",
+        "Mayor oferta de BTP largos en las licitaciones de Tesorería, o que siga la demanda receptora en swaps largos y abra más el spread.",
+        "Los swaps del 09-nov repiten el 06-nov: el spread de entrada no recoge el movimiento del lunes."
+      ]
+    }
+  ],
+  "advertencia": "Material de análisis para la mesa. No constituye asesoría de inversión ni una recomendación personalizada. Los niveles de entrada corresponden a la fecha de elaboración; los niveles actuales se recalculan con cada actualización de datos."
+}
