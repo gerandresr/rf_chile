@@ -25743,13 +25743,13 @@
     "fecha": "2026-10-01",
     "tpm": 4.5,
     "usdclp_obs": 972.6,
-    "componente_m2": null
+    "componente_m2": 127413.39395
   },
   {
     "fecha": "2026-10-02",
     "tpm": 4.5,
     "usdclp_obs": 983.84,
-    "componente_m2": null
+    "componente_m2": 127942.49279
   },
   {
     "fecha": "2026-10-03",
@@ -25767,31 +25767,31 @@
     "fecha": "2026-10-05",
     "tpm": 4.5,
     "usdclp_obs": 984.82,
-    "componente_m2": null
+    "componente_m2": 127961.82066
   },
   {
     "fecha": "2026-10-06",
     "tpm": 4.5,
     "usdclp_obs": 977.25,
-    "componente_m2": null
+    "componente_m2": 128351.0908
   },
   {
     "fecha": "2026-10-07",
     "tpm": 4.5,
     "usdclp_obs": 967.79,
-    "componente_m2": null
+    "componente_m2": 128474.45839
   },
   {
     "fecha": "2026-10-08",
     "tpm": 4.5,
     "usdclp_obs": 979.85,
-    "componente_m2": null
+    "componente_m2": 128559.42773
   },
   {
     "fecha": "2026-10-09",
     "tpm": 4.5,
     "usdclp_obs": 981.61,
-    "componente_m2": null
+    "componente_m2": 128398.58222
   },
   {
     "fecha": "2026-10-10",
@@ -25815,25 +25815,25 @@
     "fecha": "2026-10-13",
     "tpm": 4.5,
     "usdclp_obs": 978.61,
-    "componente_m2": null
+    "componente_m2": 127970.08345
   },
   {
     "fecha": "2026-10-14",
     "tpm": 4.5,
     "usdclp_obs": 980.79,
-    "componente_m2": null
+    "componente_m2": 128203.97836
   },
   {
     "fecha": "2026-10-15",
     "tpm": 4.5,
     "usdclp_obs": 987.03,
-    "componente_m2": null
+    "componente_m2": 128223.2305
   },
   {
     "fecha": "2026-10-16",
     "tpm": 4.5,
     "usdclp_obs": 984.09,
-    "componente_m2": null
+    "componente_m2": 128287.40806
   },
   {
     "fecha": "2026-10-17",
@@ -25851,31 +25851,31 @@
     "fecha": "2026-10-19",
     "tpm": 4.5,
     "usdclp_obs": 981.65,
-    "componente_m2": null
+    "componente_m2": 128702.50646
   },
   {
     "fecha": "2026-10-20",
     "tpm": 4.5,
     "usdclp_obs": 981.86,
-    "componente_m2": null
+    "componente_m2": 128586.98283
   },
   {
     "fecha": "2026-10-21",
     "tpm": 4.5,
     "usdclp_obs": 978.56,
-    "componente_m2": null
+    "componente_m2": 128404.38817
   },
   {
     "fecha": "2026-10-22",
     "tpm": 4.5,
     "usdclp_obs": 976.82,
-    "componente_m2": null
+    "componente_m2": 128840.66449
   },
   {
     "fecha": "2026-10-23",
     "tpm": 4.5,
     "usdclp_obs": 986.58,
-    "componente_m2": null
+    "componente_m2": 128992.95498
   },
   {
     "fecha": "2026-10-24",
@@ -25893,31 +25893,31 @@
     "fecha": "2026-10-26",
     "tpm": 4.5,
     "usdclp_obs": 990.35,
-    "componente_m2": null
+    "componente_m2": 129017.87001
   },
   {
     "fecha": "2026-10-27",
     "tpm": 4.5,
     "usdclp_obs": 994.29,
-    "componente_m2": null
+    "componente_m2": 129068.28737
   },
   {
     "fecha": "2026-10-28",
     "tpm": 4.5,
     "usdclp_obs": 985.14,
-    "componente_m2": null
+    "componente_m2": 128731.17465
   },
   {
     "fecha": "2026-10-29",
     "tpm": 4.5,
     "usdclp_obs": 981.08,
-    "componente_m2": null
+    "componente_m2": 128773.29784
   },
   {
     "fecha": "2026-10-30",
     "tpm": 4.5,
     "usdclp_obs": 993.22,
-    "componente_m2": null
+    "componente_m2": 129202.23015
   },
   {
     "fecha": "2026-10-31",
@@ -25959,6 +25959,24 @@
     "fecha": "2026-11-06",
     "tpm": 4.5,
     "usdclp_obs": 970.94,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-11-07",
+    "tpm": null,
+    "usdclp_obs": null,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-11-08",
+    "tpm": null,
+    "usdclp_obs": null,
+    "componente_m2": null
+  },
+  {
+    "fecha": "2026-11-09",
+    "tpm": 4.5,
+    "usdclp_obs": 979.88,
     "componente_m2": null
   }
 ]
