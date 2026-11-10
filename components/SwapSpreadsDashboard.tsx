@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "./AppShell";
 import { BondSwapStrategy } from "./BondSwapStrategy";
@@ -37,6 +37,46 @@ function ConstantMaturityPanel({ data, currency, years }: { data: SpreadData; cu
     {last && last.date < data.asOf && <p className="model-notice">No hay cobertura de curva para este plazo en la fecha de cierre. El último valor mostrado es histórico, no actual.</p>}
     {!points.length ? <p>No hay suficientes bonos para enmarcar este plazo sin extrapolar.</p> : <div className="ss-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={points}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tickFormatter={dateLabel} minTickGap={60} /><YAxis unit=" pb" domain={["auto", "auto"]} width={65} /><Tooltip labelFormatter={v => dateLabel(String(v))} formatter={(v: number) => fmt(v)} /><Legend /><ReferenceLine y={summary?.mean} stroke="#94a3b8" strokeDasharray="5 5" /><Line dataKey="spread" name={`Spread ${tenor} años constante (pb)`} stroke="#0d9488" dot={false} isAnimationActive={false} /></LineChart></ResponsiveContainer></div>}
     <p className="ss-caption">Cobertura observada: {dateLabel(points[0]?.date ?? "")} a {dateLabel(last?.date ?? "")}; puede ser menor que la ventana solicitada. Sin extrapolación ni arrastre de cotizaciones. Se incluyen los bonos disponibles en los archivos históricos que estaban vigentes en cada fecha, incluidos los hoy vencidos. Los cambios de composición, cupón y liquidez pueden influir en la curva.</p>
+  </section>;
+}
+
+
+type TenorKey = "vs2" | "vs5" | "vs10";
+const TENORS: [TenorKey, string][] = [["vs2", "vs 2y"], ["vs5", "vs 5y"], ["vs10", "vs 10y"]];
+
+/** Último mes del spread papel − swap fijo, con la media de la ventana histórica como referencia. */
+function TenorSpark({ values, mean }: { values: number[]; mean: number | null }) {
+  if (values.length < 2) return <span className="ss-spark-empty">—</span>;
+  const w = 110, h = 30, all = mean == null ? values : [...values, mean];
+  const min = Math.min(...all), max = Math.max(...all), span = max - min || 1;
+  const y = (v: number) => (h - 3 - (v - min) / span * (h - 6)).toFixed(1);
+  const pts = values.map((v, i) => `${(i / (values.length - 1) * (w - 6) + 1).toFixed(1)},${y(v)}`).join(" ");
+  const last = values[values.length - 1], above = mean != null && last > mean;
+  return <svg className="ss-spark" width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+    {mean != null && <line x1="0" x2={w} y1={y(mean)} y2={y(mean)} stroke="#94a3b8" strokeDasharray="3 3" strokeWidth="1" />}
+    <polyline points={pts} fill="none" stroke="#2563eb" strokeWidth="1.4" />
+    <circle cx={w - 5} cy={y(last)} r="2.4" fill={mean == null ? "#2563eb" : above ? "#b91c1c" : "#0d9488"} />
+  </svg>;
+}
+
+function TenorSpreadTable({ rows, years, asOf, currency, selected, onChoose }: { rows: { bond: SpreadData["bonds"][number]; points: SpreadData["bonds"][number]["points"] }[]; years: number; asOf: string; currency: "CLP" | "UF"; selected?: string; onChoose: (code: string) => void }) {
+  const from = time(asOf) - years * 365.25 * DAY, monthAgo = time(asOf) - 31 * DAY;
+  const table = rows.map(r => {
+    const window = r.points.filter(p => time(p.date) >= from);
+    const cells = TENORS.map(([key]) => {
+      const obs = window.flatMap(p => typeof p[key] === "number" ? [{ date: p.date, v: p[key] as number }] : []);
+      const summary = obs.length >= 60 ? stats(obs.map(o => o.v)) : null;
+      return { last: obs.at(-1), summary, month: obs.filter(o => time(o.date) >= monthAgo).map(o => o.v) };
+    });
+    return { bond: r.bond, cells };
+  });
+  const swapName = currency === "CLP" ? "SPC Cámara CLP" : "swap Cámara UF";
+  return <section className="panel"><div className="panel-head"><div><div className="eyebrow">Papel − swap a plazo fijo · {currency}</div><h2>Spreads contra swap 2, 5 y 10 años</h2></div><span className="pill">{table.length} instrumentos</span></div>
+    <p className="ss-caption">Cada columna es la TIR del papel menos el {swapName} cotizado al plazo indicado, del mismo día, en pb. El mini gráfico muestra el último mes; la línea punteada es la media de la ventana histórica ({years} año{years > 1 ? "s" : ""}). El punto final es rojo si el spread está sobre su media y verde si está bajo ella. Debajo de cada valor: percentil y z-score en la ventana (mínimo 60 observaciones).</p>
+    <div className="table-wrap"><table className="market-table ss-tenor-table"><thead><tr><th>Papel</th>{TENORS.map(([key, label]) => <Fragment key={key}><th>{label}</th><th>{label} mini gráfico</th></Fragment>)}</tr></thead>
+      <tbody>{table.map(r => <tr key={r.bond.code} className={selected === r.bond.code ? "ss-selected" : ""}><td><button className="ss-paper" onClick={() => onChoose(r.bond.code)}>{r.bond.code}</button></td>
+        {r.cells.map((c, i) => <Fragment key={TENORS[i][0]}><td><strong>{fmt(c.last?.v)}</strong>{c.last && c.last.date < asOf && <span className="ss-stale">{dateLabel(c.last.date)}</span>}<span className="ss-tenor-stat">{c.summary ? `p${fmt(c.summary.percentile, 0)} · z ${fmt(c.summary.z, 1)}` : "—"}</span></td><td><TenorSpark values={c.month} mean={c.summary?.mean ?? null} /></td></Fragment>)}</tr>)}</tbody>
+    </table></div>
   </section>;
 }
 
@@ -108,6 +148,7 @@ export function SwapSpreadsDashboard({ data }: { data: SpreadData }) {
     </section>
     <p className="ss-caption">Spread = papel − swap, en pb. Tasas del mismo día; interpolación sin extrapolación. Son spreads indicativos, no asset swap spreads de flujos. {basis === "duration" && "La duración swap se aproxima con una pata fija par semestral."}</p>
     {data.errors.length > 0 && <p role="status" className="model-notice">{data.errors.join(" ")}</p>}
+    <TenorSpreadTable rows={visible} years={years} asOf={data.asOf} currency={currency} selected={selected?.bond.code} onChoose={choose} />
     <section className="panel"><div className="panel-head"><h2>Comparador de papeles</h2><span className="pill">{visible.length} instrumentos</span></div>
       <div className="table-wrap"><table className="market-table ss-table"><thead><tr><th>Papel</th><th>Fecha</th><th>Dur. mod.</th><th>TIR %</th><th>Swap %</th><th>Spread pb</th><th>Δ obs. pb</th><th>Δ 1S pb</th><th>Δ 1M pb</th><th>Curva ref. pb</th><th>Desajuste pb</th><th>Z ajustado</th><th>Percentil ajustado</th><th>Obs. ajustadas</th></tr></thead>
         <tbody>{visible.map(r => { const p = r.last!, s = r.summary; return <tr key={r.bond.code} className={selected?.bond.code === r.bond.code ? "ss-selected" : ""}><td><button className="ss-paper" aria-pressed={selected?.bond.code === r.bond.code} onClick={() => choose(r.bond.code)}>{r.bond.code}</button></td><td>{dateLabel(p.date)}{p.date < data.asOf && <span className="ss-stale"> Desfasado</span>}</td><td>{fmt(p.macaulay / (1 + p.yield / 100))}</td><td>{fmt(p.yield, 3)}</td><td>{fmt(p.yield - spreadValue(p, basis)! / 100, 3)}</td><td><strong>{fmt(spreadValue(p, basis))}</strong></td><td>{fmt(change(r.points, basis, 1))}</td><td>{fmt(change(r.points, basis, 7))}</td><td>{fmt(change(r.points, basis, 30))}</td><td>{fmt(referenceValue(p, basis))}</td><td>{fmt(residualValue(p, basis))}</td><td>{fmt(s?.z)}</td><td>{fmt(s?.percentile, 0)}%</td><td>{r.signals.length}</td></tr>; })}</tbody>

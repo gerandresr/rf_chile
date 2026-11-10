@@ -1,7 +1,9 @@
 /** Spread indicativo: TIR del papel menos tasa par swap; no es un asset swap de flujos. */
 export type SpreadBasis = "maturity" | "duration";
 export type SpreadPoint = { date: string; yield: number; swap: number; spread: number; durationSpread: number | null; macaulay: number; term: number;
-  referenceSpread?: number | null; residual?: number | null; durationReferenceSpread?: number | null; durationResidual?: number | null };
+  referenceSpread?: number | null; residual?: number | null; durationReferenceSpread?: number | null; durationResidual?: number | null;
+  /** Papel menos swap Cámara a plazo fijo (2, 5 y 10 años), en pb. */
+  vs2?: number | null; vs5?: number | null; vs10?: number | null };
 export type SpreadBond = { code: string; currency: "CLP" | "UF"; maturity: string; points: SpreadPoint[]; missing: number };
 export type ConstantSpread = { currency: "CLP" | "UF"; tenor: number; points: { date: string; spread: number }[] };
 export type StrategyMarket = { fx: { value: number; date: string } | null; tpm: { value: number; date: string } | null;

@@ -16,6 +16,8 @@ function swapDuration(t: number, y: number) {
   return weighted / pv / (1 + c);
 }
 const round = (v: number) => Math.round(v * 1e6) / 1e6;
+// Papel menos el swap cotizado exactamente a ese plazo, sin interpolar.
+const fixed = (curve: { x: number; y: number }[], tenor: number, y: number) => { const q = curve.find(p => p.x === tenor); return q ? Math.round((y - q.y) * 1e4) / 100 : null; };
 
 export function swapSpreadData(): SpreadData {
   const errors: string[] = [];
@@ -64,7 +66,8 @@ export function swapSpreadData(): SpreadData {
       if (swap === null) { missing++; return; }
       const matched = interpolate(macaulay / (1 + y / 100), curve.map(p => ({ x: swapDuration(p.x, p.y), y: p.y })));
       points.push({ date, yield: round(y), swap: round(swap), spread: round((y - swap) * 100),
-        durationSpread: matched === null ? null : round((y - matched) * 100), macaulay, term: round(term) });
+        durationSpread: matched === null ? null : round((y - matched) * 100), macaulay, term: round(term),
+        vs2: fixed(curve, 2, y), vs5: fixed(curve, 5, y), vs10: fixed(curve, 10, y) });
     });
     // Una fecha por observación; nunca arrastramos cotizaciones de un día distinto.
     const unique = [...new Map(points.map(p => [p.date, p])).values()].sort((a, b) => a.date.localeCompare(b.date));
