@@ -2270,5 +2270,21 @@
     "eee_inf_a_24m": 3.0,
     "eee_tpm_a_12m": 4.5,
     "eee_pib_2027": 3.0
+  },
+  {
+    "fecha": "2026-11-01",
+    "imacec": null,
+    "imacec_ind_des": null,
+    "desempleo": null,
+    "ipc_mom": null,
+    "ipcsae_mom": null,
+    "ipc_yoy": null,
+    "tc_real": null,
+    "posicion_os_teso": null,
+    "posicion_os_bc": null,
+    "eee_inf_a_12m": 3.5,
+    "eee_inf_a_24m": 3.0,
+    "eee_tpm_a_12m": 4.5,
+    "eee_pib_2027": 3.0
   }
 ]
