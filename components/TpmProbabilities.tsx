@@ -27,7 +27,7 @@ export function TpmProbabilities({ data }: { data: TpmModelData }) {
     .sort((a, b) => Number(b) - Number(a));
   const modes = path.distributions.map(d => Object.entries(d.probabilities).sort((a, b) => b[1] - a[1])[0]?.[0]);
   const selected = history[windowIndex];
-  const rows = selected.points.map(p => ({ date: p.date, implied: p.implied, realized: p.realized }));
+  const rows = selected.points.map(p => ({ date: p.to, observed: p.date, from: p.from, implied: p.implied, realized: p.realized }));
 
   return <>
     <section className="panel" aria-label="Distribución de probabilidad de la TPM">
@@ -56,12 +56,12 @@ export function TpmProbabilities({ data }: { data: TpmModelData }) {
           {history.map((h, i) => <button key={h.window} className={i === windowIndex ? "selected" : ""} aria-pressed={i === windowIndex} onClick={() => setWindowIndex(i)}>{h.window}</button>)}
         </div>
       </div>
-      <p className="model-caption">TPM promedio que descontaban los swaps para la ventana indicada, versus la TPM promedio que efectivamente rigió. Sesgo medio: {selected.biasBp === null ? "—" : `${signed(selected.biasBp, 0)} pb`} · error absoluto medio: {selected.maeBp === null ? "—" : `${number(selected.maeBp, 0)} pb`} ({selected.observations} observaciones semanales). Un sesgo negativo indica que la TPM terminó sobre lo descontado.</p>
+      <p className="model-caption">TPM promedio que descontaban los swaps para la ventana indicada, versus la TPM promedio que efectivamente rigió. Cada punto se grafica en la fecha en que termina la ventana proyectada: la TPM efectiva llega hasta hoy y la línea de swaps se extiende hacia adelante con lo que descuenta el mercado actual. Sesgo medio: {selected.biasBp === null ? "—" : `${signed(selected.biasBp, 0)} pb`} · error absoluto medio: {selected.maeBp === null ? "—" : `${number(selected.maeBp, 0)} pb`} ({selected.observations} observaciones semanales). Un sesgo negativo indica que la TPM terminó sobre lo descontado.</p>
       <div className="model-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={rows} margin={{ top: 12, right: 16, bottom: 8, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5eaf2" />
         <XAxis dataKey="date" tickFormatter={month} minTickGap={60} tick={{ fontSize: 11 }} />
         <YAxis domain={["auto", "auto"]} tickFormatter={v => `${number(Number(v), 0)}%`} width={44} tick={{ fontSize: 11 }} />
-        <Tooltip labelFormatter={d => day(String(d))} formatter={(v, name) => [`${number(Number(v), 2)}%`, String(name)]} />
+        <Tooltip labelFormatter={(d, payload) => { const r = payload?.[0]?.payload as { from?: string; observed?: string } | undefined; return r?.from ? `TPM del ${day(r.from)} al ${day(String(d))} · swaps del ${day(r.observed ?? "")}` : day(String(d)); }} formatter={(v, name) => [`${number(Number(v), 2)}%`, String(name)]} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         <Line dataKey="implied" name="Descontado por swaps" stroke="#2f6fed" strokeWidth={1.8} dot={false} isAnimationActive={false} />
         <Line dataKey="realized" name="TPM efectiva" stroke="#d94b4b" strokeWidth={1.8} dot={false} isAnimationActive={false} connectNulls={false} />

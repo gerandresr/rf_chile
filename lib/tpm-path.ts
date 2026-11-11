@@ -158,7 +158,8 @@ export function estimateSpreadBp(swap1m: Map<string, number>, tpmOn: (date: stri
   return { spreadBp: values[Math.floor(values.length / 2)], observations: values.length };
 }
 
-export type ForwardHistoryPoint = { date: string; implied: number; realized: number | null };
+/** date: día en que se observaron los swaps; from/to: período de TPM que se proyectaba. */
+export type ForwardHistoryPoint = { date: string; from: string; to: string; implied: number; realized: number | null };
 export type ForwardHistory = {
   window: string; points: ForwardHistoryPoint[];
   biasBp: number | null; maeBp: number | null; observations: number;
@@ -196,7 +197,7 @@ export function forwardHistory(options: {
       }
       realized = n ? sum / n : null;
     }
-    points.push({ date, implied, realized });
+    points.push({ date, from, to, implied, realized });
   }
   const done = points.filter(p => p.realized !== null);
   const errors = done.map(p => (p.implied - p.realized!) * 100);
