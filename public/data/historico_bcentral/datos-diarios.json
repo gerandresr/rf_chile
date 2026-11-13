@@ -38983,14 +38983,23 @@
     "tpm": 4.5,
     "usdclp_obs": 977.05,
     "componente_m2": null,
-    "derivados_ccy": null,
-    "derivados_uf": null,
-    "derivados_swap": null
+    "derivados_ccy": 5121.2615218,
+    "derivados_uf": 12025.419088,
+    "derivados_swap": 1859.867352
   },
   {
     "fecha": "2026-11-12",
     "tpm": 4.5,
     "usdclp_obs": 984.49,
+    "componente_m2": null,
+    "derivados_ccy": null,
+    "derivados_uf": null,
+    "derivados_swap": null
+  },
+  {
+    "fecha": "2026-11-13",
+    "tpm": 4.5,
+    "usdclp_obs": 992.48,
     "componente_m2": null,
     "derivados_ccy": null,
     "derivados_uf": null,
